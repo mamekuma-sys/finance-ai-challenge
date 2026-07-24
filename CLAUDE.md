@@ -64,6 +64,12 @@ codex exec --skip-git-repo-check -m gpt-5.6-sol -c model_reasoning_effort=xhigh 
 - 스테이지 목표: R 80 / P 85 / M 85 / F 90. 목표 미달이면 개선 백로그를 처리한 뒤 재채점.
 - git commit 실행 시 PostToolUse 훅(`.claude/settings.json`)이 채점 리마인드를 띄운다.
 
+## Git 규칙
+
+- 원격: `https://github.com/mamekuma-sys/finance-ai-challenge` (origin, 브랜치 `main`).
+- **커밋 후 즉시 `git push origin main`** — 커밋만 하고 푸시를 미루지 않는다
+  (다른 세션·기기에서 이어받는 워크플로우이므로 로컬 전용 커밋을 남기지 말 것).
+
 ## 작업 규칙
 
 - 공모전 제출물(기획서, 기능명세서)은 데이콘 제공 양식 기반으로 작성 후 PDF 변환.

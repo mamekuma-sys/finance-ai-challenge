@@ -52,6 +52,9 @@
 
 ## 4. 운용 방식
 
+- **Git**: 원격은 `https://github.com/mamekuma-sys/finance-ai-challenge`(origin/`main`).
+  **커밋 후 즉시 push** — 세션 간 인수인계가 원격 기준이므로 로컬 전용 커밋 금지.
+
 - **Codex 위임**: `codex exec --skip-git-repo-check -m gpt-5.6-sol -c
   model_reasoning_effort=xhigh -s workspace-write -C <디렉토리> "<지시>"` (긴 지시는
   프롬프트 파일 + `- < prompt.md`). Codex는 `AGENTS.md`를 자동으로 읽는다. 결과물은
