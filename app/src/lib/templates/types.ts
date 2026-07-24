@@ -1,5 +1,7 @@
 import type { OfficialSource } from "@/lib/decision/sources";
 
+export type TemplateStatus = "active" | "unconfirmed" | "expired";
+
 export interface TemplateChangeLog {
   readonly reason: string;
   readonly changed_by: string;
@@ -8,6 +10,7 @@ export interface TemplateChangeLog {
 }
 
 export interface RegulatoryTemplate {
+  readonly status: Exclude<TemplateStatus, "expired">;
   readonly template_id: string;
   readonly template_version: string;
   readonly official_source: OfficialSource;

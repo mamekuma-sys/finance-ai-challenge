@@ -1,6 +1,9 @@
 import { OFFICIAL_SOURCES } from "@/lib/decision/sources";
 
-import type { RegulatoryTemplate } from "./types";
+import type {
+  RegulatoryTemplate,
+  TemplateStatus,
+} from "./types";
 
 export const TEMPLATE_VERSIONS = [
   "TPL-SAFE-DEVICE-001@1.0",
@@ -33,6 +36,7 @@ export const TEMPLATE_REGISTRY: Readonly<
   Record<TemplateVersion, RegulatoryTemplate>
 > = {
   "TPL-SAFE-DEVICE-001@1.0": {
+    status: "unconfirmed",
     template_id: "TPL-SAFE-DEVICE-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-FSC-MALAPP"],
@@ -44,6 +48,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "의심 기기의 사용을 중지하고, 그 기기와 분리된 안전한 기기에서 공식 대표번호를 확인하세요.",
   },
   "TPL-BANK-STOP-001@1.0": {
+    status: "active",
     template_id: "TPL-BANK-STOP-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-EASYLAW-STOPPAY"],
@@ -55,6 +60,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "해당 금융회사 공식 대표번호로 연락해 사기이용계좌 지급정지를 요청하세요.",
   },
   "TPL-WRITTEN-FOLLOWUP-001@1.1": {
+    status: "active",
     template_id: "TPL-WRITTEN-FOLLOWUP-001",
     template_version: "1.1",
     official_source: OFFICIAL_SOURCES["SRC-EASYLAW-STOPPAY"],
@@ -66,6 +72,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출해야 합니다. 이어서 1394에서 피해상담, 의심 전화번호·사이트 제보, 관계기관 연계를 안내받으세요.",
   },
   "TPL-CREDENTIAL-RECOVERY-001@1.0": {
+    status: "unconfirmed",
     template_id: "TPL-CREDENTIAL-RECOVERY-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-FSC-10RULES"],
@@ -77,6 +84,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "공식 대표번호로 인증정보 노출을 알리고, 금융회사 안내에 따라 인증수단 폐기·재발급과 보호조치를 진행하세요.",
   },
   "TPL-OFFICIAL-VERIFY-001@1.0": {
+    status: "unconfirmed",
     template_id: "TPL-OFFICIAL-VERIFY-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-FSC-10RULES"],
@@ -88,6 +96,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "메시지 속 연락처가 아닌 공식 기관 대표채널에서 사실을 교차 확인하세요.",
   },
   "TPL-UNDETERMINED-001@1.0": {
+    status: "unconfirmed",
     template_id: "TPL-UNDETERMINED-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-FSS-1332"],
@@ -99,6 +108,7 @@ export const TEMPLATE_REGISTRY: Readonly<
     body: "확인되지 않은 상태를 먼저 확인하고, 근거가 부족하면 판단을 유보한 채 1332 안내를 이용하세요.",
   },
   "TPL-PROXY-SCOPE-001@1.0": {
+    status: "unconfirmed",
     template_id: "TPL-PROXY-SCOPE-001",
     template_version: "1.0",
     official_source: OFFICIAL_SOURCES["SRC-EASYLAW-CONTACT"],
@@ -115,9 +125,97 @@ function isNonEmpty(value: string): boolean {
   return value.trim().length > 0;
 }
 
-export function assertTemplateRegistryComplete(): void {
+function isIsoCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return false;
+  }
+  const [, year, month, day] = match;
+  const date = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)),
+  );
+  return (
+    date.getUTCFullYear() === Number(year) &&
+    date.getUTCMonth() === Number(month) - 1 &&
+    date.getUTCDate() === Number(day)
+  );
+}
+
+function assertReferenceDate(referenceDate: string): void {
+  if (!isIsoCalendarDate(referenceDate)) {
+    throw new Error(
+      "템플릿 기준일은 YYYY-MM-DD 형식의 유효한 날짜여야 합니다.",
+    );
+  }
+}
+
+export function getTemplateStatus(
+  template: RegulatoryTemplate,
+  referenceDate: string,
+): TemplateStatus {
+  assertReferenceDate(referenceDate);
+  if (template.source_effective_date_confirmed !== true) {
+    return "unconfirmed";
+  }
+  if (template.next_review_at < referenceDate) {
+    return "expired";
+  }
+  return "active";
+}
+
+export type TemplateResolution =
+  | {
+      readonly ok: true;
+      readonly status: "active";
+      readonly version: TemplateVersion;
+      readonly body: string;
+      readonly template: RegulatoryTemplate;
+    }
+  | {
+      readonly ok: false;
+      readonly status: "unconfirmed" | "expired";
+      readonly version: TemplateVersion;
+      readonly reason:
+        | "SOURCE_EFFECTIVE_DATE_UNCONFIRMED"
+        | "NEXT_REVIEW_AT_EXPIRED";
+      readonly template: RegulatoryTemplate;
+    };
+
+export function resolveTemplate(
+  version: TemplateVersion,
+  referenceDate: string,
+): TemplateResolution {
+  const template = TEMPLATE_REGISTRY[version];
+  const status = getTemplateStatus(template, referenceDate);
+
+  if (status === "active") {
+    return {
+      ok: true,
+      status,
+      version,
+      body: template.body,
+      template,
+    };
+  }
+
+  return {
+    ok: false,
+    status,
+    version,
+    reason:
+      status === "unconfirmed"
+        ? "SOURCE_EFFECTIVE_DATE_UNCONFIRMED"
+        : "NEXT_REVIEW_AT_EXPIRED",
+    template,
+  };
+}
+
+export function assertTemplateRegistryComplete(
+  registry: Readonly<Record<TemplateVersion, RegulatoryTemplate>> =
+    TEMPLATE_REGISTRY,
+): void {
   for (const templateVersion of TEMPLATE_VERSIONS) {
-    const template = TEMPLATE_REGISTRY[templateVersion];
+    const template = registry[templateVersion];
     const changeLog = template.change_log;
     const metadata = [
       template.template_id,
@@ -132,13 +230,35 @@ export function assertTemplateRegistryComplete(): void {
       changeLog.changed_by,
       changeLog.previous_version,
       changeLog.rollback_owner,
+      template.body,
     ];
 
     if (
       metadata.some((value) => !isNonEmpty(value)) ||
-      `${template.template_id}@${template.template_version}` !== templateVersion
+      !["active", "unconfirmed"].includes(template.status) ||
+      `${template.template_id}@${template.template_version}` !==
+        templateVersion ||
+      !isIsoCalendarDate(template.source_effective_date) ||
+      !isIsoCalendarDate(template.source_reviewed_at) ||
+      !isIsoCalendarDate(template.next_review_at)
     ) {
       throw new Error(`규제 문구 메타데이터가 비었습니다: ${templateVersion}`);
+    }
+    if (
+      template.status === "active" &&
+      template.source_effective_date_confirmed !== true
+    ) {
+      throw new Error(
+        `활성 템플릿의 시행일이 확인되지 않았습니다: ${templateVersion}`,
+      );
+    }
+    if (
+      template.status === "unconfirmed" &&
+      template.source_effective_date_confirmed === true
+    ) {
+      throw new Error(
+        `확인된 템플릿 상태가 unconfirmed입니다: ${templateVersion}`,
+      );
     }
   }
 }

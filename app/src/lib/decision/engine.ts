@@ -18,6 +18,10 @@ import {
   type QuestionAxis,
   type SeverityRank,
 } from "./severity";
+import {
+  InvalidIncidentStateError,
+  validateIncidentState,
+} from "./validation";
 
 const SAFE_DEVICE_PREREQUISITE =
   "의심 기기와 분리된 안전한 기기에서 실행";
@@ -33,6 +37,8 @@ const SAFE_DEVICE_ACTION_KEYS: readonly MergeKey[] = [
   "call:1332",
   "action:credential_recovery",
 ];
+export const DECISION_RESULT_DISCLAIMER =
+  "이 서비스는 지급정지·신고 접수·수사 판정을 수행하지 않습니다.";
 
 interface CollectedRow extends RuleAction {
   rule_id: RuleId;
@@ -273,6 +279,7 @@ function ensureWrittenFollowup(
       official_sources: [
         "SRC-EASYLAW-CONTACT",
         "SRC-EASYLAW-STOPPAY",
+        "SRC-LAW-DECREE3",
         "SRC-KOREA-1394",
       ],
       template_versions: ["TPL-WRITTEN-FOLLOWUP-001@1.1"],
@@ -484,14 +491,17 @@ export function serializeActionCard(card: DecisionActionCard): ActionCard {
 export function serializeDecisionResult(result: DecisionResult): {
   actions: ActionCard[];
   next_steps: ActionCard[];
+  disclaimer: string;
 } {
   return {
     actions: result.actions.map(serializeActionCard),
     next_steps: result.next_steps.map(serializeActionCard),
+    disclaimer: DECISION_RESULT_DISCLAIMER,
   };
 }
 
 export function decideActions(state: IncidentState): DecisionResult {
+  validateIncidentState(state);
   const rows = collectRows(state);
   const mergedCards = mergeRows(rows);
   const positionedCards = applyQuestionPosition(mergedCards, rows);
@@ -501,4 +511,23 @@ export function decideActions(state: IncidentState): DecisionResult {
   const modifiedCards = applyModifiers(withProxy, state);
   const { visible, next } = reserveVisibleSlots(modifiedCards);
   return assignPriorities(visible, next);
+}
+
+export type DecideActionsSafeResult =
+  | { readonly ok: true; readonly value: DecisionResult }
+  | {
+      readonly ok: false;
+      readonly error: InvalidIncidentStateError;
+    };
+
+export function decideActionsSafe(state: unknown): DecideActionsSafeResult {
+  try {
+    validateIncidentState(state);
+    return { ok: true, value: decideActions(state) };
+  } catch (error) {
+    if (error instanceof InvalidIncidentStateError) {
+      return { ok: false, error };
+    }
+    throw error;
+  }
 }

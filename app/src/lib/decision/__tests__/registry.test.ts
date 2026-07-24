@@ -4,6 +4,7 @@ import {
   TEMPLATE_REGISTRY,
   TEMPLATE_VERSIONS,
   assertTemplateRegistryComplete,
+  resolveTemplate,
 } from "@/lib/templates/registry";
 
 import { RULES } from "../rules";
@@ -29,13 +30,20 @@ describe("§4.7 규제 문구·공식 출처 메타데이터 게이트", () => {
     ).toEqual({
       "SRC-FSC-MALAPP":
         "https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=",
+      "SRC-FSC-CARDNEWS": "https://fsc.go.kr/no040000?cnId=1954",
+      "SRC-KISA-PHISHING":
+        "https://spam.kisa.or.kr/spam/na/ntt/selectNttInfo.do?bbsId=1001&mi=1019&nttSn=2701",
       "SRC-EASYLAW-CONTACT":
         "https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&cciNo=2&cnpClsNo=1&csmSeq=2853&popMenu=ov&search_put=",
       "SRC-EASYLAW-STOPPAY":
         "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=3&cciNo=1&cnpClsNo=1&csmSeq=1592&popMenu=ov",
+      "SRC-LAW-DECREE3":
+        "https://www.law.go.kr/법령/전기통신금융사기피해방지및피해금환급에관한특별법시행령/제3조",
       "SRC-FSC-10RULES": "https://www.fsc.go.kr/no010101/86250",
       "SRC-FSS-1332":
         "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572",
+      "SRC-FSC-1332":
+        "https://www.fsc.go.kr/no040102?cnId=913&curPage=1",
       "SRC-KOREA-1394":
         "https://www.korea.kr/multi/visualNewsView.do?newsId=148959173",
     });
@@ -121,5 +129,60 @@ describe("§4.7 규제 문구·공식 출처 메타데이터 게이트", () => {
       body:
         "긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출해야 합니다. 이어서 1394에서 피해상담, 의심 전화번호·사이트 제보, 관계기관 연계를 안내받으세요.",
     });
+  });
+
+  it("시행일 미확인 5종을 unconfirmed로 명시하고 본문 resolve를 거부한다", () => {
+    const unconfirmedVersions = [
+      "TPL-SAFE-DEVICE-001@1.0",
+      "TPL-CREDENTIAL-RECOVERY-001@1.0",
+      "TPL-OFFICIAL-VERIFY-001@1.0",
+      "TPL-UNDETERMINED-001@1.0",
+      "TPL-PROXY-SCOPE-001@1.0",
+    ] as const;
+
+    for (const version of unconfirmedVersions) {
+      expect(TEMPLATE_REGISTRY[version].status).toBe("unconfirmed");
+      const resolution = resolveTemplate(version, "2026-07-25");
+      expect(resolution).toMatchObject({
+        ok: false,
+        status: "unconfirmed",
+        reason: "SOURCE_EFFECTIVE_DATE_UNCONFIRMED",
+      });
+      expect("body" in resolution).toBe(false);
+    }
+  });
+
+  it("active 템플릿만 본문을 승인하고 기준일 경과 시 expired로 바뀐다", () => {
+    for (const version of [
+      "TPL-BANK-STOP-001@1.0",
+      "TPL-WRITTEN-FOLLOWUP-001@1.1",
+    ] as const) {
+      expect(resolveTemplate(version, "2026-09-01")).toMatchObject({
+        ok: true,
+        status: "active",
+      });
+      const expired = resolveTemplate(version, "2026-09-02");
+      expect(expired).toMatchObject({
+        ok: false,
+        status: "expired",
+        reason: "NEXT_REVIEW_AT_EXPIRED",
+      });
+      expect("body" in expired).toBe(false);
+    }
+  });
+
+  it("active 표시와 시행일 확인 플래그가 모순되면 레지스트리 게이트가 실패한다", () => {
+    const version = "TPL-SAFE-DEVICE-001@1.0";
+    const inconsistentRegistry = {
+      ...TEMPLATE_REGISTRY,
+      [version]: {
+        ...TEMPLATE_REGISTRY[version],
+        status: "active" as const,
+      },
+    };
+
+    expect(() =>
+      assertTemplateRegistryComplete(inconsistentRegistry),
+    ).toThrow("활성 템플릿의 시행일이 확인되지 않았습니다");
   });
 });
