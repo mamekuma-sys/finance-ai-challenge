@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+
+# 환경 변수·시크릿
+.env
+.env.*
+!.env.example
+
+# 의존성·빌드 (스택 확정 후 보강)
+node_modules/
+dist/
+build/
+.next/
+__pycache__/
+*.pyc
+.venv/
+
+# 에디터
+.vscode/
+.idea/
+
+# 로그·임시 파일
+*.log
+tmp/
