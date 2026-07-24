@@ -41,7 +41,7 @@ describe("r5 승인 근거 UI", () => {
     render(
       <EventHistory
         events={[]}
-        actionTitles={{}}
+        actionMeanings={{}}
         elapsedSeconds={null}
         onCorrect={vi.fn()}
       />,
@@ -57,6 +57,32 @@ describe("r5 승인 근거 UI", () => {
     expect(history).toHaveTextContent(
       "개별 사건의 잔여 시간·회수 가능성을 뜻하지 않",
     );
+  });
+
+  it("의미 카탈로그가 없는 과거 이벤트를 현재 카드로 재라벨링하지 않는다", () => {
+    render(
+      <EventHistory
+        events={[
+          {
+            event_id: "event-without-preserved-title",
+            action_id: "action:call:112",
+            event_type: "observation",
+            occurred_at: "2026-07-25T00:00:00.000Z",
+            state: "user_reported_requested",
+            source: "user_statement",
+            previous_state: "user_reported_connected",
+          },
+        ]}
+        actionMeanings={{}}
+        elapsedSeconds={0}
+        onCorrect={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText("기록 당시 행동(제목 미보존)"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("현재 화면의 행동")).not.toBeInTheDocument();
   });
 });
 

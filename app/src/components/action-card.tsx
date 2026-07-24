@@ -10,14 +10,16 @@ import type {
   QuestionAxis,
 } from "@/lib/decision";
 import { OFFICIAL_SOURCES } from "@/lib/decision/sources";
-import { TEMPLATE_REGISTRY } from "@/lib/templates/registry";
+import {
+  resolveTemplate,
+  type TemplateVersion,
+} from "@/lib/templates/registry";
 import {
   ACTION_SOURCE_LABELS,
   ACTION_STATE_LABELS,
   displayCardTitle,
   explainCardOrder,
   INCIDENT_FIELD_CONFIG,
-  templateBodiesForCard,
 } from "@/lib/ui/labels";
 
 import { CopyScript } from "./copy-script";
@@ -40,13 +42,13 @@ interface ActionCardViewProps {
     key: keyof IncidentState,
     value: IncidentState[keyof IncidentState],
   ) => void;
+  templateReferenceDate: string;
 }
 
 const PHONE_KEYS = new Set([
   "call:112",
   "call:1332",
   "call:bank_fraud",
-  "procedure:written_followup",
 ]);
 
 function PrimaryAction({
@@ -54,38 +56,47 @@ function PrimaryAction({
   checked,
   onDialer,
   onToggle,
+  requiresSafeDevice,
 }: {
   card: DecisionActionCard;
   checked: boolean;
   onDialer: () => void;
   onToggle: (checked: boolean) => void;
+  requiresSafeDevice: boolean;
 }) {
   if (card.merge_key === "call:112") {
     return (
-      <a className="primary-action" href="tel:112" onClick={onDialer}>
-        <span aria-hidden="true">☎</span> 112로 전화 걸기
-      </a>
+      <div className="action-stack">
+        {requiresSafeDevice ? <SafeDeviceCallNotice /> : null}
+        <a className="primary-action" href="tel:112" onClick={onDialer}>
+          <span aria-hidden="true">☎</span> 112로 전화 걸기
+        </a>
+      </div>
     );
   }
   if (card.merge_key === "call:1332") {
     return (
-      <a className="primary-action" href="tel:1332" onClick={onDialer}>
-        <span aria-hidden="true">☎</span> 1332로 전화 걸기
-      </a>
+      <div className="action-stack">
+        {requiresSafeDevice ? <SafeDeviceCallNotice /> : null}
+        <a className="primary-action" href="tel:1332" onClick={onDialer}>
+          <span aria-hidden="true">☎</span> 1332로 전화 걸기
+        </a>
+      </div>
     );
   }
   if (card.merge_key === "procedure:written_followup") {
     return (
       <div className="action-stack">
-        <a className="primary-action" href="tel:1394" onClick={onDialer}>
-          <span aria-hidden="true">☎</span> 1394로 전화 걸기
-        </a>
         <OfficialLink
-          href="https://www.counterscam112.go.kr"
-          className="secondary-action-link"
+          href={OFFICIAL_SOURCES["SRC-EASYLAW-STOPPAY"].url}
+          className="primary-action"
         >
-          보이스피싱 통합신고대응센터 확인
+          <span aria-hidden="true">↗</span> 피해구제신청서 제출 방법 확인
         </OfficialLink>
+        {requiresSafeDevice ? <SafeDeviceCallNotice /> : null}
+        <a className="secondary-action-link" href="tel:1394">
+          <span aria-hidden="true">☎</span> 1394에 절차 상담하기
+        </a>
       </div>
     );
   }
@@ -134,6 +145,14 @@ function PrimaryAction({
   );
 }
 
+function SafeDeviceCallNotice() {
+  return (
+    <p className="safe-device-call-note" data-safe-device-call="true">
+      전화 상담은 의심 기기와 분리된 안전한 기기에서 하세요.
+    </p>
+  );
+}
+
 function EventControls({
   card,
   currentState,
@@ -156,7 +175,10 @@ function EventControls({
     {
       state: "user_reported_requested",
       source: "user_statement",
-      label: "요청을 전달했어요",
+      label:
+        card.merge_key === "procedure:written_followup"
+          ? "피해구제신청서를 금융회사에 제출했다고 확인했어요"
+          : "요청을 전달했어요",
     },
     {
       state: "user_reported_receipt_confirmed",
@@ -261,6 +283,7 @@ export function ActionCardView({
   onToggleNonCall,
   incidentState,
   onIncidentStateChange,
+  templateReferenceDate,
 }: ActionCardViewProps) {
   const titleId = `title-${card.id.replaceAll(":", "-")}`;
   const isQuestionCard =
@@ -268,7 +291,23 @@ export function ActionCardView({
   const isRequired =
     card.merge_key === "procedure:written_followup" ||
     card.merge_key === "notice:proxy_scope";
-  const templateBodies = templateBodiesForCard(card, TEMPLATE_REGISTRY);
+  const templateResolutions = card.template_versions.map((version) =>
+    resolveTemplate(version as TemplateVersion, templateReferenceDate),
+  );
+  const templateBodies = templateResolutions.flatMap((resolution) =>
+    resolution.ok ? [resolution.body] : [],
+  );
+  const blockedTemplateStatuses = [
+    ...new Set(
+      templateResolutions.flatMap((resolution) =>
+        resolution.ok ? [] : [resolution.status],
+      ),
+    ),
+  ];
+  const requiresSafeDevice =
+    incidentState.device_compromise_state === "suspected_app" ||
+    incidentState.device_compromise_state === "remote_control" ||
+    incidentState.device_compromise_state === "unknown";
   const scriptText = [
     ...templateBodies,
     "",
@@ -340,6 +379,7 @@ export function ActionCardView({
             checked={nonCallConfirmed}
             onDialer={() => onRecord(card, "dialer_opened", "ui_event")}
             onToggle={(checked) => onToggleNonCall(card.id, checked)}
+            requiresSafeDevice={requiresSafeDevice}
           />
         ) : null}
 
@@ -353,6 +393,27 @@ export function ActionCardView({
             </ul>
           </div>
         ) : null}
+
+        {blockedTemplateStatuses.map((status) => (
+          <div
+            className="template-gate-notice"
+            data-template-status={status}
+            key={status}
+            role="status"
+          >
+            <strong>
+              안내 문구 상태:{" "}
+              {status === "unconfirmed"
+                ? "출처 시행일 미확인"
+                : "재검토 기한 경과"}
+            </strong>
+            <p>
+              {status === "unconfirmed"
+                ? "이 문구는 출처 시행일 확인 전이라 표시하지 않습니다."
+                : "이 문구는 재검토 기한이 지나 표시하지 않습니다."}
+            </p>
+          </div>
+        ))}
 
         {!isQuestionCard && templateBodies.length > 0 ? (
           <CopyScript text={scriptText} title="말할 내용" />
@@ -381,7 +442,7 @@ export function ActionCardView({
           <summary>왜 이 순서인가</summary>
           <p>{explainCardOrder(card)}</p>
           <p>행동 분류: {card.merge_key}</p>
-          <p>승인 문구 버전: {card.template_versions.join(" · ")}</p>
+          <p>안내 문구 버전: {card.template_versions.join(" · ")}</p>
         </details>
 
         {!isQuestionCard ? (

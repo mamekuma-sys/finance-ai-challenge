@@ -9,13 +9,17 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import type { IncidentState } from "@/lib/contracts";
-import { decideActions } from "@/lib/decision";
+import type {
+  DecisionActionCard,
+  DecisionResult,
+} from "@/lib/decision";
+import { DECISION_SNAPSHOT_FIXTURES } from "@/lib/decision/__tests__/snapshot-fixtures";
 import {
   saveDeskSession,
   type DeskSessionSnapshot,
 } from "@/lib/session/desk-session";
-import { displayCardTitle } from "@/lib/ui/labels";
 
+import { ACTION_MEANING_CATALOG_KEY } from "../action-meaning-catalog";
 import { Rule0Desk } from "../rule0-desk";
 
 const BASE_STATE: IncidentState = {
@@ -163,65 +167,76 @@ describe("Rule 0 긴급 진입과 무전송", () => {
 });
 
 describe("결정 엔진 결과의 UI 보존", () => {
-  const SNAPSHOTS: Array<{ name: string; state: IncidentState }> = [
-    {
-      name: "a",
-      state: {
-        ...BASE_STATE,
-        transfer_state: "already_sent",
-        device_compromise_state: "suspected_app",
-        safe_device_available: "no",
-      },
+  const SNAPSHOT_EXPECTATIONS = {
+    a: {
+      actionTitles: [
+        "의심 기기 사용 중지·신뢰할 수 있는 별도 기기 확보",
+        "별도 기기에서 해당 금융회사 공식 대표번호 확인·연락",
+        "별도 기기에서 112 연락",
+        "긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출해야 합니다.",
+      ],
+      nextStepTitles: [],
     },
-    {
-      name: "b",
-      state: {
-        ...BASE_STATE,
-        transfer_state: "already_sent",
-        device_compromise_state: "remote_control",
-        credential_exposure_state: "shared",
-      },
+    b: {
+      actionTitles: [
+        "안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락",
+        "안전한 별도 기기에서 112 연락",
+        "인증수단 폐기·재발급과 악성 앱 검사 안내 확인",
+        "긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출해야 합니다.",
+      ],
+      nextStepTitles: [],
     },
-    {
-      name: "c",
-      state: {
-        ...BASE_STATE,
-        transfer_state: "unknown",
-        credential_exposure_state: "shared",
-      },
+    c: {
+      actionTitles: [
+        "먼저 확인할 것",
+        "안전한 기기에서 금융회사 공식 대표번호에 인증정보 노출 통지·보호조치 요청",
+        "112에 인증정보 노출 상황 상담",
+        "인증수단 폐기·재발급과 본인계좌 보호 수단 확인",
+      ],
+      nextStepTitles: [
+        "공식 대표채널 교차 확인",
+        "근거 부족이면 판단 유보와 1332 안내",
+      ],
     },
-    {
-      name: "d",
-      state: {
-        ...BASE_STATE,
-        user_role: "family_proxy",
-        transfer_state: "already_sent",
-      },
-    },
-    {
-      name: "e",
-      state: {
-        ...BASE_STATE,
-        personal_data_exposure_state: "shared",
-        device_compromise_state: "unknown",
-        safe_device_available: "unknown",
-      },
-    },
-  ];
+  } as const;
+  const acceptanceFixtures = DECISION_SNAPSHOT_FIXTURES.filter(
+    (fixture) =>
+      fixture.id === "a" || fixture.id === "b" || fixture.id === "c",
+  );
 
-  it.each(SNAPSHOTS)(
-    "인수 상태 $name의 화면 카드 제목 순서가 엔진과 같다",
-    async ({ state }) => {
+  it.each(acceptanceFixtures)(
+    "독립 인수 상태 $id의 제목·금지·접힘 수를 리터럴 계약과 대조한다",
+    async (fixture) => {
       const user = userEvent.setup();
       render(<Rule0Desk verifiedCombinations={1_152} />);
       await user.click(
         screen.getByRole("button", { name: /해당 없음·모름/ }),
       );
-      await selectState(user, state);
+      await selectState(user, fixture.state);
 
-      expect(visibleCardTitles()).toEqual(
-        decideActions(state).actions.map(displayCardTitle),
+      const expected = SNAPSHOT_EXPECTATIONS[fixture.id];
+      expect(visibleCardTitles()).toEqual(expected.actionTitles);
+
+      const prohibition = screen.getByRole("complementary", {
+        name: "하지 마세요",
+      });
+      expect(
+        within(prohibition)
+          .getAllByRole("listitem")
+          .map((item) =>
+            (item.textContent ?? "").replace(/^×금지\s*/, ""),
+          ),
+      ).toEqual(fixture.prohibited_actions);
+
+      const nextStepCards = document.querySelectorAll(
+        "[data-next-step-card]",
       );
+      expect(nextStepCards).toHaveLength(
+        fixture.next_step_merge_keys.length,
+      );
+      for (const [index, title] of expected.nextStepTitles.entries()) {
+        expect(nextStepCards[index]).toHaveTextContent(title);
+      }
     },
   );
 
@@ -233,47 +248,17 @@ describe("결정 엔진 결과의 UI 보존", () => {
     expect(
       screen.getAllByText(/신청한 날부터 3일 이내/).length,
     ).toBeGreaterThan(0);
-    const sentState: IncidentState = {
-      transfer_state: "already_sent",
-      device_compromise_state: "unknown",
-      credential_exposure_state: "unknown",
-      personal_data_exposure_state: "unknown",
-      user_role: "self",
-      safe_device_available: "unknown",
-    };
-    const expectedProhibitions = [
-      ...new Set(
-        [
-          ...decideActions(sentState).actions,
-          ...decideActions(sentState).next_steps,
-        ].flatMap((card) => card.prohibited_actions),
-      ),
-    ];
-    const prohibition = screen.getByRole("complementary", {
-      name: "하지 마세요",
-    });
-    const renderedProhibitions = within(prohibition)
-      .getAllByRole("listitem")
-      .map((item) => item.textContent ?? "");
-    for (const item of expectedProhibitions) {
-      expect(
-        renderedProhibitions.some((rendered) => rendered.includes(item)),
-      ).toBe(true);
-    }
-
-    const stateWithNextSteps: IncidentState = {
-      ...BASE_STATE,
-      transfer_state: "unknown",
-      credential_exposure_state: "shared",
-    };
-    await selectState(user, stateWithNextSteps);
-    const expected = decideActions(stateWithNextSteps).next_steps;
+    const fixture = DECISION_SNAPSHOT_FIXTURES.find(
+      (candidate) => candidate.id === "c",
+    );
+    expect(fixture).toBeDefined();
+    await selectState(user, fixture!.state);
     expect(
       screen.getByText("접힌 다음 행동 (전부 보존됨)"),
     ).toBeInTheDocument();
-    for (const card of expected) {
+    for (const [index, title] of SNAPSHOT_EXPECTATIONS.c.nextStepTitles.entries()) {
       expect(
-        screen.getByText(`${card.priority}. ${card.title}`),
+        screen.getByText(`${index + 5}. ${title}`),
       ).toBeInTheDocument();
     }
     expect(
@@ -304,22 +289,16 @@ describe("결정 엔진 결과의 UI 보존", () => {
 
   it("접힌 1332 행동에도 바로 전화를 걸 수 있는 링크를 제공한다", async () => {
     const user = userEvent.setup();
-    const state: IncidentState = {
-      ...BASE_STATE,
-      transfer_state: "unknown",
-      credential_exposure_state: "shared",
-    };
-    expect(
-      decideActions(state).next_steps.some(
-        (card) => card.merge_key === "call:1332",
-      ),
-    ).toBe(true);
+    const fixture = DECISION_SNAPSHOT_FIXTURES.find(
+      (candidate) => candidate.id === "c",
+    );
+    expect(fixture?.next_step_merge_keys).toContain("call:1332");
 
     render(<Rule0Desk verifiedCombinations={1_152} />);
     await user.click(
       screen.getByRole("button", { name: /해당 없음·모름/ }),
     );
-    await selectState(user, state);
+    await selectState(user, fixture!.state);
 
     expect(
       document.querySelectorAll('a[href="tel:1332"]').length,
@@ -492,6 +471,85 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("상태 변경 뒤에도 사용자 진술 당시 112 행동 제목을 세션 카탈로그에서 유지한다", async () => {
+    const user = userEvent.setup();
+    const priorState: IncidentState = {
+      ...BASE_STATE,
+      credential_exposure_state: "shared",
+    };
+    render(<Rule0Desk verifiedCombinations={1_152} />);
+    await user.click(
+      screen.getByRole("button", { name: /해당 없음·모름/ }),
+    );
+    await selectState(user, priorState);
+
+    const priorHeading = screen.getByRole("heading", {
+      level: 3,
+      name: "112에 인증정보 노출 상황 상담",
+    });
+    const phoneCard = priorHeading.closest("article") as HTMLElement;
+    const dialerLink = within(phoneCard).getByRole("link", {
+      name: /112로 전화 걸기/,
+    });
+    const canceledClick = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+    });
+    canceledClick.preventDefault();
+    fireEvent(dialerLink, canceledClick);
+    await user.click(
+      within(phoneCard).getByRole("button", {
+        name: "통화가 연결됐어요",
+      }),
+    );
+    await user.click(
+      within(phoneCard).getByRole("button", {
+        name: "요청을 전달했어요",
+      }),
+    );
+
+    const stateEditor = screen
+      .getByRole("heading", { name: "아는 만큼만 알려주세요" })
+      .closest("section") as HTMLElement;
+    const transferGroup = within(stateEditor).getByRole("group", {
+      name: "돈을 보냈나요?",
+    });
+    await user.click(
+      within(transferGroup).getByRole("radio", {
+        name: exactStart("이미 보냈어요"),
+      }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        level: 3,
+        name: "112 신고·지급정지 연계 요청",
+      }),
+    ).toBeInTheDocument();
+    const history = screen
+      .getByRole("heading", {
+        name: "행동 이벤트 이력(내 기기 보관)",
+      })
+      .closest("section") as HTMLElement;
+    const requestedEvent = within(history)
+      .getByText("요청을 전달했다고 확인함")
+      .closest("li") as HTMLElement;
+    expect(requestedEvent).toHaveTextContent(
+      "112에 인증정보 노출 상황 상담",
+    );
+    expect(requestedEvent).not.toHaveTextContent(
+      "112 신고·지급정지 연계 요청",
+    );
+    await waitFor(() => {
+      const stored = window.sessionStorage.getItem(
+        ACTION_MEANING_CATALOG_KEY,
+      );
+      expect(stored).toContain("112에 인증정보 노출 상황 상담");
+      expect(stored).toContain("112 인증정보 노출 상담");
+      expect(stored).toContain("TPL-CREDENTIAL-RECOVERY-001@1.0");
+    });
+  });
+
   it("큰 글씨·쉬운 화면에서 한 카드만 보이고 본문 20px·행동 56px를 적용한다", async () => {
     const user = userEvent.setup();
     render(<Rule0Desk verifiedCombinations={1_152} />);
@@ -515,20 +573,13 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
       ...BASE_STATE,
       transfer_state: "already_sent",
     };
-    const result = decideActions(state);
     const snapshot: DeskSessionSnapshot = {
       version: 1,
       emergency_choice: "sent",
       incident_state: state,
-      decision_result: result,
+      decision_result: { actions: [], next_steps: [] },
       action_events: [],
-      template_versions: [
-        ...new Set(
-          [...result.actions, ...result.next_steps].flatMap(
-            (card) => card.template_versions,
-          ),
-        ),
-      ],
+      template_versions: ["TPL-BANK-STOP-001@1.0"],
       easy_mode: true,
       non_call_confirmations: [],
       rule0_samples_ms: [14.2],
@@ -556,20 +607,27 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
       ...BASE_STATE,
       transfer_state: "already_sent",
     };
-    const currentResult = decideActions(state);
-    const staleResult = {
-      ...currentResult,
-      actions: currentResult.actions.map((card) =>
-        card.merge_key === "procedure:written_followup"
-          ? {
-              ...card,
-              title: `전화 신청 시 ${staleDeadline} 이내 서면 신청`,
-              purpose_slots: [`${staleDeadline} 이내 서면 신청`],
-              required_followup: [`${staleDeadline} 이내 서면 신청`],
-              template_versions: [staleTemplateVersion],
-            }
-          : card,
-      ),
+    const staleCard: DecisionActionCard = {
+      id: "action:procedure:written_followup",
+      priority: 1,
+      title: `전화 신청 시 ${staleDeadline} 이내 서면 신청`,
+      severity: 3,
+      order: 3,
+      forced: true,
+      rule_ids: ["R3"],
+      merge_key: "procedure:written_followup",
+      trigger: ["stored-stale-value"],
+      prerequisite: [],
+      purpose_slots: [`${staleDeadline} 이내 서면 신청`],
+      do_not_show_when: [],
+      prohibited_actions: [],
+      required_followup: [`${staleDeadline} 이내 서면 신청`],
+      official_sources: [],
+      template_versions: [staleTemplateVersion],
+    };
+    const staleResult: DecisionResult = {
+      actions: [staleCard],
+      next_steps: [],
     };
     const snapshot: DeskSessionSnapshot = {
       version: 1,

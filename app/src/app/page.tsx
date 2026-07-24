@@ -7,6 +7,8 @@ interface VerificationArtifact {
   verified_combinations: number;
 }
 
+const TEMPLATE_REFERENCE_DATE = "2026-07-25";
+
 function verificationArtifact(): VerificationArtifact {
   const artifactPath = path.join(
     process.cwd(),
@@ -22,6 +24,9 @@ function verificationArtifact(): VerificationArtifact {
 export default function Home() {
   const artifact = verificationArtifact();
   return (
-    <Rule0Desk verifiedCombinations={artifact.verified_combinations} />
+    <Rule0Desk
+      verifiedCombinations={artifact.verified_combinations}
+      templateReferenceDate={TEMPLATE_REFERENCE_DATE}
+    />
   );
 }

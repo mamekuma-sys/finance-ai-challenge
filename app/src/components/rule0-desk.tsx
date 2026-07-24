@@ -34,10 +34,17 @@ import {
   type EmergencyChoice,
 } from "@/lib/session/desk-session";
 import {
-  displayCardTitle,
   INITIAL_INCIDENT_STATE,
 } from "@/lib/ui/labels";
 
+import {
+  catalogCardMeaning,
+  catalogCorrectionMeaning,
+  clearActionMeaningCatalog,
+  loadActionMeaningCatalog,
+  saveActionMeaningCatalog,
+  type ActionMeaningCatalog,
+} from "./action-meaning-catalog";
 import { ActionCardView } from "./action-card";
 import { ComparisonView } from "./comparison-view";
 import { EmergencyQuestion } from "./emergency-question";
@@ -50,6 +57,12 @@ import { TrustNotice } from "./trust-notice";
 
 interface Rule0DeskProps {
   verifiedCombinations: number;
+  templateReferenceDate?: string;
+}
+
+interface ActionEventLedger {
+  events: ActionFactEvent[];
+  meanings: ActionMeaningCatalog;
 }
 
 function stateForEmergencyChoice(choice: EmergencyChoice): IncidentState {
@@ -93,7 +106,10 @@ function afterNextPaint(callback: () => void): void {
   });
 }
 
-export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
+export function Rule0Desk({
+  verifiedCombinations,
+  templateReferenceDate = "2026-07-25",
+}: Rule0DeskProps) {
   const [hydrated, setHydrated] = useState(false);
   const [emergencyChoice, setEmergencyChoice] =
     useState<EmergencyChoice | null>(null);
@@ -101,7 +117,11 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
     INITIAL_INCIDENT_STATE,
   );
   const [result, setResult] = useState<DecisionResult | null>(null);
-  const [events, setEvents] = useState<ActionFactEvent[]>([]);
+  const [eventLedger, setEventLedger] = useState<ActionEventLedger>({
+    events: [],
+    meanings: {},
+  });
+  const { events, meanings: actionMeanings } = eventLedger;
   const [easyMode, setEasyMode] = useState(false);
   const [easyStep, setEasyStep] = useState(0);
   const [nonCallConfirmations, setNonCallConfirmations] = useState<string[]>(
@@ -128,7 +148,10 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
         setEmergencyChoice(restored.emergency_choice);
         setIncidentState(restored.incident_state);
         setResult(currentResult);
-        setEvents(restored.action_events);
+        setEventLedger({
+          events: restored.action_events,
+          meanings: loadActionMeaningCatalog(window.sessionStorage),
+        });
         setEasyMode(restored.easy_mode);
         setNonCallConfirmations(restored.non_call_confirmations);
         setRule0Samples(restored.rule0_samples_ms);
@@ -158,7 +181,9 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       rule0_samples_ms: rule0Samples,
       comparison_samples_ms: comparisonSamples,
     });
+    saveActionMeaningCatalog(window.sessionStorage, actionMeanings);
   }, [
+    actionMeanings,
     comparisonSamples,
     easyMode,
     emergencyChoice,
@@ -175,22 +200,31 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       return;
     }
     const frame = requestAnimationFrame(() => {
-      setEvents((currentEvents) => {
-        let nextEvents = currentEvents;
+      setEventLedger((currentLedger) => {
+        let nextEvents = currentLedger.events;
+        let nextMeanings = currentLedger.meanings;
         for (const card of result.actions) {
           if (reduceCurrentState(nextEvents, card.id) !== null) {
             continue;
           }
+          const viewedEventId = eventId();
           nextEvents = appendActionFact(nextEvents, {
-            event_id: eventId(),
+            event_id: viewedEventId,
             action_id: card.id,
             event_type: "observation",
             occurred_at: new Date().toISOString(),
             state: "viewed",
             source: "ui_event",
           }).events;
+          nextMeanings = catalogCardMeaning(
+            nextMeanings,
+            viewedEventId,
+            card,
+          );
         }
-        return nextEvents === currentEvents ? currentEvents : nextEvents;
+        return nextEvents === currentLedger.events
+          ? currentLedger
+          : { events: nextEvents, meanings: nextMeanings };
       });
     });
     return () => cancelAnimationFrame(frame);
@@ -264,21 +298,29 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
     source: ActionFactSource,
   ) {
     let workingEvents = events;
+    let workingMeanings = actionMeanings;
     if (
       state === "dialer_opened" &&
       reduceCurrentState(workingEvents, card.id) === null
     ) {
+      const viewedEventId = eventId();
       workingEvents = appendActionFact(workingEvents, {
-        event_id: eventId(),
+        event_id: viewedEventId,
         action_id: card.id,
         event_type: "observation",
         occurred_at: new Date().toISOString(),
         state: "viewed",
         source: "ui_event",
       }).events;
+      workingMeanings = catalogCardMeaning(
+        workingMeanings,
+        viewedEventId,
+        card,
+      );
     }
+    const nextEventId = eventId();
     const appendResult = appendActionFact(workingEvents, {
-      event_id: eventId(),
+      event_id: nextEventId,
       action_id: card.id,
       event_type: "observation",
       occurred_at: new Date().toISOString(),
@@ -289,14 +331,22 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       setEventError(`기록 거부: ${appendResult.rejected.message}`);
       return;
     }
-    setEvents(appendResult.events);
+    setEventLedger({
+      events: appendResult.events,
+      meanings: catalogCardMeaning(
+        workingMeanings,
+        nextEventId,
+        card,
+      ),
+    });
     setEventError("");
     setAnnouncement("행동 상태를 이 브라우저 세션에 기록했습니다.");
   }
 
   function correctEvent(target: ActionFactEvent) {
+    const correctionEventId = eventId();
     const appendResult = appendActionFact(events, {
-      event_id: eventId(),
+      event_id: correctionEventId,
       action_id: target.action_id,
       event_type: "correction",
       corrects_event_id: target.event_id,
@@ -308,7 +358,14 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       setEventError(`기록 거부: ${appendResult.rejected.message}`);
       return;
     }
-    setEvents(appendResult.events);
+    setEventLedger({
+      events: appendResult.events,
+      meanings: catalogCorrectionMeaning(
+        actionMeanings,
+        correctionEventId,
+        target.event_id,
+      ),
+    });
     setEventError("");
     setAnnouncement("이전 기록을 삭제하지 않고 정정 기록을 추가했습니다.");
   }
@@ -328,10 +385,11 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
 
   function resetSession() {
     clearDeskSession(window.sessionStorage);
+    clearActionMeaningCatalog(window.sessionStorage);
     setEmergencyChoice(null);
     setIncidentState(INITIAL_INCIDENT_STATE);
     setResult(null);
-    setEvents([]);
+    setEventLedger({ events: [], meanings: {} });
     setEasyMode(false);
     setEasyStep(0);
     setNonCallConfirmations([]);
@@ -356,9 +414,6 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       ? [result.actions[Math.min(easyStep, result.actions.length - 1)]]
       : result.actions
     : [];
-  const actionTitles = Object.fromEntries(
-    allCards(result).map((card) => [card.id, displayCardTitle(card)]),
-  );
   const prohibitions = result
     ? [
         ...new Set(
@@ -379,7 +434,7 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       </a>
       <div className="trust-strip" role="note">
         <div>
-          <span>합성 샘플</span>
+          <span>구조화 상태 선택 데모</span>
           <span>무로그인</span>
           <span>서버 무저장</span>
         </div>
@@ -464,6 +519,7 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
                           onToggleNonCall={toggleNonCall}
                           incidentState={incidentState}
                           onIncidentStateChange={updateIncidentState}
+                          templateReferenceDate={templateReferenceDate}
                         />
                       </li>
                     ))}
@@ -506,7 +562,10 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
                     </div>
                   ) : null}
 
-                  <NextSteps cards={result.next_steps} />
+                  <NextSteps
+                    cards={result.next_steps}
+                    incidentState={incidentState}
+                  />
                 </div>
 
                 <div className="sidebar-column">
@@ -514,7 +573,7 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
                     <ProhibitionBlock items={prohibitions} />
                     <EventHistory
                       events={events}
-                      actionTitles={actionTitles}
+                      actionMeanings={actionMeanings}
                       elapsedSeconds={elapsedSeconds}
                       onCorrect={correctEvent}
                     />

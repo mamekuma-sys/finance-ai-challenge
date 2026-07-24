@@ -5,12 +5,19 @@ import { describe, expect, it } from "vitest";
 
 import { Rule0Desk } from "../rule0-desk";
 
+const TEMPLATE_REFERENCE_DATE = "2026-07-25";
+
 describe("사기대응 데스크 자동 접근성 점검", () => {
   it("긴급 행동 렌더 뒤 axe WCAG A·AA 위반이 없다", async () => {
     document.documentElement.lang = "ko";
     document.title = "골든타임 | AI 사기대응 상황실";
     const user = userEvent.setup();
-    render(<Rule0Desk verifiedCombinations={1_152} />);
+    render(
+      <Rule0Desk
+        verifiedCombinations={1_152}
+        templateReferenceDate={TEMPLATE_REFERENCE_DATE}
+      />,
+    );
     await user.click(screen.getByRole("button", { name: /돈을 보냈어요/ }));
     await screen.findAllByTestId("action-card");
 

@@ -6,9 +6,11 @@ import {
   ACTION_STATE_LABELS,
 } from "@/lib/ui/labels";
 
+import type { ActionMeaningCatalog } from "./action-meaning-catalog";
+
 interface EventHistoryProps {
   events: readonly ActionFactEvent[];
-  actionTitles: Readonly<Record<string, string>>;
+  actionMeanings: ActionMeaningCatalog;
   elapsedSeconds: number | null;
   onCorrect: (event: ActionFactEvent) => void;
 }
@@ -36,7 +38,7 @@ function formatTime(value: string): string {
 
 export function EventHistory({
   events,
-  actionTitles,
+  actionMeanings,
   elapsedSeconds,
   onCorrect,
 }: EventHistoryProps) {
@@ -93,7 +95,8 @@ export function EventHistory({
                   </time>
                 </div>
                 <strong>
-                  {actionTitles[event.action_id] ?? "현재 화면의 행동"}
+                  {actionMeanings[event.event_id]?.title ??
+                    "기록 당시 행동(제목 미보존)"}
                 </strong>
                 <p>
                   {event.event_type === "correction"
