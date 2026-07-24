@@ -10,11 +10,27 @@
 - **URL 유지**: 9. 7. 11:00 ~ 9. 11. 23:59 접근 불가 시 결격
 - 전체 요강: `docs/competition/overview.md` / 제출 체크리스트: `docs/competition/checklist.md`
 
-## 현재 상태
+## 현재 상태 (2026-07-25)
 
-- 주제: **미정** — 주최·후원사 현안 딥리서치로 확정 예정 (`docs/research/`)
-- 기술 스택: **미정** — 주제 확정 후 결정
+- 주제: **확정** — "골든타임(GoldenTime) — AI 사기대응 상황실" (`docs/research/06-decision.md`)
+- 기술 스택: **확정** — Next.js+TS / Vercel / Claude API / SSE / Neon Postgres / MCP SDK
+  (`docs/planning/03-stack-proposal.md`)
+- 스테이지: **P 마무리 → M 진입 준비.** 기획서·기능명세서 `0.4-r3`
+  (`docs/planning/10`·`11`), 개정 계약 r1~r3 (`13`·`15`·`17`), 휴먼 패널 리뷰 3라운드
+  (`12`·`14`·`16`). 범위 계약: 런타임 코어 9 + 정적(F-19) + release gate(F-20) +
+  showcase + nice, 주차별 게이트 W1~W6 — **코어 추가·축소 금지**
 - 주요 결정은 `docs/decisions.md`에 기록할 것
+
+### 문서 작업 원칙 (P단계에서 확립)
+
+- **수치 인용**: `docs/research/04-verification-digest.md` 정정표와
+  `01-golden-time-sources.md` 통과분만. 금지 표현: 피해 "폭증"(정부 프레임은 감소+풍선효과),
+  "최초·유일", 기능 부재 단정(`X`는 "공식 자료에서 확인되지 않음").
+- **개정 루프**: 휴먼 패널 리뷰 → 개정 계약 문서(결정 번호 D/E/F…) 확정 → 초안 반영(버전
+  올림) → judge 재채점 → 패널 재검증. 개정은 반드시 계약 문서를 먼저 쓰고 따른다.
+- **용어 계약**: "행동 이벤트 이력(내 기기 보관)"(원장 아님), "6단계 처리·검증
+  파이프라인"(에이전트 수 표현 금지), `evidence_strength`=근거 충분도(확률 아님),
+  "예비 평가"(일반화 주장 금지), MCP v1은 합성 `scenario_id` 전용.
 
 ## 에이전트 운용 규칙
 
