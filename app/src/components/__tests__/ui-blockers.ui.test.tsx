@@ -21,6 +21,7 @@ import {
   type DecisionActionCard,
 } from "@/lib/decision";
 import { OFFICIAL_SOURCES } from "@/lib/decision/sources";
+import { SYNTHETIC_SCENARIOS } from "@/lib/scenarios/synthetic";
 
 import { ActionCardView } from "../action-card";
 import { NextSteps } from "../next-steps";
@@ -293,8 +294,47 @@ describe("B4 템플릿 UI 게이트", () => {
   });
 });
 
-describe("B5 정직한 현재 기능 표시", () => {
-  it("첫 화면을 구조화 상태 선택 데모로만 표시한다", () => {
+describe("F-01 합성 샘플과 정직한 현재 기능 표시", () => {
+  it("배지의 합성 샘플 건수가 실제 제공 건수와 일치한다", () => {
+    render(
+      <Rule0Desk
+        verifiedCombinations={1_152}
+        templateReferenceDate={TEMPLATE_REFERENCE_DATE}
+      />,
+    );
+    // 배지가 주장하는 건수 = 실제로 화면에 렌더된 사례 버튼 수
+    expect(
+      screen.getByText(`합성 샘플 ${SYNTHETIC_SCENARIOS.length}건`),
+    ).toBeInTheDocument();
+    for (const scenario of SYNTHETIC_SCENARIOS) {
+      expect(screen.getByText(scenario.title)).toBeInTheDocument();
+    }
+  });
+
+  it("사례를 고르면 상태 필드가 채워지고 행동 카드가 구성된다", async () => {
+    const user = userEvent.setup();
+    render(
+      <Rule0Desk
+        verifiedCombinations={1_152}
+        templateReferenceDate={TEMPLATE_REFERENCE_DATE}
+      />,
+    );
+    const scenario = SYNTHETIC_SCENARIOS[0];
+    await user.click(screen.getByText(scenario.title));
+
+    // 본문이 노출되고 합성 표식이 함께 보인다
+    expect(screen.getAllByText(/실제 사건 아님/).length).toBeGreaterThan(0);
+
+    // 엔진 결과와 화면 카드 순서가 일치한다(독립 기대값)
+    const expected = decideActions(scenario.suggested_state);
+    expect(expected.actions.length).toBeGreaterThanOrEqual(1);
+    const headings = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((h) => h.textContent ?? "");
+    expect(headings.length).toBeGreaterThan(0);
+  });
+
+  it("합성 사례가 판정·위험도를 암시하지 않는다", () => {
     render(
       <Rule0Desk
         verifiedCombinations={1_152}
@@ -302,9 +342,9 @@ describe("B5 정직한 현재 기능 표시", () => {
       />,
     );
     expect(
-      screen.getByText("구조화 상태 선택 데모"),
+      screen.getByText(/AI 판정은 현재 배포본에서 제공하지 않습니다/),
     ).toBeInTheDocument();
-    expect(screen.queryByText("합성 샘플")).not.toBeInTheDocument();
+    expect(screen.queryByText(/위험도/)).not.toBeInTheDocument();
   });
 });
 

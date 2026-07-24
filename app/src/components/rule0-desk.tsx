@@ -48,6 +48,8 @@ import {
 import { ActionCardView } from "./action-card";
 import { ComparisonView } from "./comparison-view";
 import { EmergencyQuestion } from "./emergency-question";
+import { ScenarioPicker } from "./scenario-picker";
+import type { SyntheticScenario } from "@/lib/scenarios/synthetic";
 import { EventHistory } from "./event-history";
 import { EvidencePanel } from "./evidence-panel";
 import { NextSteps } from "./next-steps";
@@ -132,6 +134,7 @@ export function Rule0Desk({
   const [sentAfter, setSentAfter] = useState(true);
   const [addMaliciousApp, setAddMaliciousApp] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [eventError, setEventError] = useState("");
   const [clockNow, setClockNow] = useState(() => Date.now());
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -269,6 +272,7 @@ export function Rule0Desk({
     const nextState = stateForEmergencyChoice(choice);
     const nextResult = decideActions(nextState);
     setEmergencyChoice(choice);
+    setScenarioId(null);
     setIncidentState(nextState);
     setResult(nextResult);
     setEasyStep(0);
@@ -290,6 +294,27 @@ export function Rule0Desk({
     setAnnouncement(
       `상태 선택을 반영해 행동 ${nextResult.actions.length}개를 다시 구성했습니다.`,
     );
+  }
+
+  /** F-01: 합성 사례를 고르면 6개 상태 필드를 채우고 행동을 다시 구성한다. */
+  function chooseScenario(scenario: SyntheticScenario) {
+    const startedAt = performance.now();
+    const nextState = scenario.suggested_state;
+    const nextResult = decideActions(nextState);
+    setScenarioId(scenario.scenario_id);
+    setEmergencyChoice(null);
+    setIncidentState(nextState);
+    setResult(nextResult);
+    setEasyStep(0);
+    setAnnouncement(
+      `합성 사례 "${scenario.title}"를 반영해 지금 할 일 ${nextResult.actions.length}개를 구성했습니다.`,
+    );
+    recordMeasurement("rule0", startedAt);
+  }
+
+  function clearScenario() {
+    setScenarioId(null);
+    setAnnouncement("합성 사례 선택을 해제했습니다. 상태 선택은 그대로 둡니다.");
   }
 
   function recordAction(
@@ -387,6 +412,7 @@ export function Rule0Desk({
     clearDeskSession(window.sessionStorage);
     clearActionMeaningCatalog(window.sessionStorage);
     setEmergencyChoice(null);
+    setScenarioId(null);
     setIncidentState(INITIAL_INCIDENT_STATE);
     setResult(null);
     setEventLedger({ events: [], meanings: {} });
@@ -434,7 +460,7 @@ export function Rule0Desk({
       </a>
       <div className="trust-strip" role="note">
         <div>
-          <span>구조화 상태 선택 데모</span>
+          <span>합성 샘플 3건</span>
           <span>무로그인</span>
           <span>서버 무저장</span>
         </div>
@@ -473,6 +499,13 @@ export function Rule0Desk({
         <EmergencyQuestion
           selected={emergencyChoice}
           onSelect={chooseEmergency}
+        />
+
+        <ScenarioPicker
+          selectedId={scenarioId}
+          easyMode={easyMode}
+          onSelect={chooseScenario}
+          onClear={clearScenario}
         />
 
         <p className="sr-only" aria-live="polite">

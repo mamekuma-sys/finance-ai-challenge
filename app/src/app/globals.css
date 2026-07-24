@@ -1719,3 +1719,196 @@ summary {
     border: 2px solid CanvasText;
   }
 }
+
+/* ── F-01 합성 사례 선택 ─────────────────────────────────────── */
+
+.scenario-picker {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.scenario-intro {
+  margin: 6px 0 16px;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.scenario-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenario-option {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: 14px 16px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  cursor: pointer;
+  transition:
+    background 180ms ease-out,
+    border-color 180ms ease-out;
+}
+
+.scenario-option:hover {
+  border-width: 2px;
+  background: var(--surface);
+}
+
+.scenario-option[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+
+.scenario-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.badge-synthetic,
+.badge-channel {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badge-synthetic {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.badge-channel {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.scenario-option strong {
+  display: block;
+  font-size: 17px;
+}
+
+.scenario-option small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.scenario-detail {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.scenario-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scenario-detail-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.scenario-synthetic-note {
+  margin: 8px 0 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.scenario-body {
+  margin: 0;
+  padding: 14px;
+  overflow-x: auto;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.scenario-detail h4 {
+  margin: 16px 0 8px;
+  font-size: 15px;
+}
+
+.scenario-signals {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.scenario-source {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ghost-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.ghost-button:hover {
+  border-width: 2px;
+  background: var(--surface);
+}
+
+.easy-mode .scenario-option {
+  min-height: 112px;
+  font-size: 20px;
+}
+
+.easy-mode .scenario-option strong {
+  font-size: 21px;
+}
+
+.easy-mode .scenario-option small,
+.easy-mode .scenario-intro,
+.easy-mode .scenario-body {
+  font-size: 20px;
+}
+
+.easy-mode .ghost-button {
+  min-height: 48px;
+  font-size: 18px;
+}
+
+@media (max-width: 560px) {
+  .scenario-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
