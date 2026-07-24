@@ -24,6 +24,32 @@
 | `18-m0-freeze-verification.md` | 패널 4라운드 — M0 동결 검증(조건 3·4 충족, 1·2 잔여 V4-01~07) | 검증 루프 |
 | `19-revision-plan-r4.md` | 개정 계약 r4 (G1~G7, M0 동결 마감 패치) | 검증 루프 |
 | `20-m0-freeze-final.md` | 패널 5라운드 — **M0 계약 동결 선언**(V4 7건 전부 닫힘, M단계 착수 승인) | 검증 루프 |
+| `21-revision-plan-r5.md` | 개정 계약 r5 (H1~H6, 법령 기한 정정·미검증 수치 금지) | M단계 검증 |
+| `22-revision-plan-r6.md` | 개정 계약 r6 (I1~I4, 출처 entailment·행동 계층·정직 표기·템플릿 게이트) | M단계 검증 |
+
+## 지금 유효한 계약은 무엇인가 (진입점)
+
+**유효한 구현 계약은 `11-spec-draft.md`(현재 `0.5-r6`) 하나다.**
+`13`·`15`·`17`·`19`·`21`·`22`는 그 문서에 이미 **반영 완료된 개정 이력**이며,
+`12`·`14`·`16`·`18`·`20`은 각 개정을 촉발한 **검증 라운드 기록**이다.
+과거 라운드 문서는 역사 기록이므로 수정하지 않는다 — 새 개정이 필요하면 **새 개정 계약
+문서를 먼저 쓰고** 명세에 반영한다.
+
+```text
+검증 라운드(리뷰)            →  개정 계약(결정)              →  반영 대상
+12-human-review              →  13-revision-plan   (D1~D17)  →┐
+14-human-review-r2           →  15-revision-plan-r2 (E1~E8)  →│
+16-human-review-r3           →  17-revision-plan-r3 (F1~F6)  →│  11-spec-draft.md
+18-m0-freeze-verification    →  19-revision-plan-r4 (G1~G7)  →│  (0.5-r6, 단일 진실)
+20-m0-freeze-final ── M0 동결 선언 ─────────────────────────  →│  + 10-proposal-draft.md
+app/docs/evidence-verified   →  21-revision-plan-r5 (H1~H6)  →│
+review-human / review-agent  →  22-revision-plan-r6 (I1~I4)  →┘
+```
+
+r5·r6은 M단계 구현 검증에서 나왔다 — r5는 **1차 출처 실접속 검증**
+(`app/docs/evidence-verified.md`)이 법정 기한 오류와 미검증 수치를 찾아낸 결과이고,
+r6은 **2방향 리뷰**(`app/docs/review-human.md` / `review-agent.md`)가 출처 entailment
+부분지지와 템플릿 게이트 fail-open을 찾아낸 결과다.
 
 ## 검증 루프 (two-way)
 
