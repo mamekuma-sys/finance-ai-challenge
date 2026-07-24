@@ -13,14 +13,16 @@
 | `03-stack-proposal.md` | 기술 스택 (확정 — decisions.md 기록) | 스택 확정 ✅ |
 | `04-competitor-usage.md` | 경쟁 서비스 검증 리포트 (웹 확인 기반) | #2 (+0.8) |
 | `05-method-db-sources.md` | 수법 DB 출처 목록 (금감원·경찰청·KISA) | #5 (+0.3) |
-| `10-proposal-draft.md` | 기획서 초안 (현재 `0.4-r3`) | — |
-| `11-spec-draft.md` | 기능명세서 초안 (현재 `0.4-r3`) | — |
+| `10-proposal-draft.md` | 기획서 초안 (현재 `0.5-r4`) | — |
+| `11-spec-draft.md` | 기능명세서 초안 (현재 `0.5-r4`) | — |
 | `12-human-review.md` | 휴먼 심사위원 패널 리뷰 1라운드 | 검증 루프 |
 | `13-revision-plan.md` | 개정 계약 r1 (D1~D17) | 검증 루프 |
 | `14-human-review-r2.md` | 휴먼 패널 리뷰 2라운드 — 개정본 재검증 | 검증 루프 |
 | `15-revision-plan-r2.md` | 개정 계약 r2 (E1~E8, M0 계약 동결 4조건) | 검증 루프 |
 | `16-human-review-r3.md` | 휴먼 패널 리뷰 3라운드 — M단계 조건부 동의(진입 조건 4) | 검증 루프 |
 | `17-revision-plan-r3.md` | 개정 계약 r3 (F1~F6, 코어 재동결·MCP 합성 전용) | 검증 루프 |
+| `18-m0-freeze-verification.md` | 패널 4라운드 — M0 동결 검증(조건 3·4 충족, 1·2 잔여 V4-01~07) | 검증 루프 |
+| `19-revision-plan-r4.md` | 개정 계약 r4 (G1~G7, M0 동결 마감 패치) | 검증 루프 |
 
 ## 검증 루프 (two-way)
 
