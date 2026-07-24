@@ -34,6 +34,15 @@ sol/xhigh 검증 에이전트 7개로 luna 리서치 397개 주장을 전수 대
 라이브로 반영) + agent 인터페이스(API·MCP·llms.txt) + 공개 안전성 리포트. v1에서 다국어·
 실연동·통화 실시간 분석·보험사기는 의도적 제외(v2).
 
-## (예정) 기술 스택 확정
+## 2026-07-24 — 기술 스택 확정: TypeScript 단일 스택
 
-주제 확정 후 결정. 제약: 심사 기간(9/7~9/11) 무중단 URL 유지가 가능한 배포 방식일 것.
+Next.js(App Router)+TypeScript / Vercel 배포 / Claude API(판정·에이전트) / SSE 실시간 /
+Neon Postgres / MCP TypeScript SDK / Tailwind+shadcn. 근거와 기각 대안은
+`docs/planning/03-stack-proposal.md`. 핵심 근거: 심사 기간(9/7~9/11) 무중단을 관리형
+인프라로 담보 + 1인 유지보수·Codex 위임 효율. 사용자가 P단계 ①~④ 일괄 진행을 위임하며 확정.
+
+## 2026-07-24 — P단계 산출물 검증: two-way 리뷰 루프
+
+기획서·기능명세서 초안은 ① judge 스킬(AI 루브릭 채점) ② 휴먼 심사위원 페르소나 리뷰(Codex
+sol/xhigh)의 두 관점을 모두 통과할 때까지 개선 루프를 돈다. 데이콘 별도 양식 부재 확인 →
+심사 기준 역산 구조로 작성.
