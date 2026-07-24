@@ -23,6 +23,7 @@
 | `17-revision-plan-r3.md` | 개정 계약 r3 (F1~F6, 코어 재동결·MCP 합성 전용) | 검증 루프 |
 | `18-m0-freeze-verification.md` | 패널 4라운드 — M0 동결 검증(조건 3·4 충족, 1·2 잔여 V4-01~07) | 검증 루프 |
 | `19-revision-plan-r4.md` | 개정 계약 r4 (G1~G7, M0 동결 마감 패치) | 검증 루프 |
+| `20-m0-freeze-final.md` | 패널 5라운드 — **M0 계약 동결 선언**(V4 7건 전부 닫힘, M단계 착수 승인) | 검증 루프 |
 
 ## 검증 루프 (two-way)
 
