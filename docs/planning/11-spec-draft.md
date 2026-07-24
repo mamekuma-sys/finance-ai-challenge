@@ -1,15 +1,16 @@
 # 골든타임(GoldenTime) 기능명세서 초안
 
-- 문서 버전: `0.5-r5`
-- 작성일: 2026-07-24 (r5 개정: 2026-07-25)
+- 문서 버전: `0.5-r6`
+- 작성일: 2026-07-24 (r6 개정: 2026-07-25)
 - 구현 기준선: v1.0
 - 운영 기준선: 2026-09-06까지 배포·동결·외부 모니터링 설정, 2026-09-07 10:00 KST 제출
 - 제출 양식 상태: 데이콘 기능명세서 양식의 5개 항목에 기능 ID를 유지해 재매핑
 - 기준 문서: [최종 주제 확정](../research/06-decision.md),
   [개정 계약 r1](./13-revision-plan.md), [개정 계약 r2](./15-revision-plan-r2.md),
   [개정 계약 r3](./17-revision-plan-r3.md), [개정 계약 r4](./19-revision-plan-r4.md),
-  [개정 계약 r5](./21-revision-plan-r5.md),
-  [수법 DB 공개 출처](./05-method-db-sources.md), [문서 구조](./00-document-structure.md)
+  [개정 계약 r5](./21-revision-plan-r5.md), [개정 계약 r6](./22-revision-plan-r6.md),
+  [수법 DB 공개 출처](./05-method-db-sources.md), [문서 구조](./00-document-structure.md),
+  [1차 출처 실접속 검증](../../app/docs/evidence-verified.md)
 
 > 본 문서는 배포 URL에서 검증할 v1.0 구현 계약이다. 최종 제출본에는 배포 환경에서 검증한
 > 기능만 남기고, 미구현 기능은 버튼·설명·샘플 응답으로 암시하지 않는다.
@@ -83,6 +84,12 @@ PDF + 기기 내 개인 부속면)을 제공하는 무로그인 AI 사기대응 
 레지스트리 → W3 브리핑 이중 구성+고령자 모드 → W4 LLM 3단계+폴백 → W5 평가셋 동결+
 release gate+showcase 활성 → W6 배포 동결·전사. 주차 게이트 미달 시 showcase 슬롯을
 코어 복구에 사용하며 코어를 축소하지 않는다.
+
+**주차 진행 중 정직 표기 규칙(r6 I3):** 아직 구현되지 않은 기능은 배지·설명·샘플 응답으로
+암시하지 않는다. 현재 배포본이 F-01의 합성 샘플 3건과 `scenario_id` 선택을 제공하지 않으므로
+화면 배지는 **“구조화 상태 선택 데모”**로 표기하고, `/llms.txt`의 미제공 항목은 “현재 배포본
+미제공”으로 명시한다. F-01·F-03·F-08과 F-19 `/developers`가 배포 환경에서 검증된 뒤에만
+배지·기능 목록을 승격한다. **이 규칙은 표기 규칙이며 §2.1의 런타임 코어 9를 축소하지 않는다.**
 
 ### 2.2 기능 명세
 
@@ -423,13 +430,13 @@ MCP v1은 `analyze_scam` 도구 하나만 제공하며 **`scenario_id` 합성 �
 
 | 규칙 | match(순수 조건식) | 행동(순서 · merge_key) | `do_not_show_when`·금지 행동 | 공식 출처 | 템플릿 버전 |
 |---|---|---|---|---|---|
-| R1 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available in {no, unknown}` | ① 의심 기기 사용 중지·신뢰할 수 있는 별도 기기 확보; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `device:isolate` ② 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ③ 별도 기기에서 112 연락 · `call:112` | 감염 의심 기기의 금융 앱 사용, 그 기기에서 대표번호 검색·인증정보 재입력 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
-| R2 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available = yes` | ① 안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ② 안전한 별도 기기에서 112 연락 · `call:112` ③ 인증수단 폐기·재발급과 악성 앱 검사 안내 확인; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `action:credential_recovery` | 감염 의심 기기의 금융 앱·통화·검색을 이용한 긴급 조치 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
+| R1 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available in {no, unknown}` | ① 의심 기기 사용 중지·신뢰할 수 있는 별도 기기 확보; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `device:isolate` ② 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ③ 별도 기기에서 112 연락 · `call:112` | 감염 의심 기기의 금융 앱 사용, 그 기기에서 대표번호 검색·인증정보 재입력 | ①②③ [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=), [금융위원회 전기통신금융사기 카드뉴스(다른 휴대전화·PC 사용 권장)](https://fsc.go.kr/no040000?cnId=1954) | `TPL-SAFE-DEVICE-001@1.0` |
+| R2 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available = yes` | ① 안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ② 안전한 별도 기기에서 112 연락 · `call:112` ③ 인증수단 폐기·재발급과 악성 앱 검사 안내 확인; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `action:credential_recovery` | 감염 의심 기기의 금융 앱·통화·검색을 이용한 긴급 조치 | ①② [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=), [금융위원회 전기통신금융사기 카드뉴스(다른 휴대전화·PC 사용 권장)](https://fsc.go.kr/no040000?cnId=1954) / ③ [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=), [한국인터넷진흥원 피싱 주의 권고(인증서·보안카드 폐기·재발급)](https://spam.kisa.or.kr/spam/na/ntt/selectNttInfo.do?bbsId=1001&mi=1019&nttSn=2701) | `TPL-SAFE-DEVICE-001@1.0` |
 | R3 | `transfer_state = already_sent` | ① 해당 금융회사 공식 대표번호로 사기이용계좌 지급정지 요청 · `call:bank_fraud` ② 112 신고·지급정지 연계 요청 · `call:112` ③ 긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출하고, 이어서 1394에서 피해상담·의심 전화번호·사이트 제보·관계기관 연계와 피해구제 절차 확인 · `procedure:written_followup` | 재판정 대기, 본인계좌 일괄지급정지를 상대 계좌 지급정지의 대체로 표시 | [금융사기 연락처](https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&cciNo=2&cnpClsNo=1&csmSeq=2853&popMenu=ov&search_put=), [피해구제 신청](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=3&cciNo=1&cnpClsNo=1&csmSeq=1592&popMenu=ov), [경찰청 1394 안내](https://www.korea.kr/multi/visualNewsView.do?newsId=148959173) | `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.1` |
-| R4 | `credential_exposure_state in {suspected, shared}` | ① 안전한 기기에서 해당 금융회사 공식 대표번호에 인증정보 노출 통지·보호조치 요청 · `call:bank_fraud` ② 112에 인증정보 노출 상황 상담 · `call:112` ③ 금융회사 안내에 따라 인증수단 폐기·재발급, 추가 출금 우려 시 본인계좌 보호 수단 확인 · `action:credential_recovery` | AI 분석 결과 대기, 상대가 알려준 번호·링크·앱 사용 | [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) | `TPL-CREDENTIAL-RECOVERY-001@1.0` |
-| R5 | `personal_data_exposure_state in {suspected, shared}` | ① 상대와 추가 접촉·정보 제공 중단 · `action:stop_contact` ② 공식 기관 대표채널로 사실 교차 확인 · `verify:official_channel` ③ 1332에서 금융 피해예방·피해구제 상담 경로 확인 · `call:1332` | 개인정보 노출만으로 상대 계좌 지급정지나 신고 접수를 서비스가 확정 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-OFFICIAL-VERIFY-001@1.0` |
+| R4 | `credential_exposure_state in {suspected, shared}` | ① 안전한 기기에서 해당 금융회사 공식 대표번호에 인증정보 노출 통지·보호조치 요청 · `call:bank_fraud` ② 112에 인증정보 노출 상황 상담 · `call:112` ③ 금융회사 안내에 따라 인증수단 폐기·재발급, 추가 출금 우려 시 본인계좌 보호 수단 확인 · `action:credential_recovery` | AI 분석 결과 대기, 상대가 알려준 번호·링크·앱 사용 | ①② [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) / ③ [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250), [한국인터넷진흥원 피싱 주의 권고(인증서·보안카드 폐기·재발급)](https://spam.kisa.or.kr/spam/na/ntt/selectNttInfo.do?bbsId=1001&mi=1019&nttSn=2701), [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-CREDENTIAL-RECOVERY-001@1.0` |
+| R5 | `personal_data_exposure_state in {suspected, shared}` | ① 상대와 추가 접촉·정보 제공 중단 · `action:stop_contact` ② 공식 기관 대표채널로 사실 교차 확인 · `verify:official_channel` ③ 1332에서 금융 피해예방·피해구제 상담 경로 확인 · `call:1332` | 개인정보 노출만으로 상대 계좌 지급정지나 신고 접수를 서비스가 확정 | ①② [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) / ③ [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-OFFICIAL-VERIFY-001@1.0` |
 | R6 | `transfer_state = not_sent` and `device_compromise_state = none` and `credential_exposure_state = none` and `personal_data_exposure_state = none` | ① 송금·링크 클릭·앱 설치 중단 · `action:stop_risky` ② 메시지 속 연락처가 아닌 공식 대표채널로 교차 확인 · `verify:official_channel` ③ 근거 판정과 확인 질문 검토 · `question:state_confirm` | 긴급 처리가 끝난 것처럼 표시, `낮음`을 안전 보증으로 표시 | [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) | `TPL-OFFICIAL-VERIFY-001@1.0` |
-| R7 | `transfer_state = unknown` or `device_compromise_state = unknown` or `credential_exposure_state = unknown` or `personal_data_exposure_state = unknown` | ① 해당 `unknown` 축의 상태 확인 질문 최대 3개 · `question:state_confirm` ② 공식 대표채널 교차 확인 · `verify:official_channel` ③ 근거 부족이면 판단 유보와 1332 안내 · `call:1332` | `낮음` 판정이나 비긴급 경로를 확정적으로 표시 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-UNDETERMINED-001@1.0` |
+| R7 | `transfer_state = unknown` or `device_compromise_state = unknown` or `credential_exposure_state = unknown` or `personal_data_exposure_state = unknown` | ① 해당 `unknown` 축의 상태 확인 질문 최대 3개 · `question:state_confirm` ② 공식 대표채널 교차 확인 · `verify:official_channel` ③ 근거 부족이면 판단 유보와 1332 안내 · `call:1332` | `낮음` 판정이나 비긴급 경로를 확정적으로 표시 | ① [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572) / ② [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) / ③ [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-UNDETERMINED-001@1.0` |
 
 R3~R5는 다른 규칙과의 배타 조건 없이 자기 축의 상태만 본다 — 복합 피해에서 각 축의 행동이
 전부 수집된 뒤 §4.5.1의 정렬·병합으로 합성된다. R7은 다른 규칙과 함께 일치할 수 있으며,
@@ -439,6 +446,19 @@ R3~R5는 다른 규칙과의 배타 조건 없이 자기 축의 상태만 본다
 사이트 제보, 관계기관 연계 번호이며 직접 지급정지 기관으로 표시하지 않는다. **1332**는
 금융감독원의 금융상담과 보이스피싱 피해상담·접수·구제 안내 번호이며 긴급 출동 번호로
 표시하지 않는다.
+
+**출처 매핑은 행 단위다(r6 I1).** 출처 열의 `①②③` 표기는 그 행의 **핵심 동사를 실제로
+지지하는 출처**만 그 행에 연결한다는 뜻이다. 카드 병합 시 `official_sources`는 병합된 행들의
+합집합이 되므로(§4.5.1 ③) 병합 카드는 각 구성 행의 지지 출처를 모두 보존한다.
+
+**`procedure:written_followup` 카드의 행동 계층(r6 I2):** 이 카드의 **1차 행동은
+피해구제신청서 제출**이고 1394 상담은 **2차 행동**이다. 이 카드를 전화 행동 카드로
+분류하지 않으며, 1394 다이얼러 열기를 이 카드의 사실 상태 환원에 사용하지 않는다.
+
+**안전 기기 전제 교차 규칙(r6 I2):** `device_compromise_state ∈ {suspected_app,
+remote_control, unknown}`일 때, **UI가 전화 걸기(`tel:`) 행동을 렌더하는 모든 카드**는
+안전 기기 전제를 화면에 함께 표시해야 한다. 이 규칙은 §4.5.1 ⑤의 이행 조건이며 전
+상태 조합에서 교차 계층으로 검증한다(§9.3).
 
 **`user_role=family_proxy` 수정자(§4.5.1 ⑤):** 모든 카드에 “가족을 대신해 확인 중”을
 표시하고, 신고·지급정지 절차 카드가 있으면 본인 제한 절차 안내 카드
@@ -509,6 +529,27 @@ PDF에 함께 사용한다. `TPL-WRITTEN-FOLLOWUP-001@1.1`은 법정 기한과 �
 변경 이유를 `change_log`에 기록하며, §4.5.1 ④의 전역 규칙으로 `transfer_state=
 already_sent`인 모든 병합 결과에 포함되므로 어떤 복합 상태에서도 3일 이내 서면 제출 절차가
 누락되지 않는다.
+
+#### 4.7.1 템플릿 활성 상태와 resolve 게이트 (r6 I4)
+
+메타데이터 존재와 유효성은 다른 문제다. 위 표의 게이트를 **fail-closed로 강제**하기 위해
+템플릿에 명시적 상태를 둔다.
+
+| 상태 | 조건 | 결과 |
+|---|---|---|
+| `active` | `source_effective_date_confirmed = true` **and** `next_review_at ≥ 기준일` | 본문 resolve 허용 |
+| `unconfirmed` | `source_effective_date_confirmed ≠ true` | **본문 resolve 실패** |
+| `expired` | `next_review_at < 기준일` | **본문 resolve 실패** |
+
+- 엔진·UI·빌드는 **단일 resolver**(`resolveTemplate(version, referenceDate)`)만 사용한다.
+  기준일은 **호출자가 주입**하며 결정 엔진 내부에서 현재 시각을 만들지 않는다(결정론 유지).
+- `active`가 아니면 **문구 본문과 “승인된 고정 문구” 표시를 차단**한다.
+- **카드·긴급 행동·`template_versions` 표기는 차단하지 않는다** — 긴급 행동이 사라지면
+  런타임 코어가 무너진다. 차단 대상은 **검증되지 않은 문구 블록뿐**이며, 화면에 차단 사유를
+  표시한다. 가짜 승인 표시가 문구 부재보다 위험하다.
+- **검수일(`source_reviewed_at`)을 시행일(`source_effective_date`) 대용으로 쓰지 않는다.**
+- 각 안내의 실제 시행일을 공식 원문에서 확인해 `confirmed = true`로 전환하는 것은 W2 착수
+  전 백로그다.
 
 ### 4.8 개인 부속면(Private Annex) 계약
 
@@ -782,7 +823,18 @@ LLM 보조의 사실 추출 누락률·확인 질문 수·브리핑 슬롯 정�
    중복 없이 단일)가 노출 4개 안에 포함 ③ 접힘 행동의 `next_steps` 무손실과 전체 순위
    연속 번호 직렬화 ④ 병합 카드의 `purpose_slots`·`official_sources` 합집합 보존.
    §4.5.4 인수 스냅샷 5종의 카드 순서·`next_steps`·금지 행동·템플릿 버전이 정확히
-   일치해야 한다.
+   일치해야 한다. 인수 스냅샷 기대값은 **엔진 호출로 생성하지 않고 리터럴 픽스처로 고정**해
+   자기충족 검증을 배제한다.
+   추가 검증 속성(r6): ⑤ **입력 계약 fail-closed** — 6개 키 누락·열거값 밖 입력·`null`·
+   배열에서 빈 결과를 정상 반환하지 않고 `INVALID_INCIDENT_STATE`로 명시적으로 거부하며,
+   오류 본문에 입력을 반사하지 않는다(§4.1·§6.3). 유효 1,152 조합은 거부되지 않는다.
+   ⑥ **citation entailment** — 모든 노출·접힌 카드의 `official_sources`가 그 카드 핵심
+   동사의 지지 출처를 최소 1개 포함하는지 `규칙·행 → 핵심 동사 → source_id → 지지 문장`
+   픽스처로 전 조합 자동 대조한다(§6.3의 사람 검수를 기계 검증으로 고정).
+   ⑦ **안전 기기 전제 교차 규칙** — `device_compromise_state ∈ {suspected_app,
+   remote_control, unknown}`인 모든 조합에서 UI가 `tel:` 행동을 렌더하는 카드는 안전 기기
+   전제를 함께 표시한다(§4.5.3).
+   ⑧ **권한 한계 결합** — 외부 중계·재사용 직렬화 결과에 고정 `disclaimer`가 항상 포함된다.
 4. **이벤트 이력:** §4.6의 상태·출처 열거형과 `ActionFactEvent[]` append-only 구조,
    허용 전이 검증, `event_type=correction`+`corrects_event_id` 정정, 배열 순서 기반
    현재 상태 환원, 연속 중복 축약을 확인한다. UI 표기가 “행동 이벤트 이력(내 기기
@@ -802,27 +854,34 @@ LLM 보조의 사실 추출 누락률·확인 질문 수·브리핑 슬롯 정�
    라벨링 절차(독립 라벨 또는 대체 절차 명시), 모델·프롬프트·규칙·템플릿 버전, 프롬프트
    튜닝 비노출을 포함한다.
 9. 모든 `source_refs`가 요청별 허용 ID 집합 안에 있는지 자동 대조하고, M단계 사람 표본
-   citation entailment 검수 결과와 불일치 범주를 기록한다.
-10. 규제 문구 레지스트리의 공식 출처·시행일·검수일·재검토 예정일·변경 이력·롤백 책임이
+   citation entailment 검수 결과와 불일치 범주를 기록한다. **행동 카드 출처의 entailment
+   판정은 `app/docs/evidence-verified.md` §3 판정표를 근거로 하며, 판정이 `⚠️부분지지`인
+   동사는 지지 출처를 보강하거나 카드·템플릿에서 노출하지 않는다(r6 I1).**
+10. **템플릿 활성 게이트(§4.7.1)를 검증한다:** `unconfirmed`·`expired` 템플릿은 본문
+    resolve가 실패하고 “승인된 고정 문구” 표시가 차단되며, 그때도 카드·긴급 행동은 유지되고
+    차단 사유가 화면에 표시되는지 확인한다. 기준일을 바꾸면 `expired` 판정이 따라 바뀌는지도
+    확인한다.
+11. 규제 문구 레지스트리의 공식 출처·시행일·검수일·재검토 예정일·변경 이력·롤백 책임이
     비어 있으면 배포를 차단한다. 행동 카드와 PDF 모두 3일 이내 서면 제출 후속 절차를
     포함한다.
-11. **토큰·스키마 계약:** `POST /api/v1/tokens` 발급(TTL 10분, scope, 해시만 보관,
+12. **토큰·스키마 계약:** `POST /api/v1/tokens` 발급(TTL 10분, scope, 해시만 보관,
     발급·호출·동시 유효 쿼터 수치), `DELETE` 폐기, `Authorization: Bearer` 검증,
     `text` 존재 시 `masking_confirmed=true` 조건부 필수(위반 `422`), **MCP의
     `scenario_id` 전용 강제(자유 텍스트 `422` 거부)**, 쿼터, CORS, 입력 비반사 오류,
     남용 탐지를 UI 우회 REST와 MCP에서 각각 검증한다.
-12. 모델 호출을 차단해도 긴급 우회로, 정적 페이지, 합성 캐시, 판단 유보, API 오류 계약이
+13. 모델 호출을 차단해도 긴급 우회로, 정적 페이지, 합성 캐시, 판단 유보, API 오류 계약이
     작동해야 한다.
-13. §3.3의 2분 데모(복합 상태 와우 장면 포함, 코어 경로 100초 + `/room`·`/safety` 20초)를
+14. §3.3의 2분 데모(복합 상태 와우 장면 포함, 코어 경로 100초 + `/room`·`/safety` 20초)를
     모바일·데스크톱에서 로그인 없이 수행한다.
-14. 최종 제출 전 팀·작성자 자리표시자와 금지 용어가 0건인지 자동 검사하고, 미구현 기능은
+15. 최종 제출 전 팀·작성자 자리표시자와 금지 용어가 0건인지 자동 검사하고, 미구현 기능은
     양식·UI·개발자 문서에서 제거한다.
-15. 2026-09-06까지 배포·동결·외부 모니터링 설정을 확인하고 2026-09-07 10:00 KST 제출
+16. 2026-09-06까지 배포·동결·외부 모니터링 설정을 확인하고 2026-09-07 10:00 KST 제출
     시점의 공개 URL 헬스체크 기록을 보존한다.
-16. **AI 기여 비교(KPI ⑤):** 동일 합성 사건을 규칙형 폼(고정 질문)과 LLM 보조(비정형
+17. **AI 기여 비교(KPI ⑤):** 동일 합성 사건을 규칙형 폼(고정 질문)과 LLM 보조(비정형
     추출+맞춤 질문) 두 조건으로 처리해 사실 추출 누락률, 확인 질문 수, 브리핑 슬롯 정확도,
     쉬운 설명 이해도를 비교한 결과를 M단계에 기록한다. LLM 우위가 확인되지 않은 항목은
     결과를 그대로 공개한다.
 
 개정 이력: 13-revision-plan D1~D17, 15-revision-plan-r2 E1~E8, 17-revision-plan-r3
-F1~F6, 19-revision-plan-r4 G1~G7, 21-revision-plan-r5 H1~H6 반영
+F1~F6, 19-revision-plan-r4 G1~G7, 21-revision-plan-r5 H1~H6,
+22-revision-plan-r6 I1~I4 반영
