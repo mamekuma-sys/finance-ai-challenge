@@ -1,13 +1,14 @@
 # 골든타임(GoldenTime) 기능명세서 초안
 
-- 문서 버전: `0.5-r4`
-- 작성일: 2026-07-24 (r4 개정: 2026-07-25)
+- 문서 버전: `0.5-r5`
+- 작성일: 2026-07-24 (r5 개정: 2026-07-25)
 - 구현 기준선: v1.0
 - 운영 기준선: 2026-09-06까지 배포·동결·외부 모니터링 설정, 2026-09-07 10:00 KST 제출
 - 제출 양식 상태: 데이콘 기능명세서 양식의 5개 항목에 기능 ID를 유지해 재매핑
 - 기준 문서: [최종 주제 확정](../research/06-decision.md),
   [개정 계약 r1](./13-revision-plan.md), [개정 계약 r2](./15-revision-plan-r2.md),
   [개정 계약 r3](./17-revision-plan-r3.md), [개정 계약 r4](./19-revision-plan-r4.md),
+  [개정 계약 r5](./21-revision-plan-r5.md),
   [수법 DB 공개 출처](./05-method-db-sources.md), [문서 구조](./00-document-structure.md)
 
 > 본 문서는 배포 URL에서 검증할 v1.0 구현 계약이다. 최종 제출본에는 배포 환경에서 검증한
@@ -96,7 +97,7 @@ ID 범위는 데스크 `F-01~F-11`, 상황실 `F-12~F-15`, agent 레이어 `F-16
 | F-04 | 확인 질문 | 상태 또는 판정에 필요한 정보가 빠졌을 때 선택형 질문을 최대 3개 제시한다. 계좌번호·주민번호·인증번호·비밀번호는 요구하지 않는다. | 누락 슬롯 → 갱신된 상태·판정 또는 판단 유보 | `/` | core |
 | F-05 | 첫 화면 긴급 우회로 | 송금·앱 설치·인증정보 노출 응답이 있으면 AI 응답 전 조치 결정 엔진의 안전 카드를 즉시 표시한다(`Rule 0`, 렌더링 p95 ≤ 2초). 분석은 병렬로 진행한다. | 6개 상태 필드 → 우선순위 카드(최대 4개), 금지 행동, 공식 출처, 템플릿 버전 | `/` | core |
 | F-06 | 행동 카드·행동 이벤트 이력 | 조치 결정 엔진(§4.5)으로 행동 카드를 구성하고 사실 수준별 이벤트를 `ActionFactEvent[]` 배열로 브라우저 세션에 기록한다. 경과 타이머는 사용자 확인 시점부터의 시간을 표시한다. | 상태 조합·사용자 확인 → 다음 행동·이벤트 이력·경과 시간 | `/` | core |
-| F-07 | 고정 대응 문구 | 지급정지 요청, 112·1394 상담, 안전한 기기 사용, 전화 신청 뒤 3영업일 이내 서면 신청 절차를 승인된 템플릿+슬롯으로 제공한다. `transfer_state=already_sent`이면 서면 신청 후속 문구를 전역 규칙(§4.5.1 ④)으로 항상 포함한다. | 비식별 사건 슬롯 → 복사 가능한 고정 문구와 후속 절차 | `/` | core |
+| F-07 | 고정 대응 문구 | 지급정지 요청, 112·1394 상담, 안전한 기기 사용, 긴급하거나 부득이한 사유로 한 전화·구술 피해구제 신청 뒤 신청한 날부터 3일 이내 피해구제신청서를 해당 금융회사에 제출하는 절차를 승인된 템플릿+슬롯으로 제공한다. `transfer_state=already_sent`이면 서면 제출 후속 문구를 전역 규칙(§4.5.1 ④)으로 항상 포함한다. | 비식별 사건 슬롯 → 복사 가능한 고정 문구와 후속 절차 | `/` | core |
 | F-08 | 신고 준비 브리핑 이중 구성 | ① 서버 생성 비식별 브리핑 PDF: 첫 페이지에 `참고용·미제출`, 별도 제공 항목, 근거 출처, 생성 시각, 템플릿 버전 표시. ② 기기 내 개인 부속면(§4.8): 거래 핵심 필드를 브라우저에서만 입력·생성하며 서버로 전송하지 않는다. | 비식별 구조화 사건 JSON → 즉시 반환 PDF / 부속면 필드 → 기기 내 인쇄·저장 문서 | `/` | core |
 | F-09 | 가족 요약 1페이지 | 원문 없이 상태, 판정, 다음 행동, 실제 행동 주체를 담은 다운로드용 1페이지를 만든다. 공개 공유 링크는 생성하지 않는다. | 비식별 사건 요약 → 기기 내 인쇄·공유 문서 | `/` | nice |
 | F-10 | 고령자 모드 | 큰 글씨, 쉬운 말, 높은 대비, 넓은 버튼, 한 화면 한 기본 행동을 제공한다. 핵심 기능과 상태 질문은 일반 모드와 동일하다. | 모드 토글 → 확대·단순화 UI | `/` | core |
@@ -159,7 +160,7 @@ F-16 REST의 자유 텍스트는 UI 매개 토큰 경로로만 유지한다. F-2
 ### 3.3 2분 데모 경로
 
 와우 장면은 **복합 상태 변화**다: 송금 직후 상태에 악성 앱 설치를 추가 선택하면 금지 행동
-등장, 안전 기기 전제 삽입, 행동 카드 재구성, 3영업일 후속 유지, 부속면 필드 변화가 한
+등장, 안전 기기 전제 삽입, 행동 카드 재구성, 3일 이내 서면 제출 후속 유지, 부속면 필드 변화가 한
 화면에서 일어난다. 코어 경로를 100초까지 사용하고 `/room`·`/safety`는 마지막 20초 요약
 또는 Q&A 백업으로 둔다.
 
@@ -167,8 +168,8 @@ F-16 REST의 자유 텍스트는 UI 매개 토큰 경로로만 유지한다. F-2
 |---:|---|---|---|
 | 0초 | `/`에서 검수된 합성 메시지 선택 | 합성 배지와 같은 메시지의 `송금 전 / 송금 직후` 비교 준비 | F-01 |
 | 5초 | 두 상태 비교 실행 | 송금 전은 중단·교차 확인, 송금 직후는 금융회사·112 우선으로 재구성(p95 ≤ 5초 상한) | F-05, F-06 |
-| 15초 | 송금 직후 카드를 선택 | 우선순위 카드, 금지 행동, 고정 요청 문구, 3영업일 후속 절차 | F-06, F-07, F-21 |
-| 30초 | `악성 앱 설치`를 추가 선택(복합 상태) | 금지 행동(감염 의심 기기 금융 앱) 등장, 안전 기기 전제 삽입, 카드 재구성, 3영업일 후속 **유지** | F-05, F-06, F-07 |
+| 15초 | 송금 직후 카드를 선택 | 우선순위 카드, 금지 행동, 고정 요청 문구, 3일 이내 서면 제출 후속 절차 | F-06, F-07, F-21 |
+| 30초 | `악성 앱 설치`를 추가 선택(복합 상태) | 금지 행동(감염 의심 기기 금융 앱) 등장, 안전 기기 전제 삽입, 카드 재구성, 3일 이내 후속 **유지** | F-05, F-06, F-07 |
 | 50초 | 행동 이벤트 이력에 사용자 확인값 기록 | `ui_event`/`user_statement` 출처와 이벤트 이력(시각·이전 상태) 구분 | F-06 |
 | 65초 | 개인 부속면 필드 입력(브라우저 전용) | 무전송 고지, 거래 핵심 필드가 부속면에만 반영 | F-08 |
 | 80초 | 신고 준비 브리핑 PDF 생성 + 부속면 인쇄 미리보기 | 참고용·미제출 표시, 후속 절차, 템플릿 버전, 이중 구성 | F-08 |
@@ -422,17 +423,22 @@ MCP v1은 `analyze_scam` 도구 하나만 제공하며 **`scenario_id` 합성 �
 
 | 규칙 | match(순수 조건식) | 행동(순서 · merge_key) | `do_not_show_when`·금지 행동 | 공식 출처 | 템플릿 버전 |
 |---|---|---|---|---|---|
-| R1 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available in {no, unknown}` | ① 의심 기기 사용 중지·신뢰할 수 있는 별도 기기 확보 · `device:isolate` ② 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ③ 별도 기기에서 112 연락 · `call:112` | 감염 의심 기기의 금융 앱 사용, 그 기기에서 대표번호 검색·인증정보 재입력 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
-| R2 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available = yes` | ① 안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ② 안전한 별도 기기에서 112 연락 · `call:112` ③ 인증수단 폐기·재발급과 악성 앱 검사 안내 확인 · `action:credential_recovery` | 감염 의심 기기의 금융 앱·통화·검색을 이용한 긴급 조치 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
-| R3 | `transfer_state = already_sent` | ① 해당 금융회사 공식 대표번호로 사기이용계좌 지급정지 요청 · `call:bank_fraud` ② 112 신고·지급정지 연계 요청 · `call:112` ③ 전화 신청 시 3영업일 이내 서면 신청, 이어서 1394·피해구제 절차 확인 · `procedure:written_followup` | 재판정 대기, 본인계좌 일괄지급정지를 상대 계좌 지급정지의 대체로 표시 | [금융사기 연락처](https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&cciNo=2&cnpClsNo=1&csmSeq=2853&popMenu=ov&search_put=), [지급정지 후속 절차](https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=1592&ccfNo=3&cciNo=1&cnpClsNo=2) | `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.0` |
+| R1 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available in {no, unknown}` | ① 의심 기기 사용 중지·신뢰할 수 있는 별도 기기 확보; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `device:isolate` ② 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ③ 별도 기기에서 112 연락 · `call:112` | 감염 의심 기기의 금융 앱 사용, 그 기기에서 대표번호 검색·인증정보 재입력 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
+| R2 | `device_compromise_state in {suspected_app, remote_control}` and `safe_device_available = yes` | ① 안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락 · `call:bank_fraud` ② 안전한 별도 기기에서 112 연락 · `call:112` ③ 인증수단 폐기·재발급과 악성 앱 검사 안내 확인; 악성앱을 이미 설치했다면 모바일 백신으로 검사 후 삭제하거나 휴대전화를 초기화하고, 한국인터넷진흥원 상담센터 118에 도움을 요청하세요. · `action:credential_recovery` | 감염 의심 기기의 금융 앱·통화·검색을 이용한 긴급 조치 | [금융위원회 악성 앱 피해 대응](https://www.fsc.go.kr/po010101/85338?curPage=31&srchBeginDt=&srchCtgry=&srchEndDt=&srchKey=&srchText=) | `TPL-SAFE-DEVICE-001@1.0` |
+| R3 | `transfer_state = already_sent` | ① 해당 금융회사 공식 대표번호로 사기이용계좌 지급정지 요청 · `call:bank_fraud` ② 112 신고·지급정지 연계 요청 · `call:112` ③ 긴급하거나 부득이한 사유로 전화 또는 구술로 피해구제를 신청한 경우, 신청한 날부터 3일 이내에 피해구제신청서를 해당 금융회사에 제출하고, 이어서 1394에서 피해상담·의심 전화번호·사이트 제보·관계기관 연계와 피해구제 절차 확인 · `procedure:written_followup` | 재판정 대기, 본인계좌 일괄지급정지를 상대 계좌 지급정지의 대체로 표시 | [금융사기 연락처](https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&cciNo=2&cnpClsNo=1&csmSeq=2853&popMenu=ov&search_put=), [피해구제 신청](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=3&cciNo=1&cnpClsNo=1&csmSeq=1592&popMenu=ov), [경찰청 1394 안내](https://www.korea.kr/multi/visualNewsView.do?newsId=148959173) | `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.1` |
 | R4 | `credential_exposure_state in {suspected, shared}` | ① 안전한 기기에서 해당 금융회사 공식 대표번호에 인증정보 노출 통지·보호조치 요청 · `call:bank_fraud` ② 112에 인증정보 노출 상황 상담 · `call:112` ③ 금융회사 안내에 따라 인증수단 폐기·재발급, 추가 출금 우려 시 본인계좌 보호 수단 확인 · `action:credential_recovery` | AI 분석 결과 대기, 상대가 알려준 번호·링크·앱 사용 | [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) | `TPL-CREDENTIAL-RECOVERY-001@1.0` |
-| R5 | `personal_data_exposure_state in {suspected, shared}` | ① 상대와 추가 접촉·정보 제공 중단 · `action:stop_contact` ② 공식 기관 대표채널로 사실 교차 확인 · `verify:official_channel` ③ 1332에서 금융 피해예방·피해구제 상담 경로 확인 · `call:1332` | 개인정보 노출만으로 상대 계좌 지급정지나 신고 접수를 서비스가 확정 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572) | `TPL-OFFICIAL-VERIFY-001@1.0` |
+| R5 | `personal_data_exposure_state in {suspected, shared}` | ① 상대와 추가 접촉·정보 제공 중단 · `action:stop_contact` ② 공식 기관 대표채널로 사실 교차 확인 · `verify:official_channel` ③ 1332에서 금융 피해예방·피해구제 상담 경로 확인 · `call:1332` | 개인정보 노출만으로 상대 계좌 지급정지나 신고 접수를 서비스가 확정 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-OFFICIAL-VERIFY-001@1.0` |
 | R6 | `transfer_state = not_sent` and `device_compromise_state = none` and `credential_exposure_state = none` and `personal_data_exposure_state = none` | ① 송금·링크 클릭·앱 설치 중단 · `action:stop_risky` ② 메시지 속 연락처가 아닌 공식 대표채널로 교차 확인 · `verify:official_channel` ③ 근거 판정과 확인 질문 검토 · `question:state_confirm` | 긴급 처리가 끝난 것처럼 표시, `낮음`을 안전 보증으로 표시 | [금융위·금감원 피해예방 10계명](https://www.fsc.go.kr/no010101/86250) | `TPL-OFFICIAL-VERIFY-001@1.0` |
-| R7 | `transfer_state = unknown` or `device_compromise_state = unknown` or `credential_exposure_state = unknown` or `personal_data_exposure_state = unknown` | ① 해당 `unknown` 축의 상태 확인 질문 최대 3개 · `question:state_confirm` ② 공식 대표채널 교차 확인 · `verify:official_channel` ③ 근거 부족이면 판단 유보와 1332 안내 · `call:1332` | `낮음` 판정이나 비긴급 경로를 확정적으로 표시 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572) | `TPL-UNDETERMINED-001@1.0` |
+| R7 | `transfer_state = unknown` or `device_compromise_state = unknown` or `credential_exposure_state = unknown` or `personal_data_exposure_state = unknown` | ① 해당 `unknown` 축의 상태 확인 질문 최대 3개 · `question:state_confirm` ② 공식 대표채널 교차 확인 · `verify:official_channel` ③ 근거 부족이면 판단 유보와 1332 안내 · `call:1332` | `낮음` 판정이나 비긴급 경로를 확정적으로 표시 | [금융감독원 1332 안내](https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=6&cciNo=2&cnpClsNo=1&csmSeq=572), [금융위원회 1332 안내](https://www.fsc.go.kr/no040102?cnId=913&curPage=1) | `TPL-UNDETERMINED-001@1.0` |
 
 R3~R5는 다른 규칙과의 배타 조건 없이 자기 축의 상태만 본다 — 복합 피해에서 각 축의 행동이
 전부 수집된 뒤 §4.5.1의 정렬·병합으로 합성된다. R7은 다른 규칙과 함께 일치할 수 있으며,
 이때 확인 질문 카드의 위치는 §4.5.1 ②의 잠재 severity 규칙이 정한다.
+
+기관 역할은 고정한다. **1394**는 전기통신금융사기 통합대응단의 피해상담, 의심 전화번호·
+사이트 제보, 관계기관 연계 번호이며 직접 지급정지 기관으로 표시하지 않는다. **1332**는
+금융감독원의 금융상담과 보이스피싱 피해상담·접수·구제 안내 번호이며 긴급 출동 번호로
+표시하지 않는다.
 
 **`user_role=family_proxy` 수정자(§4.5.1 ⑤):** 모든 카드에 “가족을 대신해 확인 중”을
 표시하고, 신고·지급정지 절차 카드가 있으면 본인 제한 절차 안내 카드
@@ -449,10 +455,10 @@ R3~R5는 다른 규칙과의 배타 조건 없이 자기 축의 상태만 본다
 
 | # | 상태 조합 | 기대 노출 카드(1~4)와 도출 근거 | `next_steps` | 금지 행동(합집합) | 템플릿 버전 |
 |---|---|---|---|---|---|
-| a | `transfer=already_sent`, `device=suspected_app`, `safe_device=no` | 1 의심 기기 중지·안전 기기 확보(R1① `device:isolate`) → 2 안전 기기에서 금융회사 대표번호(R1②+R3① 병합, 전제=R1, `purpose_slots`=[대표번호 확인·연락, 지급정지 요청]) → 3 안전 기기에서 112(R1③+R3② 병합) → 4 3영업일 서면 신청(전역 독립 카드 ④) | 없음(고유 키 4개) | R1∪R3∪safe-device 수정자: 감염 의심 기기 금융 앱·대표번호 검색·인증정보 재입력, 재판정 대기, 일괄지급정지 대체 표시 | `TPL-SAFE-DEVICE-001@1.0`, `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.0` |
-| b | `transfer=already_sent`, `device=remote_control`, `credential=shared`, `safe_device=yes` | 1 안전 기기에서 금융회사 대표번호(R2①+R3①+R4① 병합, `purpose_slots`=[긴급 확인·연락, 지급정지 요청, 인증정보 노출 통지]) → 2 안전 기기에서 112(R2②+R3②+R4② 병합) → 3 인증수단 폐기·재발급+악성 앱 검사(R2③+R4③ 병합) → 4 3영업일 서면 신청(전역 독립 카드 ④) | 없음(고유 키 4개) | R2∪R3∪R4∪safe-device 수정자: 감염 의심 기기 이용 긴급 조치, 재판정 대기, 일괄지급정지 대체 표시, AI 분석 대기, 상대 제공 번호·링크·앱 사용 | `TPL-SAFE-DEVICE-001@1.0`, `TPL-BANK-STOP-001@1.0`, `TPL-CREDENTIAL-RECOVERY-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.0` |
+| a | `transfer=already_sent`, `device=suspected_app`, `safe_device=no` | 1 의심 기기 중지·안전 기기 확보(R1① `device:isolate`) → 2 안전 기기에서 금융회사 대표번호(R1②+R3① 병합, 전제=R1, `purpose_slots`=[대표번호 확인·연락, 지급정지 요청]) → 3 안전 기기에서 112(R1③+R3② 병합) → 4 3일 이내 서면 제출(전역 독립 카드 ④) | 없음(고유 키 4개) | R1∪R3∪safe-device 수정자: 감염 의심 기기 금융 앱·대표번호 검색·인증정보 재입력, 재판정 대기, 일괄지급정지 대체 표시 | `TPL-SAFE-DEVICE-001@1.0`, `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.1` |
+| b | `transfer=already_sent`, `device=remote_control`, `credential=shared`, `safe_device=yes` | 1 안전 기기에서 금융회사 대표번호(R2①+R3①+R4① 병합, `purpose_slots`=[긴급 확인·연락, 지급정지 요청, 인증정보 노출 통지]) → 2 안전 기기에서 112(R2②+R3②+R4② 병합) → 3 인증수단 폐기·재발급+악성 앱 검사(R2③+R4③ 병합) → 4 3일 이내 서면 제출(전역 독립 카드 ④) | 없음(고유 키 4개) | R2∪R3∪R4∪safe-device 수정자: 감염 의심 기기 이용 긴급 조치, 재판정 대기, 일괄지급정지 대체 표시, AI 분석 대기, 상대 제공 번호·링크·앱 사용 | `TPL-SAFE-DEVICE-001@1.0`, `TPL-BANK-STOP-001@1.0`, `TPL-CREDENTIAL-RECOVERY-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.1` |
 | c | `transfer=unknown`, `credential=shared` | 1 송금 여부 확인 질문(②: transfer 잠재 severity 3 < 확인 최고 4 → 1번 삽입) → 2 금융회사 대표번호·인증정보 노출 통지(R4①) → 3 112 상담(R4②) → 4 인증수단 폐기·재발급(R4③). 답변이 `already_sent`로 갱신되면 지급정지 `purpose_slots`와 전역 후속 카드를 즉시 삽입해 재구성 | R7② `verify:official_channel`, R7③ `call:1332` 보존 | R4∪R7: AI 분석 대기, 상대 제공 번호·링크·앱 사용, `낮음` 확정 표시 | `TPL-UNDETERMINED-001@1.0`, `TPL-CREDENTIAL-RECOVERY-001@1.0` |
-| d | `user_role=family_proxy`, `transfer=already_sent` | 1 금융회사 대표번호·지급정지 요청(R3①, “가족을 대신해 확인 중” 표시) → 2 112 신고(R3②) → 3 3영업일 서면 신청(전역 독립 카드 ④) → 4 본인 제한 절차 안내(⑤ proxy 수정자 카드 `notice:proxy_scope`) | 없음 | R3∪proxy: 대리 신고·대리 접수 가능 표현, 재판정 대기, 일괄지급정지 대체 표시 | `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.0`, `TPL-PROXY-SCOPE-001@1.0` |
+| d | `user_role=family_proxy`, `transfer=already_sent` | 1 금융회사 대표번호·지급정지 요청(R3①, “가족을 대신해 확인 중” 표시) → 2 112 신고(R3②) → 3 3일 이내 서면 제출(전역 독립 카드 ④) → 4 본인 제한 절차 안내(⑤ proxy 수정자 카드 `notice:proxy_scope`) | 없음 | R3∪proxy: 대리 신고·대리 접수 가능 표현, 재판정 대기, 일괄지급정지 대체 표시 | `TPL-BANK-STOP-001@1.0`, `TPL-WRITTEN-FOLLOWUP-001@1.1`, `TPL-PROXY-SCOPE-001@1.0` |
 | e | `transfer=not_sent`, `personal_data=shared`, `device=unknown`, `safe_device=unknown` | 1 기기 상태 확인 질문(②: device 잠재 severity 1 < 확인 최고 6 → 1번 삽입) → 2 추가 접촉·정보 제공 중단(R5①) → 3 공식 대표채널 교차 확인(R5②+R7② 병합) → 4 1332 상담 경로(R5③+R7③ 병합) | 없음 | R5∪R7∪safe-device 수정자(device unknown): 지급정지·신고 접수 확정 표현, `낮음` 안전 보증, 미확인 기기의 금융 앱 사용·검색 | `TPL-UNDETERMINED-001@1.0`, `TPL-OFFICIAL-VERIFY-001@1.0` |
 
 ### 4.6 행동 이벤트 이력
@@ -498,9 +504,10 @@ user_reported_requested → user_reported_receipt_confirmed`(순방향).
 | `next_review_at` | 다음 재검토 예정일 | 기한 경과 시 빌드 경고·운영 노출 차단 |
 | `change_log` | 변경 이유·변경자·이전 버전·롤백 책임 | 버전 변경 시 빈 값 금지 |
 
-`TPL-BANK-STOP-001`과 `TPL-WRITTEN-FOLLOWUP-001`은 행동 카드와 신고 준비 브리핑 PDF에 함께
-사용하고, `TPL-WRITTEN-FOLLOWUP-001`은 §4.5.1 ④의 전역 규칙으로 `transfer_state=
-already_sent`인 모든 병합 결과에 포함되므로 어떤 복합 상태에서도 3영업일 서면 신청 절차가
+`TPL-BANK-STOP-001@1.0`과 `TPL-WRITTEN-FOLLOWUP-001@1.1`은 행동 카드와 신고 준비 브리핑
+PDF에 함께 사용한다. `TPL-WRITTEN-FOLLOWUP-001@1.1`은 법정 기한과 적용 대상을 바로잡은
+변경 이유를 `change_log`에 기록하며, §4.5.1 ④의 전역 규칙으로 `transfer_state=
+already_sent`인 모든 병합 결과에 포함되므로 어떤 복합 상태에서도 3일 이내 서면 제출 절차가
 누락되지 않는다.
 
 ### 4.8 개인 부속면(Private Annex) 계약
@@ -676,7 +683,7 @@ p95 ≤ 2초, 모델 호출 없음). 파이프라인은 병렬로 보조 근거�
 | 근거 설명 | 검색된 공개 패턴 안에서 위험·반대 신호 설명 | 요청별 허용 `source_refs` 대조, 확정 표현 금지 |
 | 쉬운 말·확인 질문 | 최대 3개 선택형 질문과 비법적 요약 | 금지 표현·공포 과장 검사, 민감값 질문 차단 |
 | 긴급 행동 순서·기관·연락처 | 허용 안 함 | 조치 결정 엔진과 공식 URL 허용 목록 |
-| 지급정지·112·1394·3영업일 후속 문구 | 허용 안 함 | 규제 문구 레지스트리의 템플릿+슬롯 |
+| 지급정지·112·1394·3일 이내 후속 문구 | 허용 안 함 | 규제 문구 레지스트리의 템플릿+슬롯 |
 | 신고 준비 브리핑 PDF | 비법적 사건 요약 후보만 허용 | 문서 순서·법적·절차 문구·첫 페이지 고지는 템플릿 고정 |
 | 개인 부속면 | 허용 안 함(LLM 미관여) | 브라우저 전용 렌더링, 필드 4종 고정, 서버·모델 미전송 |
 
@@ -797,7 +804,8 @@ LLM 보조의 사실 추출 누락률·확인 질문 수·브리핑 슬롯 정�
 9. 모든 `source_refs`가 요청별 허용 ID 집합 안에 있는지 자동 대조하고, M단계 사람 표본
    citation entailment 검수 결과와 불일치 범주를 기록한다.
 10. 규제 문구 레지스트리의 공식 출처·시행일·검수일·재검토 예정일·변경 이력·롤백 책임이
-    비어 있으면 배포를 차단한다. 행동 카드와 PDF 모두 3영업일 후속 절차를 포함한다.
+    비어 있으면 배포를 차단한다. 행동 카드와 PDF 모두 3일 이내 서면 제출 후속 절차를
+    포함한다.
 11. **토큰·스키마 계약:** `POST /api/v1/tokens` 발급(TTL 10분, scope, 해시만 보관,
     발급·호출·동시 유효 쿼터 수치), `DELETE` 폐기, `Authorization: Bearer` 검증,
     `text` 존재 시 `masking_confirmed=true` 조건부 필수(위반 `422`), **MCP의
@@ -817,4 +825,4 @@ LLM 보조의 사실 추출 누락률·확인 질문 수·브리핑 슬롯 정�
     결과를 그대로 공개한다.
 
 개정 이력: 13-revision-plan D1~D17, 15-revision-plan-r2 E1~E8, 17-revision-plan-r3
-F1~F6, 19-revision-plan-r4 G1~G7 반영
+F1~F6, 19-revision-plan-r4 G1~G7, 21-revision-plan-r5 H1~H6 반영
