@@ -30,8 +30,14 @@
   - `02-pain-points.md` — 근거 있는 페인포인트 5개 이상
   - `03-existing-ai.md` — 기존 AI 서비스 (중복 회피용)
   - `04-candidates.md` — 후보 문제 3개 (문제 정의 중심)
-- `02-common-pain-points.md` — **기관들이 공통으로 느끼는 페인포인트 종합** (Claude 작성)
-- `03-decision.md` — 최종 주제 선정과 선정 사유
+- `02-common-pain-points.md` — **기관들이 공통으로 느끼는 페인포인트 종합** (v2, 검증 반영)
+- `03-scoping-review.md` — 대회 기간(v1.0 9/6 + v2.0 10/8) 대비 후보 복잡도 재평가, "너무 간단함" 판정 기준
+- `04-verification-digest.md` — sol/xhigh 교차 검증 결과 종합: 수치 정정표, 후보 21개 생사 판정
+- `05-solution-concepts.md` — **부서 스케일 솔루션 컨셉 4개** (uniqueness·business impact 기준 재설계)
+- `06-decision.md` — 최종 주제 선정과 선정 사유
+
+기관별 폴더에는 `05-verification.md`(검증 보고서)가 추가되어 있다. 원본 00~04 파일의 수치를
+인용할 때는 반드시 05 보고서의 판정을 먼저 확인할 것.
 
 기관 슬러그: `fsi`(금융보안원), `fsc`(금융위원회), `hana-bank`, `shinhan-bank`,
 `kakaobank`, `kb-securities`, `klia`(생명보험협회)

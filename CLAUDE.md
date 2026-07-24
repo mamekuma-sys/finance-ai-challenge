@@ -25,15 +25,26 @@ Claude Code가 오케스트레이터, Codex CLI가 하위 코딩 에이전트다
 
 ### Codex 위임 방법
 
-Bash로 비대화형 실행:
+Bash로 비대화형 실행. **모델은 반드시 `gpt-5.6-sol` + `xhigh`를 명시한다** (사용자 지정 정책, 2026-07-24):
 
 ```bash
-codex exec --full-auto --skip-git-repo-check --cd <작업디렉토리> "<작업 지시>"
+codex exec --skip-git-repo-check -m gpt-5.6-sol -c model_reasoning_effort=xhigh \
+  -s workspace-write -C <작업디렉토리> "<작업 지시>"
 ```
+
+- 웹 리서치가 필요한 작업엔 `-c tools.web_search=true -c sandbox_workspace_write.network_access=true` 추가.
+- 긴 지시는 프롬프트 파일로 작성 후 `- < prompt.md` 로 stdin 전달.
 
 - 작업 지시는 **자기완결적**으로 작성: 목표, 대상 파일, 제약, 완료 기준을 명시. Codex는 `AGENTS.md`를 자동으로 읽으므로 프로젝트 공통 컨텍스트는 거기에 유지한다.
 - Codex 결과물은 반드시 Claude가 리뷰 후 통합한다 (diff 확인, 테스트 실행).
 - 병렬 작업 시 파일 충돌이 없도록 작업 단위를 분리해 위임한다.
+
+## 채점 루프 (judge 스킬)
+
+- 스테이지 산출물을 커밋할 때마다 `judge` 스킬(`.claude/skills/judge/`)로 자가 채점한다.
+  루브릭: `docs/judging/rubric.md` / 리포트: `docs/judging/scores/`
+- 스테이지 목표: R 80 / P 85 / M 85 / F 90. 목표 미달이면 개선 백로그를 처리한 뒤 재채점.
+- git commit 실행 시 PostToolUse 훅(`.claude/settings.json`)이 채점 리마인드를 띄운다.
 
 ## 작업 규칙
 
