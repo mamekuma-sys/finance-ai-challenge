@@ -17,4 +17,17 @@ describe("고령자 모드 CSS 하한", () => {
     );
     expect(css).toMatch(/\.primary-action,[\s\S]*?min-height:\s*48px/);
   });
+
+  it("기본 화면의 첫 행동 여백만 줄이고 고령자 모드의 여유 간격은 유지한다", () => {
+    const css = readFileSync(
+      path.join(process.cwd(), "src", "app", "globals.css"),
+      "utf8",
+    );
+    expect(css).toMatch(
+      /\.actions-section\s*\{\s*margin-top:\s*clamp\(24px,\s*3vw,\s*36px\)/,
+    );
+    expect(css).toMatch(
+      /\.easy-mode\s+\.actions-section\s*\{\s*margin-top:\s*clamp\(52px,\s*8vw,\s*88px\)/,
+    );
+  });
 });

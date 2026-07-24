@@ -421,11 +421,14 @@ ol {
   font-weight: 640;
 }
 
-.actions-section,
 .state-editor,
 .comparison-view,
 .evidence-panel {
   margin-top: clamp(52px, 8vw, 88px);
+}
+
+.actions-section {
+  margin-top: clamp(24px, 3vw, 36px);
 }
 
 .section-heading {
@@ -585,6 +588,19 @@ ol {
 }
 
 .purpose-block {
+  margin-bottom: 22px;
+}
+
+.question-card-intro {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: 17px;
+  font-weight: 680;
+}
+
+.question-card-fields {
+  display: grid;
+  gap: 16px;
   margin-bottom: 22px;
 }
 
@@ -843,6 +859,19 @@ summary {
   font-size: 14px;
 }
 
+.next-step-call {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 760;
+}
+
 .sticky-sidebar {
   display: grid;
   gap: 18px;
@@ -1028,7 +1057,8 @@ summary {
   gap: 16px;
 }
 
-.state-field-grid fieldset {
+.state-field-grid fieldset,
+.question-card-fields fieldset {
   min-width: 0;
   margin: 0;
   padding: 18px;
@@ -1037,7 +1067,8 @@ summary {
   background: var(--surface);
 }
 
-.state-field-grid legend {
+.state-field-grid legend,
+.question-card-fields legend {
   padding: 0 6px;
   font-size: 18px;
   font-weight: 780;
@@ -1374,6 +1405,10 @@ summary {
 
 .easy-mode {
   font-size: 20px;
+}
+
+.easy-mode .actions-section {
+  margin-top: clamp(52px, 8vw, 88px);
 }
 
 .easy-mode .section-kicker,

@@ -109,6 +109,12 @@ export const ACTION_SOURCE_LABELS: Record<ActionFactSource, string> = {
   user_statement: "사용자 진술",
 };
 
+export function displayCardTitle(card: DecisionActionCard): string {
+  return card.question_axes && card.question_axes.length > 0
+    ? "먼저 확인할 것"
+    : card.title;
+}
+
 const RULE_LABELS: Record<string, string> = {
   R1: "기기 감염 의심·안전 기기 미확보",
   R2: "기기 감염 의심·안전 기기 확보",

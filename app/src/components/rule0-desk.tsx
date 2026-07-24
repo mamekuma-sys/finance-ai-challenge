@@ -33,7 +33,10 @@ import {
   saveDeskSession,
   type EmergencyChoice,
 } from "@/lib/session/desk-session";
-import { INITIAL_INCIDENT_STATE } from "@/lib/ui/labels";
+import {
+  displayCardTitle,
+  INITIAL_INCIDENT_STATE,
+} from "@/lib/ui/labels";
 
 import { ActionCardView } from "./action-card";
 import { ComparisonView } from "./comparison-view";
@@ -354,7 +357,7 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
       : result.actions
     : [];
   const actionTitles = Object.fromEntries(
-    allCards(result).map((card) => [card.id, card.title]),
+    allCards(result).map((card) => [card.id, displayCardTitle(card)]),
   );
   const prohibitions = result
     ? [
@@ -420,9 +423,11 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
         <p className="sr-only" aria-live="polite">
           {announcement}
         </p>
-        <p className="event-error" role="alert">
-          {eventError}
-        </p>
+        {eventError ? (
+          <p className="event-error" role="alert">
+            {eventError}
+          </p>
+        ) : null}
 
         {result ? (
           <>
@@ -457,6 +462,8 @@ export function Rule0Desk({ verifiedCombinations }: Rule0DeskProps) {
                           currentState={reduceCurrentState(events, card.id)}
                           onRecord={recordAction}
                           onToggleNonCall={toggleNonCall}
+                          incidentState={incidentState}
+                          onIncidentStateChange={updateIncidentState}
                         />
                       </li>
                     ))}

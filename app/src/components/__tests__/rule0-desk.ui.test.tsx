@@ -14,6 +14,7 @@ import {
   saveDeskSession,
   type DeskSessionSnapshot,
 } from "@/lib/session/desk-session";
+import { displayCardTitle } from "@/lib/ui/labels";
 
 import { Rule0Desk } from "../rule0-desk";
 
@@ -87,11 +88,16 @@ async function selectState(
   user: ReturnType<typeof userEvent.setup>,
   state: IncidentState,
 ) {
+  const stateEditor = screen
+    .getByRole("heading", { name: "아는 만큼만 알려주세요" })
+    .closest("section") as HTMLElement;
   for (const key of Object.keys(FIELD_OPTIONS) as Array<
     keyof typeof FIELD_OPTIONS
   >) {
     const config = FIELD_OPTIONS[key];
-    const group = screen.getByRole("group", { name: config.legend });
+    const group = within(stateEditor).getByRole("group", {
+      name: config.legend,
+    });
     const label = (config.values as Record<string, string>)[state[key]];
     await user.click(
       within(group).getByRole("radio", { name: exactStart(label) }),
@@ -214,7 +220,7 @@ describe("결정 엔진 결과의 UI 보존", () => {
       await selectState(user, state);
 
       expect(visibleCardTitles()).toEqual(
-        decideActions(state).actions.map((card) => card.title),
+        decideActions(state).actions.map(displayCardTitle),
       );
     },
   );
@@ -270,6 +276,127 @@ describe("결정 엔진 결과의 UI 보존", () => {
         screen.getByText(`${card.priority}. ${card.title}`),
       ).toBeInTheDocument();
     }
+    expect(
+      document.querySelectorAll('a[href="tel:1332"]').length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("빈 전화 링크 없이 금융회사 공식 번호 찾기와 실제 기관 전화 링크만 제공한다", async () => {
+    const user = userEvent.setup();
+    render(<Rule0Desk verifiedCombinations={1_152} />);
+    await user.click(screen.getByRole("button", { name: /돈을 보냈어요/ }));
+
+    const fineLink = screen.getByRole("link", {
+      name: /내 금융회사 대표번호 찾기/,
+    });
+    expect(fineLink).toHaveAttribute("href", "https://fine.fss.or.kr");
+    expect(fineLink).toHaveAttribute("target", "_blank");
+    expect(fineLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(
+      screen.getByText(
+        "상대가 알려준 번호가 아니라 카드 뒷면·공식 앱·공식 홈페이지의 대표번호를 사용하세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(document.querySelectorAll('a[href="tel:"]')).toHaveLength(0);
+    expect(document.querySelector('a[href="tel:112"]')).not.toBeNull();
+    expect(document.querySelector('a[href="tel:1394"]')).not.toBeNull();
+  });
+
+  it("접힌 1332 행동에도 바로 전화를 걸 수 있는 링크를 제공한다", async () => {
+    const user = userEvent.setup();
+    const state: IncidentState = {
+      ...BASE_STATE,
+      transfer_state: "unknown",
+      credential_exposure_state: "shared",
+    };
+    expect(
+      decideActions(state).next_steps.some(
+        (card) => card.merge_key === "call:1332",
+      ),
+    ).toBe(true);
+
+    render(<Rule0Desk verifiedCombinations={1_152} />);
+    await user.click(
+      screen.getByRole("button", { name: /해당 없음·모름/ }),
+    );
+    await selectState(user, state);
+
+    expect(
+      document.querySelectorAll('a[href="tel:1332"]').length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("질문 카드 안의 답을 선택하면 같은 상태 소스로 행동 카드와 아래 선택값을 함께 갱신한다", async () => {
+    const user = userEvent.setup();
+    render(<Rule0Desk verifiedCombinations={1_152} />);
+    await user.click(screen.getByRole("button", { name: /돈을 보냈어요/ }));
+
+    const firstCard = screen
+      .getAllByTestId("action-card")
+      .find((card) => card.dataset.priority === "1") as HTMLElement;
+    expect(
+      within(firstCard).getByRole("heading", {
+        level: 3,
+        name: "먼저 확인할 것",
+      }),
+    ).toBeInTheDocument();
+    const questionGroup = within(firstCard).getByRole("group", {
+      name: "앱 설치나 원격제어가 있었나요?",
+    });
+    expect(within(firstCard).queryByText("말할 내용")).not.toBeInTheDocument();
+    expect(
+      within(firstCard).queryByRole("button", { name: "문구 복사" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(firstCard).queryByText("이 전화나 확인에서 할 일"),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      within(questionGroup).getByRole("radio", {
+        name: exactStart("없어요"),
+      }),
+    );
+
+    await waitFor(() => {
+      const updatedFirstCard = screen
+        .getAllByTestId("action-card")
+        .find((card) => card.dataset.priority === "1") as HTMLElement;
+      expect(
+        within(updatedFirstCard).queryByRole("heading", {
+          level: 3,
+          name: "먼저 확인할 것",
+        }),
+      ).not.toBeInTheDocument();
+    });
+    const stateEditor = screen
+      .getByRole("heading", { name: "아는 만큼만 알려주세요" })
+      .closest("section") as HTMLElement;
+    expect(
+      within(
+        within(stateEditor).getByRole("group", {
+          name: "앱 설치나 원격제어가 있었나요?",
+        }),
+      ).getByRole("radio", { name: exactStart("없어요") }),
+    ).toBeChecked();
+  });
+
+  it("질문 카드를 내부 상태 용어 대신 사용자 질문과 확인 개수로 표시한다", async () => {
+    const user = userEvent.setup();
+    render(<Rule0Desk verifiedCombinations={1_152} />);
+    await user.click(screen.getByRole("button", { name: /돈을 보냈어요/ }));
+
+    expect(
+      screen.getByRole("heading", { level: 3, name: "먼저 확인할 것" }),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".question-card-intro")).toHaveTextContent(
+      "먼저 3가지만 확인할게요.",
+    );
+    expect(
+      screen.queryByRole("heading", { name: /미확인|상태 확인 질문/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("미확인 상태 최대 3개 확인"),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -283,7 +410,7 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
     const bankLink = screen.getByRole("link", {
       name: /내 금융회사 대표번호 찾기/,
     });
-    const firstCard = bankLink.closest("article") as HTMLElement;
+    const bankCard = bankLink.closest("article") as HTMLElement;
     const historyTitle = screen.getByRole("heading", {
       name: "행동 이벤트 이력(내 기기 보관)",
     });
@@ -296,7 +423,7 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
     });
 
     await user.click(
-      within(firstCard).getByRole("button", {
+      within(bankCard).getByRole("button", {
         name: "통화가 연결됐어요",
       }),
     );
@@ -304,9 +431,20 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
       "행동 사실 상태는 허용된 순방향으로만 기록",
     );
 
-    const dialerLink = within(firstCard).getByRole("link", {
-      name: /공식 대표번호 확인 후 전화 앱 열기/,
+    const fineClick = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
     });
+    fineClick.preventDefault();
+    fireEvent(bankLink, fineClick);
+    expect(
+      within(history as HTMLElement).queryByText("전화 앱 열기를 선택함"),
+    ).not.toBeInTheDocument();
+
+    const dialerLink = screen.getByRole("link", {
+      name: /112로 전화 걸기/,
+    });
+    const phoneCard = dialerLink.closest("article") as HTMLElement;
     const canceledClick = new MouseEvent("click", {
       bubbles: true,
       cancelable: true,
@@ -330,7 +468,7 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
       ["기관 접수를 확인했어요", "기관 접수를 확인했다고 진술함"],
     ] as const) {
       await user.click(
-        within(firstCard).getByRole("button", { name: button }),
+        within(phoneCard).getByRole("button", { name: button }),
       );
       await waitFor(() =>
         expect(
@@ -362,11 +500,11 @@ describe("행동 이벤트 이력과 고령자 모드", () => {
 
     const main = document.querySelector("main");
     const primary = document.querySelector(
-      ".primary-action, .primary-check",
+      ".primary-action, .primary-check, .question-card-fields .radio-option label",
     );
     expect(main).toHaveClass("easy-mode");
     expect(screen.getAllByTestId("action-card")).toHaveLength(1);
-    expect(primary).toHaveClass("primary-check");
+    expect(primary).not.toBeNull();
     expect(
       screen.getByRole("button", { name: "다음 행동 보기" }),
     ).toHaveClass("secondary-button");

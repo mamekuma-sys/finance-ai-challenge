@@ -3,19 +3,26 @@
 import type {
   ActionFactSource,
   ActionFactState,
+  IncidentState,
 } from "@/lib/contracts";
-import type { DecisionActionCard } from "@/lib/decision";
+import type {
+  DecisionActionCard,
+  QuestionAxis,
+} from "@/lib/decision";
 import { OFFICIAL_SOURCES } from "@/lib/decision/sources";
 import { TEMPLATE_REGISTRY } from "@/lib/templates/registry";
 import {
   ACTION_SOURCE_LABELS,
   ACTION_STATE_LABELS,
+  displayCardTitle,
   explainCardOrder,
+  INCIDENT_FIELD_CONFIG,
   templateBodiesForCard,
 } from "@/lib/ui/labels";
 
 import { CopyScript } from "./copy-script";
 import { OfficialLink } from "./official-link";
+import { IncidentStateFieldset } from "./state-editor";
 
 interface ActionCardViewProps {
   card: DecisionActionCard;
@@ -28,6 +35,11 @@ interface ActionCardViewProps {
     source: ActionFactSource,
   ) => void;
   onToggleNonCall: (cardId: string, checked: boolean) => void;
+  incidentState: IncidentState;
+  onIncidentStateChange: (
+    key: keyof IncidentState,
+    value: IncidentState[keyof IncidentState],
+  ) => void;
 }
 
 const PHONE_KEYS = new Set([
@@ -87,17 +99,9 @@ function PrimaryAction({
           <span aria-hidden="true">↗</span> 내 금융회사 대표번호 찾기
         </OfficialLink>
         <p className="official-number-note">
-          상대가 알려준 번호가 아니라, 카드 뒷면·공식 앱·공식 홈페이지의
-          대표번호를 쓰세요.
+          상대가 알려준 번호가 아니라 카드 뒷면·공식 앱·공식 홈페이지의
+          대표번호를 사용하세요.
         </p>
-        <a
-          className="secondary-action-link"
-          href="tel:"
-          onClick={onDialer}
-          aria-label="공식 대표번호 확인 후 전화 앱 열기"
-        >
-          공식 대표번호 확인 후 전화 앱 열기
-        </a>
       </div>
     );
   }
@@ -210,14 +214,57 @@ function EventControls({
   );
 }
 
+const QUESTION_AXIS_FIELD_KEYS: Readonly<
+  Record<QuestionAxis, keyof IncidentState>
+> = {
+  transfer: "transfer_state",
+  device: "device_compromise_state",
+  credential: "credential_exposure_state",
+  personal_data: "personal_data_exposure_state",
+};
+
+function QuestionCardFields({
+  axes,
+  state,
+  onChange,
+}: {
+  axes: readonly QuestionAxis[];
+  state: IncidentState;
+  onChange: ActionCardViewProps["onIncidentStateChange"];
+}) {
+  return (
+    <div className="question-card-fields">
+      {axes.map((axis) => {
+        const fieldKey = QUESTION_AXIS_FIELD_KEYS[axis];
+        const field = INCIDENT_FIELD_CONFIG.find(
+          (candidate) => candidate.key === fieldKey,
+        );
+        return field ? (
+          <IncidentStateFieldset
+            key={axis}
+            field={field}
+            state={state}
+            onChange={onChange}
+            idPrefix="question-card-"
+          />
+        ) : null;
+      })}
+    </div>
+  );
+}
+
 export function ActionCardView({
   card,
   nonCallConfirmed,
   currentState,
   onRecord,
   onToggleNonCall,
+  incidentState,
+  onIncidentStateChange,
 }: ActionCardViewProps) {
   const titleId = `title-${card.id.replaceAll(":", "-")}`;
+  const isQuestionCard =
+    card.question_axes !== undefined && card.question_axes.length > 0;
   const isRequired =
     card.merge_key === "procedure:written_followup" ||
     card.merge_key === "notice:proxy_scope";
@@ -264,22 +311,37 @@ export function ActionCardView({
           </div>
         ) : null}
 
-        <h3 id={titleId}>{card.title}</h3>
-        <div className="purpose-block">
-          <h4>이 전화나 확인에서 할 일</h4>
-          <ul>
-            {card.purpose_slots.map((slot) => (
-              <li key={slot}>{slot}</li>
-            ))}
-          </ul>
-        </div>
+        <h3 id={titleId}>{displayCardTitle(card)}</h3>
+        {isQuestionCard ? (
+          <>
+            <p className="question-card-intro">
+              먼저 {card.question_axes?.length}가지만 확인할게요.
+            </p>
+            <QuestionCardFields
+              axes={card.question_axes ?? []}
+              state={incidentState}
+              onChange={onIncidentStateChange}
+            />
+          </>
+        ) : (
+          <div className="purpose-block">
+            <h4>이 전화나 확인에서 할 일</h4>
+            <ul>
+              {card.purpose_slots.map((slot) => (
+                <li key={slot}>{slot}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <PrimaryAction
-          card={card}
-          checked={nonCallConfirmed}
-          onDialer={() => onRecord(card, "dialer_opened", "ui_event")}
-          onToggle={(checked) => onToggleNonCall(card.id, checked)}
-        />
+        {!isQuestionCard ? (
+          <PrimaryAction
+            card={card}
+            checked={nonCallConfirmed}
+            onDialer={() => onRecord(card, "dialer_opened", "ui_event")}
+            onToggle={(checked) => onToggleNonCall(card.id, checked)}
+          />
+        ) : null}
 
         {card.required_followup.length > 0 ? (
           <div className="followup-block">
@@ -292,7 +354,7 @@ export function ActionCardView({
           </div>
         ) : null}
 
-        {templateBodies.length > 0 ? (
+        {!isQuestionCard && templateBodies.length > 0 ? (
           <CopyScript text={scriptText} title="말할 내용" />
         ) : null}
 
@@ -322,11 +384,13 @@ export function ActionCardView({
           <p>승인 문구 버전: {card.template_versions.join(" · ")}</p>
         </details>
 
-        <EventControls
-          card={card}
-          currentState={currentState}
-          onRecord={onRecord}
-        />
+        {!isQuestionCard ? (
+          <EventControls
+            card={card}
+            currentState={currentState}
+            onRecord={onRecord}
+          />
+        ) : null}
       </div>
     </article>
   );

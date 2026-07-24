@@ -7,7 +7,10 @@ import {
   prohibitedUnion,
   type CardChange,
 } from "@/lib/comparison/action-diff";
-import { HUMAN_STATE_LABELS } from "@/lib/ui/labels";
+import {
+  displayCardTitle,
+  HUMAN_STATE_LABELS,
+} from "@/lib/ui/labels";
 
 interface ComparisonViewProps {
   sentAfter: boolean;
@@ -82,7 +85,7 @@ function CompareColumn({
             <li key={card.id}>
               <span className="compare-priority">{card.priority}</span>
               <div>
-                <strong>{card.title}</strong>
+                <strong>{displayCardTitle(card)}</strong>
                 {card.priority > result.actions.length ? (
                   <span className="folded-label">다음 행동</span>
                 ) : null}
