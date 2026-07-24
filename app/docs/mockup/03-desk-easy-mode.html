@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>골든타임 — 고령자 모드</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f5f7fa;
+      --surface: #ffffff;
+      --surface-muted: #eef2f6;
+      --border: #768391;
+      --text: #17212b;
+      --muted: #495866;
+      --gold: #f4c95d;
+      --gold-ink: #2b2100;
+      --accent: #765500;
+      --focus: #0b5fcc;
+      --danger-surface: #fff1f2;
+      --danger-border: #9b2c2c;
+      --danger-text: #7f1d1d;
+      --red-rank: #9b2c2c;
+      --orange-rank: #914000;
+      --amber-rank: #765500;
+      --shadow: 0 12px 32px rgb(16 24 32 / 10%);
+      --hairline: rgb(23 33 43 / 12%);
+    }
+    :root[data-theme="light"] { color-scheme: light; }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --canvas: #101820;
+      --surface: #17232e;
+      --surface-muted: #21313e;
+      --border: #71808d;
+      --text: #f4f7f9;
+      --muted: #b8c2cc;
+      --gold: #f4c95d;
+      --gold-ink: #2b2100;
+      --accent: #f4c95d;
+      --focus: #82b7ff;
+      --danger-surface: #35191f;
+      --danger-border: #ff8a8a;
+      --danger-text: #ffb4b4;
+      --red-rank: #ff8a8a;
+      --orange-rank: #ffb06a;
+      --amber-rank: #f4c95d;
+      --shadow: 0 12px 32px rgb(0 0 0 / 28%);
+      --hairline: rgb(244 247 249 / 14%);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme]) {
+        color-scheme: dark;
+        --canvas: #101820;
+        --surface: #17232e;
+        --surface-muted: #21313e;
+        --border: #71808d;
+        --text: #f4f7f9;
+        --muted: #b8c2cc;
+        --gold: #f4c95d;
+        --gold-ink: #2b2100;
+        --accent: #f4c95d;
+        --focus: #82b7ff;
+        --danger-surface: #35191f;
+        --danger-border: #ff8a8a;
+        --danger-text: #ffb4b4;
+        --red-rank: #ff8a8a;
+        --orange-rank: #ffb06a;
+        --amber-rank: #f4c95d;
+        --shadow: 0 12px 32px rgb(0 0 0 / 28%);
+        --hairline: rgb(244 247 249 / 14%);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 120px; }
+    body {
+      margin: 0;
+      min-width: 0;
+      overflow-x: hidden;
+      background: var(--canvas);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+      font-size: 20px;
+      line-height: 1.75;
+      letter-spacing: -0.01em;
+    }
+    button { font: inherit; }
+    a {
+      color: var(--accent);
+      text-underline-offset: 0.2em;
+      text-decoration-thickness: 0.1em;
+      overflow-wrap: anywhere;
+    }
+    a:hover { text-decoration-thickness: 0.16em; }
+    [hidden] { display: none !important; }
+    :focus { scroll-margin: 130px 0 48px; }
+    :focus-visible { outline: 4px solid var(--focus); outline-offset: 4px; border-radius: 8px; }
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 8px;
+      left: 8px;
+      transform: translateY(-160%);
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .skip-link:focus { transform: none; }
+    .shell { width: min(calc(100% - 32px), 920px); margin-inline: auto; }
+
+    .trust { border-bottom: 2px solid var(--border); background: var(--surface-muted); }
+    .trust-inner {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-block: 8px;
+    }
+    .trust-list, .purpose-list, .status-list, .prohibit-list, .notice-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .trust-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .trust-list li {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 3px 12px;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .trust-list li:first-child { color: var(--accent); }
+    .theme-switch {
+      display: inline-flex;
+      flex: 0 0 auto;
+      gap: 5px;
+      padding: 4px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .theme-switch button {
+      min-height: 48px;
+      padding: 6px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .theme-switch button[aria-pressed="true"] { background: var(--gold); color: var(--gold-ink); }
+
+    header { padding: 22px 0; border-bottom: 1px solid var(--hairline); background: var(--surface); }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand svg { width: 46px; height: 46px; flex: 0 0 auto; }
+    .brand strong { display: block; font-size: 23px; line-height: 1.3; letter-spacing: -0.03em; }
+    .brand span span { display: block; color: var(--muted); font-size: 18px; font-weight: 650; }
+
+    main { padding: 42px 0 58px; }
+    .eyebrow { margin: 0 0 12px; color: var(--accent); font-size: 18px; font-weight: 850; letter-spacing: 0.02em; }
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 7vw, 64px);
+      line-height: 1.2;
+      letter-spacing: -0.045em;
+      text-wrap: balance;
+    }
+    .mode-note { margin: 14px 0 0; color: var(--muted); font-size: 20px; font-weight: 650; }
+    .status-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+    .status-list li {
+      padding: 5px 12px;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-muted);
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .action-stage { margin-top: 30px; }
+    .easy-card {
+      position: relative;
+      min-width: 0;
+      padding: 34px;
+      border: 3px solid var(--accent);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .card-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .step {
+      display: inline-grid;
+      place-items: center;
+      width: 62px;
+      height: 62px;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--red-rank);
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .easy-card[data-index="1"] .step { border-color: var(--gold-ink); background: var(--gold); color: var(--gold-ink); }
+    .easy-card[data-index="3"] .step { color: var(--orange-rank); }
+    .easy-card[data-index="4"] .step { color: var(--amber-rank); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 3px 12px;
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 850;
+    }
+    .badge.now { border-color: var(--gold-ink); background: var(--gold); color: var(--gold-ink); }
+    .badge.required { color: var(--accent); }
+    h2 { margin: 0; font-size: clamp(32px, 5vw, 48px); line-height: 1.28; letter-spacing: -0.035em; text-wrap: balance; }
+    .purpose {
+      margin-top: 24px;
+      padding: 20px 22px;
+      border-left: 6px solid var(--gold);
+      background: var(--surface-muted);
+    }
+    .purpose > p { margin: 0 0 8px; color: var(--muted); font-size: 18px; font-weight: 850; letter-spacing: 0.03em; }
+    .purpose-list { display: grid; gap: 7px; }
+    .purpose-list li { position: relative; padding-left: 25px; font-size: 20px; font-weight: 650; }
+    .purpose-list li::before { content: "—"; position: absolute; left: 0; color: var(--accent); font-weight: 900; }
+    .prerequisite {
+      margin: 18px 0 0;
+      padding: 15px 17px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-muted);
+      font-size: 20px;
+      font-weight: 750;
+    }
+    .meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--hairline);
+      color: var(--muted);
+      font-size: 18px;
+      overflow-wrap: anywhere;
+    }
+    details.trace { margin-top: 16px; }
+    details.trace summary { width: fit-content; color: var(--accent); cursor: pointer; font-size: 20px; font-weight: 800; }
+    details.trace p { margin: 10px 0 0; color: var(--muted); font-size: 18px; }
+    .next-button {
+      width: 100%;
+      min-height: 58px;
+      margin-top: 18px;
+      padding: 12px 18px;
+      border: 2px solid var(--gold-ink);
+      border-radius: 14px;
+      background: var(--gold);
+      color: var(--gold-ink);
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 850;
+    }
+    .next-button:hover { box-shadow: inset 0 0 0 3px var(--gold-ink); }
+    .next-button:active { transform: translateY(1px); }
+    .live-status { min-height: 1.75em; margin: 9px 0 0; color: var(--muted); font-size: 18px; font-weight: 700; text-align: center; }
+
+    .danger-details {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border: 3px solid var(--danger-border);
+      border-radius: 18px;
+      background: var(--danger-surface);
+      color: var(--danger-text);
+    }
+    .danger-details summary { cursor: pointer; color: var(--danger-text); font-size: 22px; font-weight: 850; }
+    .prohibit-list { display: grid; gap: 13px; margin-top: 16px; }
+    .prohibit-list li { position: relative; padding-left: 52px; font-size: 20px; overflow-wrap: anywhere; }
+    .prohibit-list li::before {
+      content: "금지";
+      position: absolute;
+      left: 0;
+      top: 3px;
+      padding: 0 6px;
+      border: 2px solid currentColor;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    footer { padding: 32px 0 44px; border-top: 2px solid var(--border); background: var(--surface-muted); }
+    .notice-title { margin: 0 0 10px; font-size: 22px; font-weight: 850; }
+    .notice-list { display: grid; gap: 7px; padding-left: 26px; list-style: disc; color: var(--muted); font-size: 20px; }
+
+    @media (max-width: 680px) {
+      .shell { width: min(calc(100% - 24px), 920px); }
+      .trust-inner { align-items: stretch; flex-direction: column; padding-block: 10px; }
+      .theme-switch { width: 100%; }
+      .theme-switch button { flex: 1; min-height: 52px; }
+      main { padding-top: 32px; }
+      .status-list { display: grid; grid-template-columns: 1fr 1fr; }
+      .status-list li { min-width: 0; border-radius: 12px; overflow-wrap: anywhere; }
+      .easy-card { padding: 24px 20px; border-radius: 22px; }
+      .step { width: 54px; height: 54px; font-size: 24px; }
+      .badge { min-height: 36px; font-size: 17px; }
+    }
+    @media (max-width: 430px) {
+      .brand span span { font-size: 16px; }
+      h1 { font-size: 36px; }
+      .mode-note { font-size: 20px; }
+      .status-list { grid-template-columns: 1fr; }
+      .easy-card { padding: 20px 16px; }
+      h2 { font-size: 31px; }
+      .purpose { padding: 16px; }
+      .meta { font-size: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    @media (forced-colors: active) {
+      .easy-card, .danger-details, .step, .theme-switch { border: 3px solid CanvasText; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">첫 행동으로 건너뛰기</a>
+
+  <div class="trust" aria-label="신뢰 고지">
+    <div class="shell trust-inner">
+      <ul class="trust-list">
+        <li>합성 샘플</li>
+        <li>무로그인</li>
+        <li>서버 무저장</li>
+      </ul>
+      <div class="theme-switch" role="group" aria-label="화면 테마">
+        <button type="button" data-theme-choice="light" aria-pressed="false">라이트</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false">다크</button>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="shell brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="#F4C95D" stroke="#2B2100" stroke-width="2"/>
+        <path d="M20 9v11l7 4" fill="none" stroke="#2B2100" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="20" r="2.5" fill="#2B2100"/>
+      </svg>
+      <span><strong>골든타임</strong><span>AI 사기대응 상황실 · 고령자 모드</span></span>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="shell">
+      <p class="eyebrow">첫 화면 긴급 우회로 · 인수 스냅샷 b</p>
+      <h1>한 화면 한 기본 행동</h1>
+      <p class="mode-note">본문 최소 20px · 핵심 버튼 높이 최소 48px · 높은 대비 · 아이콘 단독 의미 전달 금지</p>
+      <ul class="status-list" aria-label="피해 상태">
+        <li>송금 · already_sent</li>
+        <li>기기 · remote_control</li>
+        <li>인증정보 · shared</li>
+        <li>안전 기기 · yes</li>
+      </ul>
+
+      <section class="action-stage" aria-label="한 번에 한 개씩 보는 행동 카드">
+        <article class="easy-card" data-index="1" aria-labelledby="easy-action-1">
+          <div class="card-top">
+            <span class="step" aria-label="행동 1">1</span>
+            <span class="badge now">지금 먼저</span>
+            <span class="badge">위해 순위 1</span>
+          </div>
+          <h2 id="easy-action-1">안전한 별도 기기에서 해당 금융회사 공식 대표번호 확인·연락</h2>
+          <div class="purpose">
+            <p>목적</p>
+            <ul class="purpose-list">
+              <li>긴급 확인·연락</li>
+              <li>지급정지 요청</li>
+              <li>인증정보 노출 통지</li>
+            </ul>
+          </div>
+          <p class="prerequisite"><strong>전제 조건</strong> · 안전한 별도 기기</p>
+          <div class="meta">
+            <span><strong>공식 출처</strong> · <a href="https://www.fsc.go.kr/po010101/85338?curPage=31&amp;srchBeginDt=&amp;srchCtgry=&amp;srchEndDt=&amp;srchKey=&amp;srchText=" rel="noreferrer">금융위원회 악성 앱 피해 대응</a> · <a href="https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&amp;cciNo=2&amp;cnpClsNo=1&amp;csmSeq=2853&amp;popMenu=ov&amp;search_put=" rel="noreferrer">금융사기 연락처</a> · <a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&amp;csmSeq=1592&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" rel="noreferrer">지급정지 후속 절차</a> · <a href="https://www.fsc.go.kr/no010101/86250" rel="noreferrer">금융위·금감원 피해예방 10계명</a></span>
+            <span><strong>템플릿 버전</strong> · TPL-SAFE-DEVICE-001@1.0 · TPL-BANK-STOP-001@1.0 · TPL-CREDENTIAL-RECOVERY-001@1.0</span>
+          </div>
+          <details class="trace">
+            <summary>왜 이 순서인가</summary>
+            <p>R2① + R3① + R4① 병합 · call:bank_fraud · purpose_slots 합집합 보존</p>
+          </details>
+        </article>
+
+        <article class="easy-card" data-index="2" aria-labelledby="easy-action-2" hidden>
+          <div class="card-top">
+            <span class="step" aria-label="행동 2">2</span>
+            <span class="badge">위해 순위 1</span>
+          </div>
+          <h2 id="easy-action-2">안전한 별도 기기에서 112 연락</h2>
+          <div class="purpose">
+            <p>목적</p>
+            <ul class="purpose-list">
+              <li>112 신고·지급정지 연계 요청</li>
+              <li>112에 인증정보 노출 상황 상담</li>
+            </ul>
+          </div>
+          <p class="prerequisite"><strong>전제 조건</strong> · 안전한 별도 기기</p>
+          <div class="meta">
+            <span><strong>공식 출처</strong> · <a href="https://www.fsc.go.kr/po010101/85338?curPage=31&amp;srchBeginDt=&amp;srchCtgry=&amp;srchEndDt=&amp;srchKey=&amp;srchText=" rel="noreferrer">금융위원회 악성 앱 피해 대응</a> · <a href="https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&amp;cciNo=2&amp;cnpClsNo=1&amp;csmSeq=2853&amp;popMenu=ov&amp;search_put=" rel="noreferrer">금융사기 연락처</a> · <a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&amp;csmSeq=1592&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" rel="noreferrer">지급정지 후속 절차</a> · <a href="https://www.fsc.go.kr/no010101/86250" rel="noreferrer">금융위·금감원 피해예방 10계명</a></span>
+            <span><strong>템플릿 버전</strong> · TPL-SAFE-DEVICE-001@1.0 · TPL-BANK-STOP-001@1.0 · TPL-CREDENTIAL-RECOVERY-001@1.0</span>
+          </div>
+          <details class="trace">
+            <summary>왜 이 순서인가</summary>
+            <p>R2② + R3② + R4② 병합 · call:112</p>
+          </details>
+        </article>
+
+        <article class="easy-card" data-index="3" aria-labelledby="easy-action-3" hidden>
+          <div class="card-top">
+            <span class="step" aria-label="행동 3">3</span>
+            <span class="badge">위해 순위 1</span>
+          </div>
+          <h2 id="easy-action-3">인증수단 폐기·재발급과 악성 앱 검사 안내 확인</h2>
+          <div class="purpose">
+            <p>목적</p>
+            <ul class="purpose-list">
+              <li>금융회사 안내에 따라 인증수단 폐기·재발급</li>
+              <li>악성 앱 검사 안내 확인</li>
+              <li>추가 출금 우려 시 본인계좌 보호 수단 확인</li>
+            </ul>
+          </div>
+          <div class="meta">
+            <span><strong>공식 출처</strong> · <a href="https://www.fsc.go.kr/po010101/85338?curPage=31&amp;srchBeginDt=&amp;srchCtgry=&amp;srchEndDt=&amp;srchKey=&amp;srchText=" rel="noreferrer">금융위원회 악성 앱 피해 대응</a> · <a href="https://www.fsc.go.kr/no010101/86250" rel="noreferrer">금융위·금감원 피해예방 10계명</a></span>
+            <span><strong>템플릿 버전</strong> · TPL-SAFE-DEVICE-001@1.0 · TPL-CREDENTIAL-RECOVERY-001@1.0</span>
+          </div>
+          <details class="trace">
+            <summary>왜 이 순서인가</summary>
+            <p>R2③ + R4③ 병합 · action:credential_recovery</p>
+          </details>
+        </article>
+
+        <article class="easy-card" data-index="4" aria-labelledby="easy-action-4" hidden>
+          <div class="card-top">
+            <span class="step" aria-label="행동 4">4</span>
+            <span class="badge required">필수 카드</span>
+            <span class="badge">위해 순위 3</span>
+          </div>
+          <h2 id="easy-action-4">전화 신청 시 3영업일 이내 서면 신청, 이어서 1394·피해구제 절차 확인</h2>
+          <div class="meta">
+            <span><strong>공식 출처</strong> · <a href="https://www.easylaw.go.kr/CSP/CnpClsMainPreview.laf?ccfNo=3&amp;cciNo=2&amp;cnpClsNo=1&amp;csmSeq=2853&amp;popMenu=ov&amp;search_put=" rel="noreferrer">금융사기 연락처</a> · <a href="https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&amp;csmSeq=1592&amp;ccfNo=3&amp;cciNo=1&amp;cnpClsNo=2" rel="noreferrer">지급정지 후속 절차</a></span>
+            <span><strong>템플릿 버전</strong> · TPL-WRITTEN-FOLLOWUP-001@1.0</span>
+          </div>
+          <details class="trace">
+            <summary>왜 이 순서인가</summary>
+            <p>transfer_state=already_sent 전역 필수 후속 · procedure:written_followup · 노출 카드 4개 안에 포함</p>
+          </details>
+        </article>
+
+        <button class="next-button" type="button" data-next-action>다음 행동 보기</button>
+        <p class="live-status" aria-live="polite"></p>
+      </section>
+
+      <details class="danger-details">
+        <summary>하지 마세요</summary>
+        <ul class="prohibit-list">
+          <li>감염 의심 기기의 금융 앱·통화·검색을 이용한 긴급 조치</li>
+          <li>해당(의심·미확인) 기기의 금융 앱 사용·검색</li>
+          <li>재판정 대기</li>
+          <li>본인계좌 일괄지급정지를 상대 계좌 지급정지의 대체로 표시</li>
+          <li>AI 분석 결과 대기</li>
+          <li>상대가 알려준 번호·링크·앱 사용</li>
+        </ul>
+      </details>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell" aria-labelledby="f21-title">
+      <p class="notice-title" id="f21-title">F-21 신뢰·쿨링오프 장치</p>
+      <ul class="notice-list">
+        <li>오분류 가능성</li>
+        <li>공식 채널 재확인</li>
+        <li>실제 처리 권한 부재</li>
+        <li>외부 링크는 공식 허용 목록과 확인 단계 적용</li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const themeButtons = [...document.querySelectorAll("[data-theme-choice]")];
+      const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const setTheme = (theme) => {
+        root.dataset.theme = theme;
+        themeButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.themeChoice === theme)));
+      };
+      themeButtons.forEach((button) => button.addEventListener("click", () => setTheme(button.dataset.themeChoice)));
+      setTheme(preferred);
+
+      const cards = [...document.querySelectorAll(".easy-card")];
+      const nextButton = document.querySelector("[data-next-action]");
+      const liveStatus = nextButton.nextElementSibling;
+      let current = 0;
+      nextButton.addEventListener("click", () => {
+        cards[current].hidden = true;
+        current = (current + 1) % cards.length;
+        cards[current].hidden = false;
+        nextButton.textContent = current === cards.length - 1 ? "첫 행동 다시 보기" : "다음 행동 보기";
+        liveStatus.textContent = `행동 ${current + 1} 표시`;
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -22,3 +22,8 @@ __pycache__/
 # 로그·임시 파일
 *.log
 tmp/
+
+# app
+app/node_modules/
+app/.next/
+app/coverage/
