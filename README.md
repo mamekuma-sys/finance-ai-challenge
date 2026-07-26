@@ -74,6 +74,7 @@ finance-ai-challenge/
 ├── README.md              # 이 파일
 ├── CLAUDE.md              # Claude Code(오케스트레이터) 컨텍스트
 ├── AGENTS.md              # Codex 등 하위 에이전트 공용 컨텍스트
+├── handoff.md             # 세션 인수인계 (현재: M단계 W1 착수용)
 ├── docs/
 │   ├── competition/       # 공모전 요강·제출물 체크리스트 (수정 금지)
 │   ├── research/          # 주제 발굴·컨셉 검증 리서치 (01~20)
