@@ -5,7 +5,7 @@
 - 작성일: 2026-07-26
 - 컨셉 근거: `31-solution-lock.md` · `../research/15-concepts-bank.md` · `../research/19-verify-final3.md`
 - 팀명·구성원: `[팀명]` / `[성명]` — 공모전 등록 정보로 최종 양식 전사 시 기입
-- ⚠️ 이전 `10-proposal-draft.md`(골든타임, `0.5-r5`)는 **폐기**. 컨셉 전면 교체.
+- ⚠️ 이전 골든타임 기획서(`0.5-r5`)는 **폐기** — `docs/archive/goldentime/planning/10-proposal-draft.md`
 
 ---
 

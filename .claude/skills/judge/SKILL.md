@@ -23,10 +23,16 @@ description: 2026 금융 AI Challenge 제출물을 AI 심사위원 관점으로 
 ### 2. 평가 대상 읽기 (신선하게, 전부)
 
 - `docs/judging/rubric.md` — 루브릭 (항상)
-- 스테이지 R: `docs/research/` 전체 (02, 03, 04, 05-decision 있으면 포함)
-- 스테이지 P: 위 + `docs/planning/` 전체 (기획서·기능명세서 초안)
+- 스테이지 R: `docs/research/` 전체
+- 스테이지 P: 위 + `docs/planning/` 전체 (기획서 `40`·기능명세서 `41`·계약 `31`·`32`)
 - 스테이지 M/F: 위 + 배포 URL 실제 접속(가능하면 curl/브라우저로 확인) + `app/` 코드 구조 훑기
 - **이전 채점 리포트는 채점이 끝나기 전까지 읽지 않는다** (드리프트 방지)
+
+> ⛔ **`docs/archive/` 아래는 채점·인용 대상이 아니다.** 폐기된 컨셉(골든타임)의 문서이며
+> 그 수치·기능·계약을 현행 산출물의 근거로 삼거나 감점 사유로 삼지 않는다.
+> **폐기 배너가 붙은 문서**(`docs/research/06-decision.md`, `12-final-concept.md`)도
+> 컨셉 서술은 채점 대상이 아니다 — 단 `12-final-concept.md` §2의 **사용금지 수치
+> 레지스트리는 계속 유효**하다.
 
 ### 3. 채점
 
@@ -41,9 +47,11 @@ description: 2026 금융 AI Challenge 제출물을 AI 심사위원 관점으로 
 
 **v2 필수 대조 (하나라도 빠뜨리면 채점 무효)**
 
-1. **사용금지 수치 레지스트리** — `docs/research/12-final-concept.md` §2 +
-   `10-verification-verdict.md` §1 정정표 + `04-verification-digest.md` 정정표.
-   등재된 값이 산출물에 있으면 R2에 건당 −3
+1. **사용금지 수치 레지스트리** — `docs/research/13-concept-brief.md` §6 +
+   `12-final-concept.md` §2 + `10-verification-verdict.md` §1 정정표 +
+   `04-verification-digest.md` 정정표 + `19-verify-final3.md`.
+   등재된 값이 산출물에 있으면 R2에 건당 −3.
+   **「176건」은 오기이며 원본은 173건** — 인용 시 기간(2024-01~2025-08)·주체 병기 필수
 2. **AI 가이드라인 충돌** — "AI가 판정/결정한다"는 서술이 있으면 R1 −2
    (「금융분야 AI 가이드라인」 2026-06-22 시행 제3원칙 "보조수단성")
 3. **기존 서비스 4개 층 조사 기록** — 공공 인프라 / 공동개최사 자사 / 민간·개인위키·법무법인 /
