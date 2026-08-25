@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/mismatch-finding.schema.json",
+  "title": "MismatchFinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mismatch_id",
+    "constraint_id",
+    "finding_id",
+    "implementation_status",
+    "severity",
+    "evidence_links",
+    "is_synthetic"
+  ],
+  "properties": {
+    "mismatch_id": { "type": "string" },
+    "constraint_id": { "type": "string" },
+    "finding_id": { "type": "string" },
+    "implementation_status": { "enum": ["IMPLEMENTED", "PARTIAL", "MISSING", "UNKNOWN"] },
+    "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+    "evidence_links": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string" }
+    },
+    "is_synthetic": { "const": true }
+  }
+}

@@ -1,0 +1,8 @@
+# RWA Guard
+
+RWA Guard is a synthetic-data MVP for continuous assurance of tokenized securities.
+
+- P0: issuance document controls, deterministic Solidity checks, evidence-linked findings and reports.
+- P1: Kaia Kairos event monitoring and price-integrity simulation.
+- Evidence mode is always labeled LIVE or REPLAY.
+- The service does not approve issuance, stop trading, or move real funds.

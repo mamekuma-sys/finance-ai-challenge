@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/scan-run.schema.json",
+  "title": "ScanRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scan_id",
+    "asset_id",
+    "status",
+    "input_hashes",
+    "rule_versions",
+    "started_at",
+    "is_synthetic"
+  ],
+  "properties": {
+    "scan_id": { "type": "string" },
+    "asset_id": { "type": "string" },
+    "status": { "enum": ["QUEUED", "RUNNING", "COMPLETED", "PARTIAL", "FAILED"] },
+    "input_hashes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "rule_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "is_synthetic": { "const": true }
+  }
+}

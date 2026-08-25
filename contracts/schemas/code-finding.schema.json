@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/code-finding.schema.json",
+  "title": "CodeFinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scan_id",
+    "finding_id",
+    "rule_id",
+    "severity",
+    "status",
+    "title",
+    "source_hash",
+    "code_location",
+    "deterministic_evidence",
+    "tool_versions",
+    "is_synthetic"
+  ],
+  "properties": {
+    "scan_id": { "type": "string" },
+    "finding_id": { "type": "string" },
+    "rule_id": { "type": "string" },
+    "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+    "status": { "enum": ["CONFIRMED", "PROBABLE", "NEEDS_REVIEW", "UNKNOWN"] },
+    "title": { "type": "string", "minLength": 1 },
+    "source_hash": { "type": "string", "minLength": 1 },
+    "code_location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "start_line", "end_line", "excerpt"],
+      "properties": {
+        "file": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "excerpt": { "type": "string" }
+      }
+    },
+    "deterministic_evidence": { "type": "array", "items": { "type": "string" } },
+    "tool_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "is_synthetic": { "const": true }
+  }
+}

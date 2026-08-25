@@ -1,0 +1,40 @@
+{
+  "fixture_version": "0.1.0",
+  "scenario_id": "replay_oracle_shock_01",
+  "asset_id": "asset_synthetic_hanriver_01",
+  "mode": "REPLAY",
+  "chain_id": 1001,
+  "events": [
+    {
+      "tx_hash": "0xsynthetic000000000000000000000000000000000000000000000000000001",
+      "log_index": 0,
+      "block_number": 18402118,
+      "event_name": "PriceUpdated",
+      "previous_value": "10000",
+      "changed_value": "12100",
+      "timestamp": "2026-08-25T03:00:00Z",
+      "is_synthetic": true
+    },
+    {
+      "tx_hash": "0xsynthetic000000000000000000000000000000000000000000000000000002",
+      "log_index": 0,
+      "block_number": 18402119,
+      "event_name": "PriceUpdated",
+      "previous_value": "12100",
+      "changed_value": "12240",
+      "timestamp": "2026-08-25T03:00:03Z",
+      "is_synthetic": true
+    },
+    {
+      "tx_hash": "0xsynthetic000000000000000000000000000000000000000000000000000003",
+      "log_index": 0,
+      "block_number": 18402120,
+      "event_name": "Minted",
+      "previous_value": "100000",
+      "changed_value": "120000",
+      "timestamp": "2026-08-25T03:00:06Z",
+      "is_synthetic": true
+    }
+  ],
+  "is_synthetic": true
+}

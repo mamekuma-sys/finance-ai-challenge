@@ -1,0 +1,13 @@
+{
+  "asset_id": "asset_synthetic_hanriver_01",
+  "name": "Han River Office 01",
+  "asset_type": "SYNTHETIC_COMMERCIAL_REAL_ESTATE_BENEFICIARY_TOKEN",
+  "description": "공모전 데모를 위해 생성한 가상 상업용 부동산 수익증권",
+  "currency": "KRW",
+  "token_unit": "TOKEN",
+  "planned_max_supply": 100000,
+  "network": "KAIA_KAIROS",
+  "chain_id": 1001,
+  "contract_address": null,
+  "is_synthetic": true
+}

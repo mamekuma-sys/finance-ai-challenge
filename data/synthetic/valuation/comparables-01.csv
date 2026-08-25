@@ -1,0 +1,11 @@
+record_id,area_sqm,age_years,transit_minutes,occupancy_rate,annual_income_million_krw,unit_value_krw,is_synthetic
+synthetic_cmp_001,8100,7,4,0.96,5020,9800,true
+synthetic_cmp_002,7600,11,7,0.91,4310,8950,true
+synthetic_cmp_003,9250,5,6,0.97,5780,10350,true
+synthetic_cmp_004,6800,14,9,0.88,3510,8120,true
+synthetic_cmp_005,8700,9,5,0.94,5210,9650,true
+synthetic_cmp_006,7900,6,8,0.92,4490,9020,true
+synthetic_cmp_007,10100,4,3,0.98,6540,10900,true
+synthetic_cmp_008,7200,13,10,0.87,3740,8260,true
+synthetic_cmp_009,8450,8,6,0.95,4980,9480,true
+synthetic_cmp_010,9000,10,7,0.93,5390,9720,true

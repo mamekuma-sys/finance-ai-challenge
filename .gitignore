@@ -6,14 +6,23 @@
 .env.*
 !.env.example
 
-# 의존성·빌드 (스택 확정 후 보강)
+# 의존성·빌드
 node_modules/
 dist/
 build/
 .next/
+coverage/
+*.tsbuildinfo
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.forge-cache/
+chain/cache/
+chain/out/
 
 # 에디터
 .vscode/
@@ -23,7 +32,7 @@ __pycache__/
 *.log
 tmp/
 
-# app
-app/node_modules/
-app/.next/
-app/coverage/
+# 로컬 런타임 데이터
+.supabase/
+uploads/
+reports/

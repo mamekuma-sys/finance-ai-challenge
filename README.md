@@ -1,93 +1,68 @@
-# 2026 금융 AI Challenge
+# RWA Guard — 2026 금융 AI Challenge
 
-> 상상을 넘어 실제로, AI로 움직이는 금융의 미래 — AI 기반 금융 현안 해결 아이디어 및 웹서비스(MVP) 개발 공모전 참가 프로젝트
+RWA Guard는 합성 토큰증권의 **발행 문서 → 스마트컨트랙트 코드 → 온체인 이벤트 → 경보**를 하나의 Evidence Spine으로 연결하는 금융 통제 연속검증 MVP다.
 
-## 핵심 일정
+## 제출 일정
 
-| 날짜 | 내용 |
+| 일정 | 내용 |
 |---|---|
-| **2026. 9. 7.(월) 10:00** | 기획서(PDF) + MVP 산출물(기능명세서 PDF, 웹서비스 URL) 제출 마감 |
-| 9. 7.(월) 11:00 ~ 9. 11.(금) 23:59 | 웹서비스 URL 접근 가능 필수 (다운 시 **결격**) |
-| 10. 8.(목) 23:59 | (본선 진출 시) 발표자료 PDF + 소스코드 ZIP 제출 |
-| 10. 13.(화) | (본선 진출 시) 오프라인 발표 심사 — PT 15분 + Q&A 5분 |
+| 2026-09-07 10:00 KST | 기획서, 기능명세서, 공개 웹서비스 URL 제출 |
+| 2026-09-07 11:00 ~ 09-11 23:59 | 제출 URL 무중단 접근 필수 |
+| 2026-10-08 23:59 | 발표심사 진출 시 발표자료와 소스코드 제출 |
 
-## 참가 정보
+## 범위
 
-- **참가 형태**: 개인 참가 (1인 + AI 에이전트)
-- **주제**: **「기록으로」 — 내 편의 사고조사실.** 무단이체·명의도용·사기 피해자가,
-  은행이 **기억으로 답하라고 요구하는 항목**을 자기 기기에 남아 있는 **기록으로** 답하고,
-  **어느 제도의 문이 열려 있는지와 그 문들 사이의 순서**를 신청 전에 확인하는
-  무설치·무로그인 웹 서비스 (`docs/planning/31-solution-lock.md`)
-- **기술 스택**: Next.js(App Router)+TypeScript / Vercel / Claude API / SSE /
-  Neon Postgres / MCP TypeScript SDK / Tailwind+shadcn
+- **P0 제출 계약:** 문서 통제조건 추출·확정, Solidity 핵심 결함 3종 검사, 문서–코드 불일치, Evidence Spine, 취약→수정 재검사, HTML/JSON 증적, 명시적 Replay
+- **P1 라이브 경쟁력:** 기준가 밴드, Kaia Kairos 이벤트 수집, 가격 무결성 경보, allowlist 시뮬레이터
+- **P2 발표심사·PoC:** 추가 룰팩, 범용 프록시, 다중 자산·네트워크, 외부 알림과 기관 워크플로
 
-### 무엇을 하지 않는가 (설계 원칙 = 규제 방어선)
+자산 유형은 합성 상업용 부동산 수익증권 1종, 네트워크는 Kaia Kairos, 핵심 결함은 접근권한·담보/발행한도·오라클 검증 3종으로 고정한다.
 
-승산·확률·예상 금액 출력 ✗ · "AI가 판정한다" 서술 ✗ · 대화형 챗봇 ✗ ·
-체크리스트 문서 생성 ✗ · "국내 최초·유일" ✗ · **대신 제출·대리 ✗**
+## 저장소 구조
 
-## 배포 URL
-
-| 구분 | URL | 상태 |
-|---|---|---|
-| **서비스(심사용)** | **https://app-three-phi-xcbdkemvcf.vercel.app** | 공개 접근 가능(무로그인) |
-| 기계가독 안내 | https://app-three-phi-xcbdkemvcf.vercel.app/llms.txt | 공개 |
-
-> ⚠️ **현재 배포본은 폐기된 골든타임 빌드다.** 「기록으로」로 W1~W5에 걸쳐 교체한다.
-> 심사 대상 배포는 **2026-09-06 동결본**이다.
->
-> ⚠️ Vercel **배포 전용 URL**(`app-<hash>-<team>.vercel.app`)에는 배포 보호(SSO)가
-> 걸려 있어 외부에서 열 수 없다. **심사 제출에는 반드시 위 production 별칭 URL을 쓴다.**
-> 제출 전 무로그인 접근을 재확인하고 9/11까지 무중단 유지·모니터링을 설정한다(NF-01).
-
-## 현재 상태 (2026-07-27)
-
-- **컨셉 전면 교체(2026-07-26)** — 「골든타임」 폐기 → **「기록으로」** 확정.
-  부서 스케일 재점검(컨셉 5라운드 + 조직도 지도 + 3-way 적대적 검증)의 결과다.
-  폐기 문서: `docs/archive/goldentime/` · 스냅샷: git 태그 `goldentime-final`
-- **P단계 종료 — judge 93.8/100** (목표 85). `docs/judging/scores/012-P.md`
-  - 기획서 `1.2` (`docs/planning/40-proposal-draft.md`) — 데이콘 양식 7항목
-  - 기능명세서 `1.0` (`docs/planning/41-spec-draft.md`) — 구현 계약 F-01~F-19
-  - 대체 경로 규칙 원본 (`docs/planning/32-alt-route-track.md`) — 조문 전문 확보
-- **문제 정의** (5대 은행, 2024-01~2025-08, 이인영 의원실 국정감사 제출자료)
-
-  | 상담 | 신청 | 심사제외 | 배상 |
-  |---:|---:|---:|---:|
-  | **2,135** | **173** (8.1%) | **60** (신청의 34.7%) | **18** — **상담 대비 0.84%** |
-
-- **이번 라운드의 결정적 발견** — 34.7%는 하나의 덩어리가 아니다.
-  통신사기피해환급법 §2조제2호 **단서**("재화의 공급 또는 용역의 제공 등을 가장한 행위는
-  제외하되, 대출의 제공·알선·중개를 가장한 행위는 포함")가 제외사유들을 서로 다른 법으로
-  가른다. **책임분담제에서 제외되는 「피해자 직접 이체」는 그 법 §2②가목의 정면 대상**이다.
-  그리고 **소송·압류를 먼저 걸면 환급 경로가 닫힌다**(§4의2·§5①) — 어느 안내에도 없는 규칙이다.
-- **다음: M단계 W1~W6** — 엔진 이식·경로 배정 규칙 코드화(W1) → 관문·경로 보드(W2)
-  → 타임라인·쟁점·반사실(W3) → AI 파이프라인·증적 패키지(W4) → A-면·하네스(W5)
-  → 릴리스 게이트·PDF·hwpx 전사·동결(W6)
-
-> ⚠️ **M단계 첫 채점은 급락한다.** M 루브릭은 R4(가중치 20)를 **배포본 실측**으로 재고
-> D 신호도 *"배포본에서 작동하는가"*로 센다. 문서 93.8은 M 점수를 예측하지 않는다.
-
-## 프로젝트 구조
-
-```
-finance-ai-challenge/
-├── README.md              # 이 파일
-├── CLAUDE.md              # Claude Code(오케스트레이터) 컨텍스트
-├── AGENTS.md              # Codex 등 하위 에이전트 공용 컨텍스트
-├── handoff.md             # 세션 인수인계 (현재: M단계 W1 착수용)
-├── docs/
-│   ├── competition/       # 공모전 요강·제출물 체크리스트 (수정 금지)
-│   ├── research/          # 주제 발굴·컨셉 검증 리서치 (01~20)
-│   ├── planning/          # 솔루션 확정(31)·대체 경로(32)·기획서(40)·기능명세서(41)
-│   ├── judging/           # AI 심사 루브릭·채점 리포트 (judge 스킬)
-│   ├── archive/goldentime/  # ⛔ 폐기 컨셉 — 인용 금지
-│   └── decisions.md       # 주요 의사결정 로그
-└── app/                   # MVP 웹서비스
+```text
+apps/web/                 팀원 A — Next.js 관제 콘솔과 Evidence Spine
+services/backend/         팀원 B — FastAPI, 문서 AI, job worker, 리포트
+chain/                    팀원 C — Solidity fixture, Foundry, 보안 룰 입력
+data/synthetic/           팀원 D — 합성 데이터, LIVE/REPLAY 이벤트 fixture
+infra/                    팀원 D — Docker, Supabase migration, 배포 운영
+contracts/                전 팀 공통 — JSON Schema와 예시 payload
+docs/product/             PRD와 제품 범위
+docs/architecture/        기술·시각 방향과 계약 설명
+docs/project/             역할, 일정, 완료 정의
+docs/submission/          제출 양식과 운영 체크
+docs/competition/         공모전 원문 요약 — 수정 금지
 ```
 
-## 에이전트 운용 체계
+## 빠른 시작
 
-- **Claude Code** — 오케스트레이터. 리서치, 기획, 작업 분배, 코드 리뷰, 통합을 담당.
-- **Codex CLI** — 하위 코딩 에이전트. Claude가 `codex exec`로 구현 작업을 위임.
+### Web
 
-자세한 운용 규칙은 `CLAUDE.md` 참조.
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+### API와 worker
+
+```bash
+cd services/backend
+python -m venv .venv
+python -m pip install -e ".[dev]"
+fastapi dev src/rwa_guard/api/main.py
+python -m rwa_guard.worker
+```
+
+### 전체 검증
+
+PowerShell에서 `./scripts/verify.ps1`을 실행한다. 설치되지 않은 도구는 명확히 건너뛰며, 설치된 Web/Python/Foundry 검사를 수행한다.
+
+## 구현 기준 문서
+
+1. [`docs/product/prd.md`](docs/product/prd.md) — 기능·우선순위·수용 기준의 단일 진실
+2. [`docs/architecture/stack-and-visual-direction.md`](docs/architecture/stack-and-visual-direction.md) — 기술 경계와 Assurance Ledger UI
+3. [`contracts/README.md`](contracts/README.md) — 팀 간 payload 계약
+4. [`docs/project/ownership.md`](docs/project/ownership.md) — 4인 소유권과 통합 규칙
+
+모든 샘플은 합성 데이터이며 `is_synthetic=true`를 유지한다. 실제 금융정보·개인정보·실제 투자자 자금은 사용하지 않는다.

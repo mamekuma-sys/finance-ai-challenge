@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/evidence-report.schema.json",
+  "title": "EvidenceReport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "scan_run",
+    "controls",
+    "code_findings",
+    "mismatches",
+    "onchain_evidence",
+    "lineage",
+    "generated_at",
+    "is_synthetic"
+  ],
+  "properties": {
+    "report_id": { "type": "string" },
+    "scan_run": { "$ref": "./scan-run.schema.json" },
+    "controls": { "type": "array", "items": { "$ref": "./control-spec.schema.json" } },
+    "code_findings": { "type": "array", "items": { "$ref": "./code-finding.schema.json" } },
+    "mismatches": { "type": "array", "items": { "$ref": "./mismatch-finding.schema.json" } },
+    "onchain_evidence": {
+      "type": "array",
+      "items": { "$ref": "./onchain-evidence.schema.json" }
+    },
+    "lineage": { "type": "object" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "is_synthetic": { "const": true }
+  }
+}

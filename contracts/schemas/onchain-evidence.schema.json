@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/onchain-evidence.schema.json",
+  "title": "OnchainEvidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "mode",
+    "chain_id",
+    "tx_hash",
+    "log_index",
+    "block_number",
+    "event_name",
+    "is_synthetic"
+  ],
+  "properties": {
+    "asset_id": { "type": "string" },
+    "mode": { "enum": ["LIVE", "REPLAY"] },
+    "chain_id": { "type": "integer", "minimum": 1 },
+    "tx_hash": { "type": "string", "minLength": 1 },
+    "log_index": { "type": "integer", "minimum": 0 },
+    "block_number": { "type": "integer", "minimum": 0 },
+    "event_name": { "type": "string", "minLength": 1 },
+    "previous_value": { "type": ["string", "null"] },
+    "changed_value": { "type": ["string", "null"] },
+    "fixture_version": { "type": ["string", "null"] },
+    "is_synthetic": { "const": true }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "REPLAY" } } },
+      "then": { "required": ["fixture_version"] }
+    }
+  ]
+}

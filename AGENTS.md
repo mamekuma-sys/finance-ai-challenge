@@ -1,79 +1,52 @@
-# AGENTS.md — 에이전트 공용 컨텍스트
-
-이 파일은 이 저장소에서 작업하는 모든 코딩 에이전트(Codex 등)가 읽는 공통 컨텍스트다.
+# AGENTS.md — RWA Guard 공용 구현 계약
 
 ## 프로젝트
 
-2026 금융 AI Challenge 공모전 참가 프로젝트. AI 기반 금융 현안 해결 웹서비스(MVP)를 개발해
-2026. 9. 7. 10:00까지 배포 URL과 함께 제출한다. 배포된 URL은 9. 11.까지 무중단 유지되어야 한다.
+2026 금융 AI Challenge에 제출할 4인 팀 프로젝트다. RWA Guard는 합성 토큰증권의 발행 문서, 스마트컨트랙트 코드, 온체인 이벤트 사이의 통제 불일치를 근거와 함께 보여주는 웹서비스다.
 
-- 주제: **「기록으로」 — 내 편의 사고조사실.** 무단이체·명의도용·사기 피해자가, 은행이
-  **기억으로 답하라고 요구하는 항목**을 자기 기기에 남아 있는 **기록으로** 답하고,
-  **어느 제도의 문이 열려 있는지와 그 문들 사이의 순서**를 신청 전에 확인하는
-  무설치·무로그인 웹 서비스 (`docs/planning/31-solution-lock.md`)
-- 기술 스택: **Next.js(App Router)+TypeScript / Vercel / Claude API / SSE /
-  Neon Postgres / MCP TypeScript SDK / Tailwind+shadcn** (`docs/planning/03-stack-proposal.md`)
-- 구현 계약: **`docs/planning/41-spec-draft.md`(기능명세서)가 단일 진실이다.** 기능
-  ID(F-01~F-19), `CaseState` 스키마(§4.2), 관문 엔진 총함수(§4.1), 규칙셋 R-01~R-04(§4.3),
-  인수 기준·게이트(§9)를 임의 해석·변경하지 않는다.
-- 주요 결정 로그: `docs/decisions.md`
+- 제출 마감: 2026-09-07 10:00 KST
+- URL 유지: 2026-09-07 11:00 ~ 2026-09-11 23:59
+- 제품 단일 진실: `docs/product/prd.md`
+- 기술·시각 단일 진실: `docs/architecture/stack-and-visual-direction.md`
+- 팀 계약: `contracts/schemas/`와 `docs/project/ownership.md`
 
-> ⛔ **`docs/archive/goldentime/`는 폐기된 컨셉이다.** 그 안의 수치·기능·계약·서사를
-> 인용하거나 재사용하지 마라. 이전 기획서 `10`·명세서 `11`은 거기로 이동했다.
+## 4개 작업 트랙
 
-## 범위 계약 (2026-07-27 — 코어 추가·축소 금지)
+- A — `apps/web/`: Next.js, Evidence Spine, diff, 리포트, 상태 표시
+- B — `services/backend/`: FastAPI, Pydantic, PDF/AI pipeline, job, DB
+- C — `chain/` 및 backend contract pipeline: Solidity fixture, Slither/AST/룰, Foundry
+- D — `data/synthetic/`, chain worker, `infra/`: Kairos, 가격, Replay, 배포 운영
 
-- **T1 런타임 코어(must, 삭제 불가):** F-01 사건 선택 · F-02 타임라인 재생 ·
-  F-03 **관문 ① 경로 배정** · F-04 경로 보드 · F-05 **순서 제약 시뮬레이션** ·
-  F-06 기억↔기록 전환 · F-07 관문 ② 쟁점 보드 · F-08 반사실 시뮬레이터 ·
-  F-09 은행 심사역 뷰 · F-10 증적 패키지 · F-11 내 사건 넣기 · F-17 정직한 표시
-- **T2 신뢰·A면(must):** F-12 `llms.txt`·`/agent` · F-13 공개 조회·계산 API ·
-  F-15 평가 하네스 · F-16 가드레일 · F-19 릴리스 게이트
-- **T3 should:** F-18 규칙·법령 뷰어 / **T4 nice:** F-14 MCP
-- **일정 압박 시 삭제가 아니라 축소한다** — 축소판 계약은 명세서 §2.3에 고정돼 있다
+공통 계약 파일을 바꿀 때는 생산자, 소비자, example payload를 같은 변경에서 갱신한다.
 
-## 디렉토리 구조
+## 범위 불변식
 
-- `docs/competition/` — 공모전 요강, 제출물 체크리스트 (**수정 금지**, 참조용)
-- `docs/research/` — 주제 발굴·컨셉 검증 리서치 (금지 수치 레지스트리: `13-concept-brief.md` §6)
-- `docs/planning/` — 기획서(`40`)·기능명세서(`41`)·솔루션 확정(`31`)·대체 경로 규칙(`32`)
-- `docs/archive/goldentime/` — **폐기 컨셉. 인용 금지**
-- `app/` — MVP 웹서비스 코드
+1. P0가 모두 통과하기 전에는 자산 유형, 네트워크, 핵심 룰을 늘리지 않는다.
+2. 합성 상업용 부동산 수익증권 1종, Kaia Kairos 1개, 핵심 결함 3종만 공식 지원한다.
+3. AI는 문서 구조화, 의미 매핑 후보, 설명을 담당한다. 확정 Critical/High는 결정적 코드·규칙 근거를 반드시 가진다.
+4. AI 단독 결과는 `NEEDS_REVIEW`이며 `CONFIRMED`로 승격할 수 없다.
+5. 모든 Critical/High는 문서 page/span과 코드 file/line을 연결한다.
+6. 온체인 데이터는 `LIVE` 또는 `REPLAY`를 반드시 노출한다. 실제 receipt 없는 데이터를 LIVE로 표시하지 않는다.
+7. P1 장애는 P0 문서–코드 검사와 리포트 생성을 중단시키지 않는다.
+8. 자동 발행 승인, 거래정지, 실제 자금 이동을 구현하지 않는다.
+9. 실제 금융데이터와 개인정보를 저장하지 않는다. 모든 fixture는 `is_synthetic=true`다.
+10. 미실측 정확도·지연·가용성 수치를 완료 실적으로 표현하지 않는다.
 
-## 작업 규칙
+## 파일 규칙
 
-- 지시받은 작업 범위를 벗어난 파일을 수정하지 않는다.
-- `docs/competition/` 아래 파일은 절대 수정하지 않는다.
-- 실제 금융데이터·개인정보를 코드나 문서에 포함하지 않는다. 샘플 데이터는 합성 데이터만
-  사용 (`is_synthetic=true`, 더미 번호 `010-0000-0000`, URL은 `.invalid`/`example.com`).
-- 외부 코드·자료를 가져올 때는 라이선스를 확인하고 출처를 남긴다 (공모전 표절 규정상 실격 사유).
-- 커밋은 오케스트레이터(Claude)가 수행한다. 에이전트는 파일 변경까지만 수행.
+- `docs/competition/`은 참조용이며 수정하지 않는다.
+- 삭제된 이전 프로젝트의 코드·문서·도메인 규칙을 Git 이력에서 복원하거나 재사용하지 않는다.
+- 외부 코드·데이터를 추가하면 라이선스와 출처를 `NOTICE.md` 또는 해당 데이터 README에 기록한다.
+- 환경변수와 signer key를 커밋하지 않는다. `.env.example`에는 이름과 설명만 둔다.
+- 파일 수정은 요청 범위 안에서 수행하고, 관련 없는 사용자 변경을 보존한다.
 
-## 설계 불변식 (위반 시 릴리스 차단 — 명세서 §1.3·§9.2)
+## 기본 검증
 
-1. **판정은 생성형 AI 밖**이다. 관문 판정·경로 배정·과실 평가는 결정적 규칙 엔진이 한다.
-   같은 입력 → 같은 출력이 보장돼야 한다.
-2. **확률·승산·예상 금액을 출력하지 않는다.** 응답 스키마에 해당 필드를 만들지 마라.
-   금액은 **구간(band)으로만** 받는다 — 원금액을 받지 않아 산출이 구조적으로 불가능하다.
-3. **제출·쓰기 엔드포인트를 만들지 않는다.** 에이전트가 대신 신청할 수 없어야 한다.
-4. **모든 규범 주장에 조문·공개자료 인용을 강제**한다. `citations`가 빈 규칙은 빌드 실패.
-5. **개인 사건 데이터 서버 무저장**, 요청 본문 무로깅.
-6. **합성 사건 경로(F-01~F-08, F-10)는 모델 호출 없이 작동**해야 한다(무중단 담보).
-   AI 의존 구간은 F-09·F-11뿐이다.
+- Web: `cd apps/web && npm run verify`
+- Backend: `cd services/backend && python -m pytest && python -m ruff check .`
+- Solidity: `cd chain && forge build && forge test`
+- 공통: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1`
 
-## 문서·용어 규칙 (심사 대응 — 위반 시 감점·실격 위험)
+## 완료 정의
 
-- **수치 인용은 검증 통과분만**: `docs/research/19-verify-final3.md`·`04-verification-digest.md`
-  정정표를 통과한 값만 쓰고 **기간·주체·출처**를 병기한다.
-- **법령 인용은 시행령까지 대조**한다. 예: 통신사기피해환급법 §5①6호 본문은 "3만원"이지만
-  **시행령 §6②이 정한 금액은 1만원**이다. 인용 시 **시행일 병기** 필수.
-  법령 원문은 **법제처 Open API**(`law.go.kr/DRF/lawService.do`)로 취득한다 — 웹 페이지는
-  SPA라 본문이 렌더링되지 않는다.
-- **금지 표현**: 피해 "폭증"(정부 공식 프레임은 감소+풍선효과) / "최초·유일" /
-  "무과실 배상 통과"(계류 중이며, 통과된 의안 2216766은 가상자산 건) / 특정 은행 배상 실적 지목 /
-  경쟁 서비스 기능 부재 단정(→ "확인되지 않았다") / 미실측 성능 수치 / "AI가 판정한다·결정한다"
-- **용어 계약**: "행동 이벤트 이력(내 기기 보관)"(감사 원장 아님) / `confidence_label`은
-  `stated`·`recorded`·`absent` 세 값(확률 아님) / 관문 판정 결과는 **"예비 평가"** /
-  결손 발급 경로 안내문은 **고정 템플릿+슬롯**(LLM 자유 생성 금지) /
-  「176건」은 오기이며 원본은 **173건**
-- **개인정보 경계**: 이용자 사건은 서버 무저장(`sessionStorage` 전용), 요청 본문 로깅 금지.
+기능 완료는 화면 존재가 아니라 합성 fixture를 사용한 `ControlSpec → CodeFinding → MismatchFinding → EvidenceReport` 경로가 재현 가능하고, 실패·제한·LIVE/REPLAY 상태가 정직하게 표시되는 것을 뜻한다.
