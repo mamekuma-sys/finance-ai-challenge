@@ -64,5 +64,6 @@ PowerShell에서 `./scripts/verify.ps1`을 실행한다. 설치되지 않은 도
 2. [`docs/architecture/stack-and-visual-direction.md`](docs/architecture/stack-and-visual-direction.md) — 기술 경계와 Assurance Ledger UI
 3. [`contracts/README.md`](contracts/README.md) — 팀 간 payload 계약
 4. [`docs/project/ownership.md`](docs/project/ownership.md) — 4인 소유권과 통합 규칙
+5. [`docs/project/team-development-operating-plan.md`](docs/project/team-development-operating-plan.md) — 화면·AI·역할·브랜치·풀스택 개발 운영 계약
 
 모든 샘플은 합성 데이터이며 `is_synthetic=true`를 유지한다. 실제 금융정보·개인정보·실제 투자자 자금은 사용하지 않는다.

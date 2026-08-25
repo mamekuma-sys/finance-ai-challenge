@@ -1,5 +1,8 @@
 # 4인 팀 소유권
 
+화면, AI 역할, 세부 업무, 브랜치·PR 및 풀스택 통합 규칙을 포함한 팀 공유본은
+[`team-development-operating-plan.md`](team-development-operating-plan.md)를 따른다.
+
 | 트랙 | 기본 소유 경로 | 책임 | 병합 전 필수 확인 |
 |---|---|---|---|
 | A 제품·프론트 | `apps/web/` | Assurance Ledger, Evidence Spine, diff, 리포트 UI | API 타입, 실패 상태, LIVE/REPLAY 라벨 |
