@@ -1,0 +1,69 @@
+{
+  "$defs": {
+    "ImplementationStatus": {
+      "enum": [
+        "IMPLEMENTED",
+        "PARTIAL",
+        "MISSING",
+        "UNKNOWN"
+      ],
+      "title": "ImplementationStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "mismatch_id": {
+      "title": "Mismatch Id",
+      "type": "string"
+    },
+    "constraint_id": {
+      "title": "Constraint Id",
+      "type": "string"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "implementation_status": {
+      "$ref": "#/$defs/ImplementationStatus"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "evidence_links": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "title": "Evidence Links",
+      "type": "array"
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "mismatch_id",
+    "constraint_id",
+    "finding_id",
+    "implementation_status",
+    "severity",
+    "evidence_links"
+  ],
+  "title": "MismatchFinding",
+  "type": "object"
+}

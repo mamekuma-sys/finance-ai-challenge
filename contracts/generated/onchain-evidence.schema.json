@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "EvidenceMode": {
+      "enum": [
+        "LIVE",
+        "REPLAY"
+      ],
+      "title": "EvidenceMode",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "mode": {
+      "$ref": "#/$defs/EvidenceMode"
+    },
+    "chain_id": {
+      "title": "Chain Id",
+      "type": "integer"
+    },
+    "tx_hash": {
+      "title": "Tx Hash",
+      "type": "string"
+    },
+    "log_index": {
+      "minimum": 0,
+      "title": "Log Index",
+      "type": "integer"
+    },
+    "block_number": {
+      "minimum": 0,
+      "title": "Block Number",
+      "type": "integer"
+    },
+    "event_name": {
+      "title": "Event Name",
+      "type": "string"
+    },
+    "previous_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Previous Value"
+    },
+    "changed_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Changed Value"
+    },
+    "fixture_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fixture Version"
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "asset_id",
+    "mode",
+    "chain_id",
+    "tx_hash",
+    "log_index",
+    "block_number",
+    "event_name"
+  ],
+  "title": "OnchainEvidence",
+  "type": "object"
+}

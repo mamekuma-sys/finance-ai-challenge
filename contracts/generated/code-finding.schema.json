@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "CodeLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "start_line",
+        "end_line",
+        "excerpt"
+      ],
+      "title": "CodeLocation",
+      "type": "object"
+    },
+    "FindingStatus": {
+      "enum": [
+        "CONFIRMED",
+        "PROBABLE",
+        "NEEDS_REVIEW",
+        "UNKNOWN"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "scan_id": {
+      "title": "Scan Id",
+      "type": "string"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "status": {
+      "$ref": "#/$defs/FindingStatus"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "source_hash": {
+      "title": "Source Hash",
+      "type": "string"
+    },
+    "code_location": {
+      "$ref": "#/$defs/CodeLocation"
+    },
+    "deterministic_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Deterministic Evidence",
+      "type": "array"
+    },
+    "tool_versions": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Tool Versions",
+      "type": "object"
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scan_id",
+    "finding_id",
+    "rule_id",
+    "severity",
+    "status",
+    "title",
+    "source_hash",
+    "code_location"
+  ],
+  "title": "CodeFinding",
+  "type": "object"
+}
