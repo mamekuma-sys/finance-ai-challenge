@@ -16,7 +16,7 @@ from rwa_guard.domain.contracts import CodeFinding, CodeLocation, FindingStatus,
 
 JsonObject = dict[str, Any]
 
-ANALYZER_VERSION = "1.0.0"
+ANALYZER_VERSION = "1.1.0"
 
 
 @dataclass(frozen=True)
@@ -160,16 +160,30 @@ class RescanResult:
 
 
 @dataclass(frozen=True)
+class _GuardFact:
+    kind: str
+    subjects: frozenset[int] = frozenset()
+    state_variables: frozenset[int] = frozenset()
+
+
+@dataclass(frozen=True)
 class _ExecutionState:
-    guards: frozenset[str] = frozenset()
+    guards: frozenset[_GuardFact] = frozenset()
     call_path: tuple[str, ...] = ()
     unsupported: frozenset[str] = frozenset()
+    bindings: tuple[tuple[int, JsonObject], ...] = ()
+    binding_frames: tuple[tuple[tuple[int, JsonObject], ...], ...] = ()
+    halted: bool = False
+    path: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class _Mutation:
     kind: str
+    variable_id: int
     variable_name: str
+    variable_category: str
+    value_subjects: frozenset[int]
     node: JsonObject
     state: _ExecutionState
     entrypoint: str
@@ -212,16 +226,27 @@ def analyze_compiled_sources(
         }
     )
     findings: list[CodeFinding] = []
+    emitted_paths: set[tuple[str, str, str, tuple[str, ...]]] = set()
 
     for mutation in mutations:
+        effective_guards = analyzer.effective_guard_kinds(mutation, mutations)
         for rule in RULES:
             if mutation.kind != rule.mutation_kind:
                 continue
             missing = tuple(
-                guard for guard in rule.required_guards if guard not in mutation.state.guards
+                guard for guard in rule.required_guards if guard not in effective_guards
             )
             if not missing:
                 continue
+            path_key = (
+                rule.rule_id,
+                mutation.contract_name,
+                mutation.entrypoint,
+                mutation.state.path,
+            )
+            if path_key in emitted_paths:
+                continue
+            emitted_paths.add(path_key)
             findings.append(
                 _build_finding(
                     scan_id=scan_id,
@@ -304,7 +329,8 @@ class _AstAnalyzer:
             for function in self._entrypoints(contract):
                 label = f"{contract['name']}.{function.get('name') or function.get('kind')}"
                 initial = _ExecutionState(call_path=(label,))
-                self._execute_function(
+                mutation_start = len(self.mutations)
+                final_states = self._execute_function(
                     function,
                     [initial],
                     entrypoint=label,
@@ -312,20 +338,92 @@ class _AstAnalyzer:
                     stack=(),
                     append_label=False,
                 )
+                if not final_states:
+                    del self.mutations[mutation_start:]
+                    continue
+                entry_mutations = self.mutations[mutation_start:]
+                global_reasons = frozenset(
+                    reason
+                    for mutation in entry_mutations
+                    for reason in mutation.state.unsupported
+                    if reason == "recursive internal call"
+                    or reason.startswith("unresolved function or dynamic call")
+                )
+                if global_reasons:
+                    self.mutations[mutation_start:] = [
+                        replace(
+                            mutation,
+                            state=replace(
+                                mutation.state,
+                                unsupported=mutation.state.unsupported | global_reasons,
+                            ),
+                        )
+                        for mutation in entry_mutations
+                    ]
         supply_entries = {
             (mutation.contract_name, mutation.entrypoint)
             for mutation in self.mutations
-            if mutation.kind == "mint" and "supply" in _normalize_name(mutation.variable_name)
+            if mutation.kind == "mint" and mutation.variable_category == "supply"
+        }
+        oracle_entries = {
+            (mutation.contract_name, mutation.entrypoint)
+            for mutation in self.mutations
+            if mutation.kind == "oracle"
+            and mutation.variable_category in {"oracle_answer", "oracle_timestamp"}
         }
         return tuple(
             mutation
             for mutation in self.mutations
             if not (
                 mutation.kind == "mint"
-                and "balance" in _normalize_name(mutation.variable_name)
+                and mutation.variable_category in {"balance", "unclassified_mint_state"}
                 and (mutation.contract_name, mutation.entrypoint) in supply_entries
             )
+            and not (
+                mutation.kind == "oracle"
+                and mutation.variable_category == "unclassified_oracle_state"
+                and (mutation.contract_name, mutation.entrypoint) in oracle_entries
+            )
         )
+
+    def effective_guard_kinds(
+        self, mutation: _Mutation, mutations: Sequence[_Mutation]
+    ) -> frozenset[str]:
+        kinds: set[str] = set()
+        oracle_group = [
+            candidate
+            for candidate in mutations
+            if candidate.kind == "oracle"
+            and candidate.contract_name == mutation.contract_name
+            and candidate.entrypoint == mutation.entrypoint
+            and candidate.state.path == mutation.state.path
+        ]
+        answer_subjects = frozenset(
+            subject
+            for candidate in oracle_group
+            if candidate.variable_category == "oracle_answer"
+            for subject in candidate.value_subjects
+        )
+        timestamp_subjects = frozenset(
+            subject
+            for candidate in oracle_group
+            if candidate.variable_category == "oracle_timestamp"
+            for subject in candidate.value_subjects
+        )
+        for fact in mutation.state.guards:
+            if fact.kind == "cap_guard":
+                if mutation.variable_id not in fact.state_variables:
+                    continue
+                if mutation.value_subjects and not mutation.value_subjects.issubset(fact.subjects):
+                    continue
+            elif fact.kind == "positive_answer":
+                if not answer_subjects or not answer_subjects.issubset(fact.subjects):
+                    continue
+            elif fact.kind in {"not_future", "max_age"}:
+                if not timestamp_subjects or not timestamp_subjects.issubset(fact.subjects):
+                    continue
+            kinds.add(fact.kind)
+        return frozenset(kinds)
 
     def _index(self, node: Any, contract: JsonObject | None) -> None:
         if isinstance(node, list):
@@ -399,19 +497,31 @@ class _AstAnalyzer:
             states = [replace(state, call_path=(*state.call_path, label)) for state in states]
 
         next_stack = (*stack, function_id)
+        resolved_modifiers: list[tuple[JsonObject, JsonObject]] = []
         for invocation in function.get("modifiers", []):
             modifier_id = _referenced_declaration(invocation.get("modifierName"))
             modifier = self.modifiers.get(modifier_id)
             if modifier is None:
                 states = [self._unsupported(state, "unresolved modifier") for state in states]
                 continue
+            resolved_modifiers.append((modifier, invocation))
+            suffix = self._modifier_suffix(modifier)
+            if suffix and _statements_always_revert(suffix):
+                return []
             states = self._execute_modifier_prefix(
                 modifier,
+                invocation,
                 states,
                 entrypoint=entrypoint,
                 contract_name=contract_name,
                 stack=next_stack,
             )
+
+        if any(self._modifier_suffix(modifier) for modifier, _ in resolved_modifiers):
+            states = [
+                self._unsupported(state, "modifier postlude affects commit semantics")
+                for state in states
+            ]
 
         body = function.get("body")
         if isinstance(body, dict):
@@ -431,9 +541,29 @@ class _AstAnalyzer:
             return restored
         return states
 
+    @staticmethod
+    def _modifier_suffix(modifier: JsonObject) -> list[Any]:
+        body = modifier.get("body")
+        if not isinstance(body, dict):
+            return []
+        statements = body.get("statements", [])
+        placeholder_index = next(
+            (
+                index
+                for index, statement in enumerate(statements)
+                if isinstance(statement, dict)
+                and statement.get("nodeType") == "PlaceholderStatement"
+            ),
+            None,
+        )
+        if placeholder_index is None:
+            return []
+        return list(statements[placeholder_index + 1 :])
+
     def _execute_modifier_prefix(
         self,
         modifier: JsonObject,
+        invocation: JsonObject,
         states: list[_ExecutionState],
         *,
         entrypoint: str,
@@ -457,6 +587,7 @@ class _AstAnalyzer:
             return [self._unsupported(state, "modifier without continuation") for state in states]
         label = _node_label(modifier, self.parent_contract)
         original_depth = len(states[0].call_path) if states else 0
+        states = self._bind_states(modifier, invocation.get("arguments", []), states)
         states = [replace(state, call_path=(*state.call_path, label)) for state in states]
         states = self._execute_statements(
             statements[:placeholder_index],
@@ -465,7 +596,8 @@ class _AstAnalyzer:
             contract_name=contract_name,
             stack=stack,
         )
-        return [replace(state, call_path=state.call_path[:original_depth]) for state in states]
+        states = [replace(state, call_path=state.call_path[:original_depth]) for state in states]
+        return self._restore_bindings(states)
 
     def _execute_block(
         self,
@@ -497,9 +629,13 @@ class _AstAnalyzer:
         for statement in statements:
             if not isinstance(statement, dict) or not current:
                 continue
-            current = self._execute_statement(
+            halted = [state for state in current if state.halted]
+            active = [state for state in current if not state.halted]
+            if not active:
+                continue
+            current = halted + self._execute_statement(
                 statement,
-                current,
+                active,
                 entrypoint=entrypoint,
                 contract_name=contract_name,
                 stack=stack,
@@ -524,8 +660,10 @@ class _AstAnalyzer:
                 contract_name=contract_name,
                 stack=stack,
             )
-        if node_type in {"RevertStatement", "Return"}:
+        if node_type == "RevertStatement":
             return []
+        if node_type == "Return":
+            return [replace(state, halted=True) for state in states]
         if node_type == "InlineAssembly":
             states = [self._unsupported(state, "inline assembly") for state in states]
             self._record_unsupported_entry_mutation(statement, states, entrypoint, contract_name)
@@ -534,30 +672,42 @@ class _AstAnalyzer:
             condition = statement.get("condition", {})
             true_body = statement.get("trueBody")
             false_body = statement.get("falseBody")
-            if _terminates(true_body) and false_body is None:
-                guards = _classify_guards(condition)
-                return [replace(state, guards=state.guards | guards) for state in states]
-            if _terminates(false_body):
-                guards = _classify_guards(condition)
-                return [replace(state, guards=state.guards | guards) for state in states]
+            branch_id = str(statement.get("src", "unknown"))
+            true_states = self._add_condition_guards(
+                [replace(state, path=(*state.path, f"{branch_id}:true")) for state in states],
+                condition,
+                truth=True,
+            )
+            false_states = self._add_condition_guards(
+                [replace(state, path=(*state.path, f"{branch_id}:false")) for state in states],
+                condition,
+                truth=False,
+            )
             true_states = self._execute_optional_body(
                 true_body,
-                states,
+                true_states,
                 entrypoint=entrypoint,
                 contract_name=contract_name,
                 stack=stack,
             )
             false_states = self._execute_optional_body(
                 false_body,
-                states,
+                false_states,
                 entrypoint=entrypoint,
                 contract_name=contract_name,
                 stack=stack,
             )
             return [*true_states, *false_states]
+        if node_type == "VariableDeclarationStatement":
+            return self._bind_local_declaration(statement, states)
         if node_type == "ExpressionStatement":
             expression = statement.get("expression")
             if isinstance(expression, dict):
+                if (
+                    expression.get("nodeType") == "FunctionCall"
+                    and _call_name(expression.get("expression")) == "revert"
+                ):
+                    return []
                 return self._execute_expression(
                     expression,
                     states,
@@ -566,7 +716,9 @@ class _AstAnalyzer:
                     stack=stack,
                 )
         if node_type in {"TryStatement", "WhileStatement", "ForStatement", "DoWhileStatement"}:
-            return [self._unsupported(state, f"unsupported {node_type}") for state in states]
+            states = [self._unsupported(state, f"unsupported {node_type}") for state in states]
+            self._record_unsupported_entry_mutation(statement, states, entrypoint, contract_name)
+            return states
         return states
 
     def _execute_optional_body(
@@ -582,13 +734,17 @@ class _AstAnalyzer:
             return list(states)
         if not isinstance(body, dict):
             return [self._unsupported(state, "unresolved branch") for state in states]
-        return self._execute_statement(
+        mutation_start = len(self.mutations)
+        executed = self._execute_statement(
             body,
             list(states),
             entrypoint=entrypoint,
             contract_name=contract_name,
             stack=stack,
         )
+        if not executed:
+            del self.mutations[mutation_start:]
+        return executed
 
     def _execute_expression(
         self,
@@ -601,6 +757,10 @@ class _AstAnalyzer:
     ) -> list[_ExecutionState]:
         node_type = expression.get("nodeType")
         if node_type in {"Assignment", "UnaryOperation"}:
+            left = expression.get("leftHandSide") or expression.get("subExpression")
+            declaration = _base_variable_declaration(left)
+            if declaration not in self.state_variables:
+                return self._update_local_binding(expression, declaration, states)
             self._record_mutation(expression, states, entrypoint, contract_name)
             return states
         if node_type != "FunctionCall":
@@ -610,19 +770,28 @@ class _AstAnalyzer:
         called_name = _call_name(called)
         if called_name in {"require", "assert"}:
             arguments = expression.get("arguments", [])
-            guards = _classify_guards(arguments[0]) if arguments else frozenset()
+            guards = (
+                self._classify_guards(arguments[0], truth=True, states=states)
+                if arguments
+                else frozenset()
+            )
             return [replace(state, guards=state.guards | guards) for state in states]
 
         declaration = _referenced_declaration(called)
         function = self.functions.get(declaration)
-        if function is not None and function.get("visibility") in {"internal", "private"}:
-            return self._execute_function(
+        if function is not None and not (
+            isinstance(called, dict) and called.get("nodeType") == "MemberAccess"
+        ):
+            bound_states = self._bind_states(function, expression.get("arguments", []), states)
+            executed = self._execute_function(
                 function,
-                states,
+                bound_states,
                 entrypoint=entrypoint,
                 contract_name=contract_name,
                 stack=stack,
             )
+            resumed = [replace(state, halted=False) for state in executed]
+            return self._restore_bindings(resumed)
         if isinstance(called, dict) and called.get("nodeType") == "MemberAccess":
             states = [
                 self._unsupported(state, f"external or dynamic call: {called_name}")
@@ -633,7 +802,405 @@ class _AstAnalyzer:
                     expression, states, entrypoint, contract_name
                 )
             return states
+        if declaration >= 0:
+            return [
+                self._unsupported(state, f"unresolved function or dynamic call: {called_name}")
+                for state in states
+            ]
         return states
+
+    def _bind_local_declaration(
+        self, statement: JsonObject, states: list[_ExecutionState]
+    ) -> list[_ExecutionState]:
+        declarations = [
+            declaration
+            for declaration in statement.get("declarations", [])
+            if isinstance(declaration, dict) and isinstance(declaration.get("id"), int)
+        ]
+        initial = statement.get("initialValue")
+        if len(declarations) != 1 or not isinstance(initial, dict):
+            return [
+                self._unsupported(state, "unresolved local declaration or tuple assignment")
+                for state in states
+            ]
+        declaration_id = int(declarations[0]["id"])
+        bound: list[_ExecutionState] = []
+        for state in states:
+            bindings = dict(state.bindings)
+            bindings[declaration_id] = self._expand_expression(initial, state)
+            bound.append(
+                replace(
+                    state,
+                    bindings=tuple(sorted(bindings.items())),
+                    binding_frames=(*state.binding_frames, state.bindings),
+                )
+            )
+        return bound
+
+    @staticmethod
+    def _restore_bindings(states: list[_ExecutionState]) -> list[_ExecutionState]:
+        restored: list[_ExecutionState] = []
+        for state in states:
+            if not state.binding_frames:
+                restored.append(state)
+                continue
+            restored.append(
+                replace(
+                    state,
+                    bindings=state.binding_frames[-1],
+                    binding_frames=state.binding_frames[:-1],
+                )
+            )
+        return restored
+
+    def _update_local_binding(
+        self,
+        expression: JsonObject,
+        declaration: int,
+        states: list[_ExecutionState],
+    ) -> list[_ExecutionState]:
+        if declaration < 0 or expression.get("nodeType") != "Assignment":
+            return [self._unsupported(state, "unresolved local mutation") for state in states]
+        if expression.get("operator") != "=":
+            return [self._unsupported(state, "compound local mutation") for state in states]
+        right = expression.get("rightHandSide")
+        if not isinstance(right, dict):
+            return [self._unsupported(state, "unresolved local assignment") for state in states]
+        updated: list[_ExecutionState] = []
+        for state in states:
+            bindings = dict(state.bindings)
+            bindings[declaration] = self._expand_expression(right, state)
+            updated.append(replace(state, bindings=tuple(sorted(bindings.items()))))
+        return updated
+
+    def _bind_states(
+        self,
+        callable_node: JsonObject,
+        arguments: Sequence[Any],
+        states: list[_ExecutionState],
+    ) -> list[_ExecutionState]:
+        parameters = callable_node.get("parameters", {}).get("parameters", [])
+        bound: list[_ExecutionState] = []
+        for state in states:
+            bindings = dict(state.bindings)
+            for parameter, argument in zip(parameters, arguments, strict=False):
+                parameter_id = parameter.get("id") if isinstance(parameter, dict) else None
+                if isinstance(parameter_id, int) and isinstance(argument, dict):
+                    bindings[parameter_id] = self._expand_expression(argument, state)
+            bound.append(replace(state, bindings=tuple(sorted(bindings.items()))))
+        return bound
+
+    def _add_condition_guards(
+        self,
+        states: list[_ExecutionState],
+        expression: Any,
+        *,
+        truth: bool,
+    ) -> list[_ExecutionState]:
+        return [
+            replace(
+                state,
+                guards=state.guards | self._guard_facts(expression, truth=truth, state=state),
+            )
+            for state in states
+        ]
+
+    def _classify_guards(
+        self,
+        expression: Any,
+        *,
+        truth: bool,
+        states: Sequence[_ExecutionState],
+    ) -> frozenset[_GuardFact]:
+        if not states:
+            return frozenset()
+        return self._guard_facts(expression, truth=truth, state=states[0])
+
+    def _guard_facts(
+        self, expression: Any, *, truth: bool, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        if not isinstance(expression, dict):
+            return frozenset()
+        expression = self._expand_expression(expression, state)
+        node_type = expression.get("nodeType")
+        if node_type == "UnaryOperation" and expression.get("operator") == "!":
+            return self._guard_facts(expression.get("subExpression"), truth=not truth, state=state)
+        if node_type == "BinaryOperation" and expression.get("operator") in {"&&", "||"}:
+            operator = expression["operator"]
+            if (operator == "&&" and truth) or (operator == "||" and not truth):
+                left = self._guard_facts(expression.get("leftExpression"), truth=truth, state=state)
+                right = self._guard_facts(
+                    expression.get("rightExpression"), truth=truth, state=state
+                )
+                return left | right
+            return frozenset()
+
+        atom_facts = self._boolean_atom_facts(expression, truth=truth, state=state)
+        if node_type != "BinaryOperation":
+            return atom_facts
+        operator = expression.get("operator")
+        if not isinstance(operator, str):
+            return atom_facts
+        effective_operator = operator if truth else _NEGATED_COMPARISON.get(operator)
+        if effective_operator is None:
+            return atom_facts
+        left = expression.get("leftExpression")
+        right = expression.get("rightExpression")
+
+        boolean = _literal_boolean(right)
+        if boolean is not None and effective_operator in {"==", "!="}:
+            required_truth = boolean if effective_operator == "==" else not boolean
+            atom_facts |= self._boolean_atom_facts(left, truth=required_truth, state=state)
+        boolean = _literal_boolean(left)
+        if boolean is not None and effective_operator in {"==", "!="}:
+            required_truth = boolean if effective_operator == "==" else not boolean
+            atom_facts |= self._boolean_atom_facts(right, truth=required_truth, state=state)
+
+        facts = set(atom_facts)
+        if effective_operator == "==":
+            if self._contains_msg_sender(left) and self._authority_state_refs(right, state):
+                facts.add(_GuardFact("authorization"))
+            if self._contains_msg_sender(right) and self._authority_state_refs(left, state):
+                facts.add(_GuardFact("authorization"))
+
+        facts.update(self._positive_answer_facts(left, effective_operator, right, state))
+        facts.update(
+            self._positive_answer_facts(right, _SWAPPED_COMPARISON[effective_operator], left, state)
+        )
+        facts.update(self._not_future_facts(left, effective_operator, right, state))
+        facts.update(
+            self._not_future_facts(right, _SWAPPED_COMPARISON[effective_operator], left, state)
+        )
+        facts.update(self._max_age_facts(left, effective_operator, right, state))
+        facts.update(
+            self._max_age_facts(right, _SWAPPED_COMPARISON[effective_operator], left, state)
+        )
+        facts.update(self._cap_facts(left, effective_operator, right, state))
+        facts.update(self._cap_facts(right, _SWAPPED_COMPARISON[effective_operator], left, state))
+        return frozenset(facts)
+
+    def _boolean_atom_facts(
+        self, expression: Any, *, truth: bool, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        if not truth or not isinstance(expression, dict):
+            return frozenset()
+        expression = self._expand_expression(expression, state)
+        facts: set[_GuardFact] = set()
+        if self._is_role_check(expression, state):
+            facts.add(_GuardFact("authorization"))
+        collateral = self._semantic_state_refs(
+            expression,
+            state,
+            required=("collateral",),
+            any_of=("verified", "active", "ready"),
+        )
+        if collateral:
+            facts.add(_GuardFact("collateral_guard", state_variables=collateral))
+        return frozenset(facts)
+
+    def _positive_answer_facts(
+        self, subject: Any, operator: str, boundary: Any, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        subjects = self._value_refs(subject, state, ("answer", "price"))
+        literal = _literal_integer(boundary)
+        if not subjects or literal is None:
+            return frozenset()
+        proven = (operator == ">" and literal >= 0) or (operator == ">=" and literal >= 1)
+        return (
+            frozenset({_GuardFact("positive_answer", subjects=subjects)}) if proven else frozenset()
+        )
+
+    def _not_future_facts(
+        self, timestamp: Any, operator: str, clock: Any, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        subjects = self._value_refs(timestamp, state, ("updatedat", "timestamp", "observedat"))
+        if subjects and operator in {"<", "<="} and self._is_block_timestamp(clock):
+            return frozenset({_GuardFact("not_future", subjects=subjects)})
+        return frozenset()
+
+    def _max_age_facts(
+        self, age: Any, operator: str, maximum: Any, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        if operator not in {"<", "<="}:
+            return frozenset()
+        max_age = self._semantic_state_refs(maximum, state, required=("maxage",), any_of=())
+        if not max_age or not isinstance(age, dict):
+            return frozenset()
+        age = self._expand_expression(age, state)
+        if age.get("nodeType") != "BinaryOperation" or age.get("operator") != "-":
+            return frozenset()
+        if not self._is_block_timestamp(age.get("leftExpression")):
+            return frozenset()
+        subjects = self._value_refs(
+            age.get("rightExpression"), state, ("updatedat", "timestamp", "observedat")
+        )
+        if not subjects:
+            return frozenset()
+        return frozenset({_GuardFact("max_age", subjects=subjects, state_variables=max_age)})
+
+    def _cap_facts(
+        self, post_supply: Any, operator: str, maximum: Any, state: _ExecutionState
+    ) -> frozenset[_GuardFact]:
+        if operator not in {"<", "<="}:
+            return frozenset()
+        cap_variables = self._semantic_state_refs(
+            maximum, state, required=(), any_of=("maxsupply", "supplycap", "issuancelimit")
+        )
+        if not cap_variables or not isinstance(post_supply, dict):
+            return frozenset()
+        post_supply = self._expand_expression(post_supply, state)
+        if post_supply.get("nodeType") != "BinaryOperation" or post_supply.get("operator") != "+":
+            return frozenset()
+        left = post_supply.get("leftExpression")
+        right = post_supply.get("rightExpression")
+        supply = self._semantic_state_refs(left, state, required=("supply",), any_of=())
+        amount = self._non_state_refs(right, state)
+        if not supply or not amount:
+            supply = self._semantic_state_refs(right, state, required=("supply",), any_of=())
+            amount = self._non_state_refs(left, state)
+        if not supply or not amount:
+            return frozenset()
+        return frozenset({_GuardFact("cap_guard", subjects=amount, state_variables=supply)})
+
+    def _is_role_check(self, expression: JsonObject, state: _ExecutionState) -> bool:
+        if expression.get("nodeType") == "IndexAccess":
+            role_variables = self._semantic_state_refs(
+                expression.get("baseExpression"),
+                state,
+                required=(),
+                any_of=("role", "allowlist", "minter", "authorized", "approved"),
+            )
+            return bool(role_variables) and self._contains_msg_sender(
+                expression.get("indexExpression")
+            )
+        if expression.get("nodeType") == "FunctionCall":
+            name = _normalize_name(_call_name(expression.get("expression")))
+            return name in {"hasrole", "isauthorized", "isallowlisted"} and any(
+                self._contains_msg_sender(argument) for argument in expression.get("arguments", [])
+            )
+        return False
+
+    def _authority_state_refs(self, expression: Any, state: _ExecutionState) -> frozenset[int]:
+        return self._semantic_state_refs(
+            expression,
+            state,
+            required=(),
+            any_of=("issuer", "owner", "admin", "authority"),
+        )
+
+    def _semantic_state_refs(
+        self,
+        expression: Any,
+        state: _ExecutionState,
+        *,
+        required: tuple[str, ...],
+        any_of: tuple[str, ...],
+    ) -> frozenset[int]:
+        references = self._canonical_declarations(expression, state)
+        return frozenset(
+            declaration
+            for declaration in references
+            if declaration in self.state_variables
+            and all(
+                token in _normalize_name(self.state_variables[declaration]) for token in required
+            )
+            and (
+                not any_of
+                or any(
+                    token in _normalize_name(self.state_variables[declaration]) for token in any_of
+                )
+            )
+        )
+
+    def _value_refs(
+        self, expression: Any, state: _ExecutionState, names: tuple[str, ...]
+    ) -> frozenset[int]:
+        return frozenset(
+            declaration
+            for declaration in self._canonical_declarations(expression, state)
+            if declaration not in self.state_variables
+            and any(token in self._declaration_name(declaration) for token in names)
+        )
+
+    def _non_state_refs(self, expression: Any, state: _ExecutionState) -> frozenset[int]:
+        return frozenset(
+            declaration
+            for declaration in self._canonical_declarations(expression, state)
+            if declaration not in self.state_variables and declaration >= 0
+        )
+
+    def _canonical_declarations(self, expression: Any, state: _ExecutionState) -> frozenset[int]:
+        expanded = self._expand_expression(expression, state)
+        references: set[int] = set()
+
+        def visit(node: Any) -> None:
+            if isinstance(node, list):
+                for child in node:
+                    visit(child)
+                return
+            if not isinstance(node, dict):
+                return
+            declaration = node.get("referencedDeclaration")
+            if isinstance(declaration, int) and declaration >= 0:
+                references.add(declaration)
+            for value in node.values():
+                if isinstance(value, (dict, list)):
+                    visit(value)
+
+        visit(expanded)
+        return frozenset(references)
+
+    def _expand_expression(self, expression: JsonObject, state: _ExecutionState) -> JsonObject:
+        bindings = dict(state.bindings)
+
+        def expand(node: Any, stack: frozenset[int]) -> Any:
+            if isinstance(node, list):
+                return [expand(child, stack) for child in node]
+            if not isinstance(node, dict):
+                return node
+            declaration = node.get("referencedDeclaration")
+            if (
+                isinstance(declaration, int)
+                and declaration in bindings
+                and declaration not in stack
+            ):
+                return expand(bindings[declaration], stack | {declaration})
+            return {
+                key: expand(value, stack) if isinstance(value, (dict, list)) else value
+                for key, value in node.items()
+            }
+
+        expanded = expand(expression, frozenset())
+        return expanded if isinstance(expanded, dict) else expression
+
+    def _declaration_name(self, declaration: int) -> str:
+        node = self.nodes.get(declaration, {})
+        return _normalize_name(str(node.get("name", "")))
+
+    @staticmethod
+    def _contains_msg_sender(expression: Any) -> bool:
+        if isinstance(expression, list):
+            return any(_AstAnalyzer._contains_msg_sender(item) for item in expression)
+        if not isinstance(expression, dict):
+            return False
+        if (
+            expression.get("nodeType") == "MemberAccess"
+            and expression.get("memberName") == "sender"
+        ):
+            base = expression.get("expression")
+            if isinstance(base, dict) and base.get("name") == "msg":
+                return True
+        return any(_AstAnalyzer._contains_msg_sender(value) for value in expression.values())
+
+    @staticmethod
+    def _is_block_timestamp(expression: Any) -> bool:
+        return (
+            isinstance(expression, dict)
+            and expression.get("nodeType") == "MemberAccess"
+            and expression.get("memberName") == "timestamp"
+            and isinstance(expression.get("expression"), dict)
+            and expression["expression"].get("name") == "block"
+        )
 
     def _record_mutation(
         self,
@@ -646,29 +1213,91 @@ class _AstAnalyzer:
         variable_id = _base_variable_declaration(left)
         variable_name = self.state_variables.get(variable_id, "")
         normalized = _normalize_name(variable_name)
-        call_names = " ".join(
-            state_part.lower() for state in states for state_part in state.call_path
-        )
-        kind: str | None = None
-        if "supply" in normalized or (
-            "balance" in normalized and any(token in call_names for token in ("mint", "issue"))
-        ):
-            kind = "mint"
-        elif normalized in {"answer", "price", "oracleanswer", "oracleprice"}:
-            kind = "oracle"
-        if kind is None:
-            return
         for state in states:
+            entrypoint_name = _normalize_name(entrypoint.rsplit(".", 1)[-1])
+            kind: str | None = None
+            category = ""
+            mutation_state = state
+            if "supply" in normalized or (
+                "balance" in normalized
+                and any(token in entrypoint_name for token in ("mint", "issue"))
+            ):
+                increase = self._increase_status(expression, variable_id, state)
+                if increase is False:
+                    continue
+                if increase is None:
+                    mutation_state = self._unsupported(
+                        state, "unresolved protected supply assignment direction"
+                    )
+                kind = "mint"
+                category = "supply" if "supply" in normalized else "balance"
+            elif any(token in normalized for token in ("answer", "price")):
+                kind = "oracle"
+                category = "oracle_answer"
+            elif any(token in normalized for token in ("updatedat", "timestamp", "observedat")):
+                kind = "oracle"
+                category = "oracle_timestamp"
+            elif variable_id in self.state_variables and any(
+                token in entrypoint_name for token in ("mint", "issue")
+            ):
+                increase = self._increase_status(expression, variable_id, state)
+                if increase is False:
+                    continue
+                kind = "mint"
+                category = "unclassified_mint_state"
+                mutation_state = self._unsupported(state, "unclassified mint-like state mutation")
+            elif variable_id in self.state_variables and any(
+                token in entrypoint_name for token in ("oracle", "price", "update")
+            ):
+                kind = "oracle"
+                category = "unclassified_oracle_state"
+                mutation_state = self._unsupported(state, "unclassified oracle-like state mutation")
+            if kind is None:
+                continue
+            value = expression.get("rightHandSide") or expression.get("subExpression")
             self.mutations.append(
                 _Mutation(
                     kind=kind,
+                    variable_id=variable_id,
                     variable_name=variable_name,
+                    variable_category=category,
+                    value_subjects=self._non_state_refs(value, state),
                     node=expression,
-                    state=state,
+                    state=mutation_state,
                     entrypoint=entrypoint,
                     contract_name=contract_name,
                 )
             )
+
+    def _increase_status(
+        self, expression: JsonObject, variable_id: int, state: _ExecutionState
+    ) -> bool | None:
+        if expression.get("nodeType") == "UnaryOperation":
+            operator = expression.get("operator")
+            if operator == "++":
+                return True
+            if operator == "--":
+                return False
+            return None
+        operator = expression.get("operator")
+        if operator == "+=":
+            return True
+        if operator in {"-=", "*=", "/=", "%="}:
+            return False
+        if operator != "=":
+            return None
+        right = self._expand_expression(expression.get("rightHandSide", {}), state)
+        if right.get("nodeType") != "BinaryOperation":
+            return None
+        if right.get("operator") == "+" and variable_id in self._canonical_declarations(
+            right, state
+        ):
+            return True
+        if right.get("operator") == "-" and variable_id in self._canonical_declarations(
+            right, state
+        ):
+            return False
+        return None
 
     def _record_unsupported_entry_mutation(
         self,
@@ -689,7 +1318,10 @@ class _AstAnalyzer:
             self.mutations.append(
                 _Mutation(
                     kind=kind,
+                    variable_id=-1,
                     variable_name="unsupported_dynamic_state",
+                    variable_category="unsupported",
+                    value_subjects=frozenset(),
                     node=node,
                     state=state,
                     entrypoint=entrypoint,
@@ -820,57 +1452,46 @@ def _location(compiled: CompiledSources, node: JsonObject) -> tuple[CodeLocation
     )
 
 
-def _classify_guards(expression: Any) -> frozenset[str]:
-    names: set[str] = set()
-    operators: set[str] = set()
-    literals: set[str] = set()
+_NEGATED_COMPARISON = {
+    "==": "!=",
+    "!=": "==",
+    ">": "<=",
+    ">=": "<",
+    "<": ">=",
+    "<=": ">",
+}
 
-    def visit(node: Any) -> None:
-        if isinstance(node, list):
-            for child in node:
-                visit(child)
-            return
-        if not isinstance(node, dict):
-            return
-        for key in ("name", "memberName"):
-            value = node.get(key)
-            if isinstance(value, str):
-                names.add(_normalize_name(value))
-        operator = node.get("operator")
-        if isinstance(operator, str):
-            operators.add(operator)
-        value = node.get("value")
-        if node.get("nodeType") == "Literal" and isinstance(value, str):
-            literals.add(value)
-        for value in node.values():
-            if isinstance(value, (dict, list)):
-                visit(value)
+_SWAPPED_COMPARISON = {
+    "==": "==",
+    "!=": "!=",
+    ">": "<",
+    ">=": "<=",
+    "<": ">",
+    "<=": ">=",
+}
 
-    visit(expression)
-    guards: set[str] = set()
-    has_sender = "msg" in names and "sender" in names
-    has_authority = any(
-        any(token in name for token in ("issuer", "owner", "admin", "role", "allowlist"))
-        for name in names
-    )
-    if has_sender and has_authority:
-        guards.add("authorization")
-    if any("collateral" in name for name in names):
-        guards.add("collateral_guard")
-    has_supply = any("supply" in name for name in names)
-    has_cap = any("max" in name or "cap" in name for name in names)
-    if has_supply and has_cap and operators & {">", ">=", "<", "<="}:
-        guards.add("cap_guard")
-    has_answer = any("answer" in name or name == "price" for name in names)
-    if has_answer and "0" in literals and operators & {">", ">=", "<", "<="}:
-        guards.add("positive_answer")
-    has_block_timestamp = "block" in names and "timestamp" in names
-    has_updated_at = any("updatedat" in name or "timestamp" in name for name in names)
-    if has_block_timestamp and has_updated_at and operators & {">", ">=", "<", "<="}:
-        guards.add("not_future")
-    if has_block_timestamp and has_updated_at and any("maxage" in name for name in names):
-        guards.add("max_age")
-    return frozenset(guards)
+
+def _literal_boolean(node: Any) -> bool | None:
+    if not isinstance(node, dict) or node.get("nodeType") != "Literal":
+        return None
+    value = node.get("value")
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    return None
+
+
+def _literal_integer(node: Any) -> int | None:
+    if not isinstance(node, dict) or node.get("nodeType") != "Literal":
+        return None
+    value = node.get("value")
+    if not isinstance(value, str):
+        return None
+    try:
+        return int(value, 0)
+    except ValueError:
+        return None
 
 
 def _base_variable_declaration(node: Any) -> int:
@@ -886,14 +1507,17 @@ def _base_variable_declaration(node: Any) -> int:
     return -1
 
 
-def _terminates(node: Any) -> bool:
-    if not isinstance(node, dict):
+def _statements_always_revert(statements: Sequence[Any]) -> bool:
+    if not statements:
         return False
-    if node.get("nodeType") in {"RevertStatement", "Return"}:
+    last = statements[-1]
+    if not isinstance(last, dict):
+        return False
+    if last.get("nodeType") == "RevertStatement":
         return True
-    if node.get("nodeType") == "Block":
-        statements = node.get("statements", [])
-        return bool(statements) and _terminates(statements[-1])
+    if last.get("nodeType") == "ExpressionStatement":
+        expression = last.get("expression")
+        return isinstance(expression, dict) and _call_name(expression.get("expression")) == "revert"
     return False
 
 

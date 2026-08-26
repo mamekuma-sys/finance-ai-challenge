@@ -36,13 +36,22 @@ def test_adversarial_cases_separate_confirmed_safe_and_review(
             assert not findings
             continue
         assert findings
-        assert findings[0].status.value == case["expected"]
+        assert {finding.status.value for finding in findings} == {case["expected"]}
+        assert findings[0].code_location.file == case["path"]
         assert findings[0].code_location.start_line == case["line"]
         if case["expected"] == "NEEDS_REVIEW":
             assert any(
                 evidence.startswith("unsupported=")
                 for evidence in findings[0].deterministic_evidence
             )
+
+
+def test_all_adversarial_sources_are_declared_synthetic() -> None:
+    for path in {case["path"] for case in _read(ADVERSARIAL)["cases"]}:
+        source = (REPOSITORY / path).read_text(encoding="utf-8")
+
+        assert path.startswith("chain/src/fixtures/")
+        assert "Synthetic" in source
 
 
 def test_recorded_confusion_matrix_matches_executable_corpus(

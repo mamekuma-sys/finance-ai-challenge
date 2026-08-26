@@ -3,6 +3,9 @@
 This document is the C-track executable contract for the three P0 Solidity rules. Rule output
 must follow `CodeFinding`; text or AI screening alone can never create a `CONFIRMED` finding.
 
+The final adversarial review record and executable corpus metrics are documented in
+[`RED_TEAM_REVIEW.md`](RED_TEAM_REVIEW.md).
+
 ## Shared analysis contract
 
 - Supported input is a compiling Solidity `0.8.x` source set supplied directly to RWA Guard.

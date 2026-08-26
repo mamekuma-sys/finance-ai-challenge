@@ -10,6 +10,102 @@
     },
     {
       "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "DisjunctiveBypassMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 20
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "InvertedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 40
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "UnrelatedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 79
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "WrongHelperArgumentsMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 123
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "EarlyReturnBypassMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 278
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BranchGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BoundHelperMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "LayeredGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "AliasedInputMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "EarlyReturnGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "RevertedBranchMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "ReversedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BurnOnlySupply",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "AlwaysRevertedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "PostludeGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 198
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
       "contract": "RoleMappingMint",
       "path": "chain/src/fixtures/adversarial/RoleMappingMint.sol",
       "expected": "NONE"
@@ -36,11 +132,128 @@
       "line": 22
     },
     {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "FunctionPointerMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 48
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "RecursiveMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 64
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "OpaqueMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 73
+    },
+    {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
       "contract": "ConditionalGuardMint",
       "path": "chain/src/fixtures/adversarial/ConditionalGuardMint.sol",
       "expected": "CONFIRMED",
       "line": 23
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "DisjunctiveBypassMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 20
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "InvertedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 40
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "UnrelatedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 79
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "WrongHelperArgumentsMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 123
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "EarlyReturnBypassMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 278
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BranchGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BoundHelperMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "LayeredGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "AliasedInputMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "EarlyReturnGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "RevertedBranchMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "ReversedGuardMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BurnOnlySupply",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "AlwaysRevertedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "PostludeGuardedMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 198
     },
     {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
@@ -70,11 +283,71 @@
       "line": 22
     },
     {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "FunctionPointerMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 48
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "RecursiveMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 64
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "OpaqueMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 73
+    },
+    {
       "rule_id": "ORACLE_VALIDATION_MISSING",
       "contract": "ConditionalValidatedOracle",
       "path": "chain/src/fixtures/adversarial/ConditionalValidatedOracle.sol",
       "expected": "CONFIRMED",
       "line": 21
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "DisjunctiveBypassOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 19
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "InvertedGuardOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 38
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "UnrelatedValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 81
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "BranchValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "StrictBoundaryOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "MultiPathValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/SemanticOracleVariants.sol",
+      "expected": "NONE"
     },
     {
       "rule_id": "ORACLE_VALIDATION_MISSING",
@@ -95,6 +368,13 @@
       "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
       "expected": "NEEDS_REVIEW",
       "line": 34
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "OpaqueOracle",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 83
     }
   ]
 }

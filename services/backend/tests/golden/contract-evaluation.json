@@ -5,31 +5,31 @@
   "rules": [
     {
       "rule_id": "MINT_ACCESS_CONTROL_MISSING",
-      "tp": 4,
+      "tp": 9,
       "fp": 0,
-      "tn": 4,
+      "tn": 13,
       "fn": 0,
-      "needs_review": 3,
+      "needs_review": 7,
       "precision": 1.0,
       "recall": 1.0
     },
     {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
-      "tp": 4,
+      "tp": 9,
       "fp": 0,
-      "tn": 4,
+      "tn": 13,
       "fn": 0,
-      "needs_review": 3,
+      "needs_review": 7,
       "precision": 1.0,
       "recall": 1.0
     },
     {
       "rule_id": "ORACLE_VALIDATION_MISSING",
-      "tp": 4,
+      "tp": 7,
       "fp": 0,
-      "tn": 4,
+      "tn": 7,
       "fn": 0,
-      "needs_review": 2,
+      "needs_review": 3,
       "precision": 1.0,
       "recall": 1.0
     }
