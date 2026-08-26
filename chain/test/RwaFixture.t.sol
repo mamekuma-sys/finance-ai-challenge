@@ -40,7 +40,8 @@ contract RwaFixtureTest {
 
     function testFixedOracleRejectsInvalidAnswer() public {
         FixedOracle oracle = new FixedOracle(address(this), 3600);
-        (bool ok,) = address(oracle).call(abi.encodeCall(oracle.update, (int256(0), block.timestamp)));
+        (bool ok,) =
+            address(oracle).call(abi.encodeCall(oracle.update, (int256(0), block.timestamp)));
         assert(!ok);
     }
 }
