@@ -66,5 +66,6 @@ PowerShell에서 `./scripts/verify.ps1`을 실행한다. 설치되지 않은 도
 4. [`docs/project/ownership.md`](docs/project/ownership.md) — 4인 소유권과 통합 규칙
 5. [`docs/project/team-development-operating-plan.md`](docs/project/team-development-operating-plan.md) — 화면·AI·역할·브랜치·풀스택 개발 운영 계약
 6. [`docs/project/team-technical-stack.md`](docs/project/team-technical-stack.md) — 역할별 package·실행 환경·CI·배포 기술 기준
+7. [`docs/project/b-track-contract.md`](docs/project/b-track-contract.md) — B 트랙 API·DB/job·문서 AI 계약 초안
 
 모든 샘플은 합성 데이터이며 `is_synthetic=true`를 유지한다. 실제 금융정보·개인정보·실제 투자자 자금은 사용하지 않는다.
