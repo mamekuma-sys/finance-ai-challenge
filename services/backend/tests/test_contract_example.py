@@ -11,4 +11,5 @@ def test_shared_example_matches_runtime_contract() -> None:
 
     assert report.is_synthetic is True
     assert report.code_findings[0].status is FindingStatus.CONFIRMED
+    assert report.code_findings[0].rule_id == "MINT_COLLATERAL_CAP_MISSING"
     assert report.onchain_evidence[0].mode is EvidenceMode.REPLAY

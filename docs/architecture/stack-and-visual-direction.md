@@ -472,7 +472,7 @@ ALERT   Issuance limit exceeded    CRITICAL
 EXPLOIT RISK  84
 0────────20────────40────────60────────80────100
                                        ▲
-                                MINT_CAP_MISSING
+                          MINT_COLLATERAL_CAP_MISSING
 ```
 
 점수 아래에 상위 원인 2개와 점수 기여도를 표시한다. 숫자를 장식하지 않고 계산 가능한 판정으로 보이게 한다.

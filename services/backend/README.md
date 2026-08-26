@@ -16,3 +16,7 @@ python -m pip install -e ".[analysis,chain,valuation,dev]"
 ```
 
 P0 API는 P1 패키지나 RPC 연결이 없어도 기동해야 한다.
+
+결정론적 컨트랙트 검사는 Foundry `v1.7.1`과 solc `0.8.24` AST를 사용한다. 로컬에서는
+`forge`를 PATH에 두거나 `RWA_GUARD_FORGE_BIN`으로 실행 파일을 지정한다. 배포 Docker
+이미지는 같은 버전의 도구와 컴파일러를 포함하며 분석 중 외부 네트워크를 사용하지 않는다.

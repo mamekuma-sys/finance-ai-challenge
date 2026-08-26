@@ -1,10 +1,43 @@
-from rwa_guard.pipelines.contract import screen_mint_controls
+from rwa_guard.domain.contracts import FindingStatus
+from rwa_guard.pipelines.contract import FoundryCompiler, analyze_compiled_sources
 
 
-def test_vulnerable_mint_is_only_a_candidate_at_scaffold_stage() -> None:
-    source = "function mint(address to, uint amount) external { _mint(to, amount); }"
+def test_text_and_comments_cannot_create_confirmed_findings() -> None:
+    sources = {
+        "CommentOnly.sol": """
+            // MINT_ACCESS_CONTROL_MISSING onlyIssuer maxSupply collateralVerified
+            pragma solidity ^0.8.24;
+            contract CommentOnly { function ping() external pure returns (bool) { return true; } }
+        """
+    }
 
-    results = screen_mint_controls(source)
+    compiled = FoundryCompiler().compile(sources)
+    findings = analyze_compiled_sources(
+        scan_id="scan_comment_only", compiled=compiled, target_contract="CommentOnly"
+    )
 
-    assert all(result.matched for result in results)
-    assert all(result.rule_id.endswith("_CANDIDATE") for result in results)
+    assert findings == ()
+
+
+def test_compiler_ast_confirms_unguarded_supply_mutation() -> None:
+    sources = {
+        "Vulnerable.sol": """
+            pragma solidity ^0.8.24;
+            contract Vulnerable {
+                uint256 public totalSupply;
+                function mint(uint256 amount) external { totalSupply += amount; }
+            }
+        """
+    }
+
+    compiled = FoundryCompiler().compile(sources)
+    findings = analyze_compiled_sources(
+        scan_id="scan_vulnerable", compiled=compiled, target_contract="Vulnerable"
+    )
+
+    assert {finding.rule_id for finding in findings} == {
+        "MINT_ACCESS_CONTROL_MISSING",
+        "MINT_COLLATERAL_CAP_MISSING",
+    }
+    assert all(finding.status is FindingStatus.CONFIRMED for finding in findings)
+    assert all(finding.code_location.start_line == 5 for finding in findings)
