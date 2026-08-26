@@ -6,7 +6,7 @@ export function AssuranceLedger() {
   const finding = demoFinding;
 
   return (
-    <main className="ledger-shell">
+    <section className="ledger-shell">
       <header className="topbar">
         <div className="brand">
           <strong>RWA GUARD</strong>
@@ -40,7 +40,7 @@ export function AssuranceLedger() {
           </div>
 
           <div className="finding-header">
-            <h1 id="finding-title">{finding.title}</h1>
+            <h2 id="finding-title">{finding.title}</h2>
             <div className="risk-ruler" aria-label={`Exploit risk ${finding.risk}`}>
               <span>EXPLOIT RISK</span>
               <div className="risk-value">{finding.risk}</div>
@@ -90,6 +90,6 @@ export function AssuranceLedger() {
         <span>Minted · supply 120,000 · issuance limit exceeded</span>
         <span>fixture v0.1.0</span>
       </footer>
-    </main>
+    </section>
   );
 }

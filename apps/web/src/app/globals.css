@@ -334,3 +334,97 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- 화면 껍데기와 상태 표시 (라우팅 스켈레톤) --- */
+
+.screen-shell {
+  width: min(1440px, calc(100% - 32px));
+  margin: 16px auto;
+}
+
+.screen-head {
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.screen-meta {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.screen-id {
+  padding: 1px 6px;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+.screen-head h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.state-notice,
+.error-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.state-notice-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+}
+
+/* 색만으로 의미를 전달하지 않는다. 라벨 텍스트가 항상 함께 있다. */
+.state-notice[data-state="partial"] .state-notice-label,
+.state-notice[data-state="unknown"] .state-notice-label {
+  color: var(--warning);
+}
+
+.state-notice[data-state="replay"] .state-notice-label {
+  color: var(--verify);
+}
+
+.state-notice-meta {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.loading-notice {
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.error-notice {
+  border-color: var(--breach);
+}
+
+.error-notice p {
+  margin: 0;
+}
+
+.error-notice button {
+  margin-left: auto;
+  padding: 5px 12px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
