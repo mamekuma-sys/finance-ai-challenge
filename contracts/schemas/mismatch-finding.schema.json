@@ -14,16 +14,85 @@
     "is_synthetic"
   ],
   "properties": {
-    "mismatch_id": { "type": "string" },
-    "constraint_id": { "type": "string" },
-    "finding_id": { "type": "string" },
-    "implementation_status": { "enum": ["IMPLEMENTED", "PARTIAL", "MISSING", "UNKNOWN"] },
-    "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+    "mismatch_id": {
+      "type": "string"
+    },
+    "constraint_id": {
+      "type": "string"
+    },
+    "finding_id": {
+      "type": "string"
+    },
+    "implementation_status": {
+      "enum": [
+        "IMPLEMENTED",
+        "PARTIAL",
+        "MISSING",
+        "UNKNOWN"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ]
+    },
     "evidence_links": {
       "type": "array",
       "minItems": 2,
-      "items": { "type": "string" }
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "DOCUMENT",
+              "CODE",
+              "CHAIN"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "DOCUMENT"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "CODE"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      ]
     },
-    "is_synthetic": { "const": true }
+    "is_synthetic": {
+      "const": true
+    }
   }
 }

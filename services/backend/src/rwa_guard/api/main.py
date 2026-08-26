@@ -19,7 +19,7 @@ class HealthResponse(BaseModel):
 settings = get_settings()
 app = FastAPI(
     title="RWA Guard API",
-    version="0.1.0",
+    version="0.2.0",
     description="Evidence-bound tokenized-security assurance API",
 )
 app.add_middleware(

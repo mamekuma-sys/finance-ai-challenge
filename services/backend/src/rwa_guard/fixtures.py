@@ -4,6 +4,8 @@ from rwa_guard.domain.contracts import (
     CodeFinding,
     CodeLocation,
     ControlSpec,
+    EvidenceKind,
+    EvidenceLink,
     EvidenceMode,
     EvidenceReport,
     EvidenceSpan,
@@ -66,7 +68,10 @@ def build_demo_report() -> EvidenceReport:
         finding_id=finding.finding_id,
         implementation_status=ImplementationStatus.MISSING,
         severity=Severity.CRITICAL,
-        evidence_links=["control_max_supply", finding.finding_id],
+        evidence_links=[
+            EvidenceLink(kind=EvidenceKind.DOCUMENT, ref=control.constraint_id),
+            EvidenceLink(kind=EvidenceKind.CODE, ref=finding.finding_id),
+        ],
     )
     event = OnchainEvidence(
         asset_id=control.asset_id,
@@ -97,8 +102,8 @@ def build_demo_report() -> EvidenceReport:
         mismatches=[mismatch],
         onchain_evidence=[event],
         lineage={
-            "document": control.evidence_span.model_dump(),
-            "code": finding.code_location.model_dump(),
-            "chain": {"mode": event.mode, "tx_hash": event.tx_hash},
+            "document": "doc_synthetic_issuance_01#p4:128-181",
+            "code": "chain/src/fixtures/VulnerableRwaToken.sol:12",
+            "chain": "REPLAY:0.1.0:block-18402119",
         },
     )

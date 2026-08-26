@@ -1,0 +1,60 @@
+{
+  "$defs": {
+    "DiffChange": {
+      "enum": [
+        "RESOLVED",
+        "REMAINS",
+        "NEW"
+      ],
+      "title": "DiffChange",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Server-computed rescan comparison. Rule versions may differ between the two runs, so the\nconsumer cannot derive this by diffing two finding lists.",
+  "properties": {
+    "base_scan_id": {
+      "title": "Base Scan Id",
+      "type": "string"
+    },
+    "change": {
+      "$ref": "#/$defs/DiffChange"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "head_scan_id": {
+      "title": "Head Scan Id",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    }
+  },
+  "required": [
+    "finding_id",
+    "change",
+    "base_scan_id",
+    "head_scan_id",
+    "severity"
+  ],
+  "title": "FindingDiff",
+  "type": "object"
+}

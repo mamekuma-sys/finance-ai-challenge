@@ -76,10 +76,8 @@ The evidence must state separately whether `collateral_guard` and `cap_guard` ar
 and identify each unguarded entry point-to-supply-mutation path. A vulnerable-to-fixed rescan is
 `RESOLVED` only when both guards dominate every such mutation.
 
-The legacy final ID `MINT_CAP_MISSING` and scaffold IDs `MINT_CAP_CANDIDATE` and
-`COLLATERAL_GATE_CANDIDATE` are superseded by this combined rule. Migrating the backend producer,
-schema examples, report fixture, and consumer tests must happen in the same change and requires B
-track review before merge.
+This combined rule is the only supported P0 identifier for collateral and maximum-supply guards.
+The backend producer, schemas, report fixture, and Web consumer migrate together.
 
 ## `ORACLE_VALIDATION_MISSING`
 

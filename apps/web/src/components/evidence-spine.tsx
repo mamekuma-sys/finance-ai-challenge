@@ -1,4 +1,4 @@
-import type { SpineNode } from "@/types/contracts";
+import type { SpineNode } from "@/types/ui";
 
 export function EvidenceSpine({ nodes }: { nodes: SpineNode[] }) {
   return (

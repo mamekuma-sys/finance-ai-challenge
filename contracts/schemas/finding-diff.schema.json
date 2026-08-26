@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/finding-diff.schema.json",
+  "title": "FindingDiff",
+  "description": "Server-computed rescan comparison. Rule versions may differ between runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "finding_id",
+    "change",
+    "base_scan_id",
+    "head_scan_id",
+    "severity",
+    "is_synthetic"
+  ],
+  "properties": {
+    "finding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "change": {
+      "enum": [
+        "RESOLVED",
+        "REMAINS",
+        "NEW"
+      ]
+    },
+    "base_scan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "head_scan_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ]
+    },
+    "is_synthetic": {
+      "const": true
+    }
+  }
+}

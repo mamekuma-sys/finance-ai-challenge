@@ -78,5 +78,5 @@ claim.
   storage categories in protected entry points are surfaced for review instead of being declared
   safe.
 
-No shared Pydantic/OpenAPI/TypeScript contract changed in this review. The earlier replacement of
-`MINT_CAP_MISSING` with `MINT_COLLATERAL_CAP_MISSING` still requires B-track review before merge.
+The shared Pydantic/OpenAPI/TypeScript contract is integrated by the stacked B-track change before
+this C-track branch is marked ready for review.

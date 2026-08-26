@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "EvidenceKind": {
+      "enum": [
+        "DOCUMENT",
+        "CODE",
+        "CHAIN"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceLink": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "EvidenceLink",
+      "type": "object"
+    },
+    "ImplementationStatus": {
+      "enum": [
+        "IMPLEMENTED",
+        "PARTIAL",
+        "MISSING",
+        "UNKNOWN"
+      ],
+      "title": "ImplementationStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "constraint_id": {
+      "title": "Constraint Id",
+      "type": "string"
+    },
+    "evidence_links": {
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "DOCUMENT"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "CODE"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      ],
+      "items": {
+        "$ref": "#/$defs/EvidenceLink"
+      },
+      "minItems": 2,
+      "title": "Evidence Links",
+      "type": "array"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "implementation_status": {
+      "$ref": "#/$defs/ImplementationStatus"
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "mismatch_id": {
+      "title": "Mismatch Id",
+      "type": "string"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    }
+  },
+  "required": [
+    "mismatch_id",
+    "constraint_id",
+    "finding_id",
+    "implementation_status",
+    "severity",
+    "evidence_links"
+  ],
+  "title": "MismatchFinding",
+  "type": "object"
+}

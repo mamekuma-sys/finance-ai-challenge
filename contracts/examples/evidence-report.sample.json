@@ -8,7 +8,10 @@
       "document": "sha256:synthetic-document",
       "source": "sha256:synthetic-vulnerable-source"
     },
-    "rule_versions": { "MINT_COLLATERAL_CAP_MISSING": "1.0.0" },
+    "rule_versions": {
+      "MINT_COLLATERAL_CAP_MISSING": "1.0.0"
+    },
+    "failed_stages": [],
     "started_at": "2026-08-25T03:00:00Z",
     "completed_at": "2026-08-25T03:00:08Z",
     "is_synthetic": true
@@ -68,7 +71,16 @@
       "finding_id": "finding_mint_collateral_cap_missing",
       "implementation_status": "MISSING",
       "severity": "CRITICAL",
-      "evidence_links": ["control_max_supply", "finding_mint_collateral_cap_missing"],
+      "evidence_links": [
+        {
+          "kind": "DOCUMENT",
+          "ref": "control_max_supply"
+        },
+        {
+          "kind": "CODE",
+          "ref": "finding_mint_collateral_cap_missing"
+        }
+      ],
       "is_synthetic": true
     }
   ],
@@ -92,6 +104,6 @@
     "code": "chain/src/fixtures/VulnerableRwaToken.sol:12",
     "chain": "REPLAY:0.1.0:block-18402119"
   },
-  "generated_at": "2026-08-25T03:00:09Z",
+  "generated_at": "2026-08-26T13:17:35.860202Z",
   "is_synthetic": true
 }

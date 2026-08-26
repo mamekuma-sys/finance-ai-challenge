@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwa-guard.example.com/schemas/asset-summary.schema.json",
+  "title": "AssetSummary",
+  "description": "Console home ledger row. Server-aggregated so the list never ships findings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "name",
+    "critical_count",
+    "high_count",
+    "is_synthetic"
+  ],
+  "properties": {
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "highest_severity": {
+      "oneOf": [
+        {
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "INFO"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "critical_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "high_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "latest_scan": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scan_id",
+            "status"
+          ],
+          "properties": {
+            "scan_id": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "QUEUED",
+                "RUNNING",
+                "COMPLETED",
+                "PARTIAL",
+                "FAILED"
+              ]
+            },
+            "completed_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_mode": {
+      "oneOf": [
+        {
+          "enum": [
+            "LIVE",
+            "REPLAY"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "freshness": {
+      "oneOf": [
+        {
+          "enum": [
+            "FRESH",
+            "AGING",
+            "STALE",
+            "INVALID"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "is_synthetic": {
+      "const": true
+    }
+  }
+}

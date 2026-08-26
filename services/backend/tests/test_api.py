@@ -13,8 +13,8 @@ def test_demo_report_is_synthetic_and_replay() -> None:
     assert payload["is_synthetic"] is True
     assert payload["onchain_evidence"][0]["mode"] == "REPLAY"
     assert payload["mismatches"][0]["evidence_links"] == [
-        "control_max_supply",
-        "finding_mint_collateral_cap_missing",
+        {"kind": "DOCUMENT", "ref": "control_max_supply"},
+        {"kind": "CODE", "ref": "finding_mint_collateral_cap_missing"},
     ]
 
 

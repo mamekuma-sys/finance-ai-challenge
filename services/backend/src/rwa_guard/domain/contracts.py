@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EvidenceMode(StrEnum):
@@ -38,6 +38,27 @@ class ScanStatus(StrEnum):
     COMPLETED = "COMPLETED"
     PARTIAL = "PARTIAL"
     FAILED = "FAILED"
+
+
+class DataFreshness(StrEnum):
+    """Derived from the current clock, so it never belongs on immutable evidence."""
+
+    FRESH = "FRESH"
+    AGING = "AGING"
+    STALE = "STALE"
+    INVALID = "INVALID"
+
+
+class EvidenceKind(StrEnum):
+    DOCUMENT = "DOCUMENT"
+    CODE = "CODE"
+    CHAIN = "CHAIN"
+
+
+class DiffChange(StrEnum):
+    RESOLVED = "RESOLVED"
+    REMAINS = "REMAINS"
+    NEW = "NEW"
 
 
 class EvidenceSpan(BaseModel):
@@ -105,6 +126,13 @@ class OnchainEvidence(BaseModel):
     is_synthetic: bool = True
 
 
+class EvidenceLink(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: EvidenceKind
+    ref: str = Field(min_length=1)
+
+
 class MismatchFinding(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -113,20 +141,118 @@ class MismatchFinding(BaseModel):
     finding_id: str
     implementation_status: ImplementationStatus
     severity: Severity
-    evidence_links: list[str] = Field(min_length=2)
+    evidence_links: list[EvidenceLink] = Field(
+        min_length=2,
+        json_schema_extra={
+            "allOf": [
+                {
+                    "contains": {
+                        "properties": {"kind": {"const": "DOCUMENT"}},
+                        "required": ["kind"],
+                    }
+                },
+                {
+                    "contains": {
+                        "properties": {"kind": {"const": "CODE"}},
+                        "required": ["kind"],
+                    }
+                },
+            ]
+        },
+    )
     is_synthetic: bool = True
+
+    @model_validator(mode="after")
+    def require_document_and_code_evidence(self) -> "MismatchFinding":
+        kinds = {link.kind for link in self.evidence_links}
+        missing = {EvidenceKind.DOCUMENT, EvidenceKind.CODE} - kinds
+        if missing:
+            names = ", ".join(sorted(kind.value for kind in missing))
+            raise ValueError(f"MismatchFinding requires evidence of kind: {names}")
+        return self
+
+
+class FailedStage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    stage: str = Field(min_length=1)
+    rule_id: str | None = None
+    reason: str = Field(min_length=1)
 
 
 class ScanRun(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {"status": {"const": "PARTIAL"}},
+                        "required": ["status"],
+                    },
+                    "then": {"properties": {"failed_stages": {"minItems": 1}}},
+                }
+            ]
+        },
+    )
 
     scan_id: str
     asset_id: str
     status: ScanStatus
     input_hashes: dict[str, str]
     rule_versions: dict[str, str]
+    failed_stages: list[FailedStage] = Field(default_factory=list)
     started_at: datetime
     completed_at: datetime | None = None
+    is_synthetic: bool = True
+
+    @model_validator(mode="after")
+    def partial_requires_failed_stages(self) -> "ScanRun":
+        if self.status is ScanStatus.PARTIAL and not self.failed_stages:
+            raise ValueError("ScanRun with status PARTIAL must list at least one failed stage")
+        return self
+
+
+class LatestScanRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scan_id: str
+    status: ScanStatus
+    completed_at: datetime | None = None
+
+
+class AssetSummary(BaseModel):
+    """Ledger row for the console home. The server aggregates so the list never ships findings.
+
+    Optional fields are null before an asset has been scanned; the console renders its empty
+    state from that instead of showing a zero score.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    asset_id: str
+    name: str
+    highest_severity: Severity | None = None
+    critical_count: int = Field(default=0, ge=0)
+    high_count: int = Field(default=0, ge=0)
+    latest_scan: LatestScanRef | None = None
+    evidence_mode: EvidenceMode | None = None
+    freshness: DataFreshness | None = None
+    is_synthetic: bool = True
+
+
+class FindingDiff(BaseModel):
+    """Server-computed rescan comparison. Rule versions may differ between the two runs, so the
+    consumer cannot derive this by diffing two finding lists.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    finding_id: str
+    change: DiffChange
+    base_scan_id: str
+    head_scan_id: str
+    severity: Severity
     is_synthetic: bool = True
 
 

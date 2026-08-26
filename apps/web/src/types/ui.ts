@@ -1,6 +1,8 @@
-export type EvidenceMode = "LIVE" | "REPLAY";
-export type FindingStatus = "CONFIRMED" | "PROBABLE" | "NEEDS_REVIEW" | "UNKNOWN";
-export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
+import type { components } from "./generated/api";
+
+export type EvidenceMode = components["schemas"]["EvidenceMode"];
+export type FindingStatus = components["schemas"]["FindingStatus"];
+export type Severity = components["schemas"]["Severity"];
 
 export interface SpineNode {
   kind: "SPEC" | "CODE" | "CHAIN" | "ALERT";
