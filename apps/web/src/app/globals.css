@@ -428,3 +428,138 @@ a {
   background: transparent;
   cursor: pointer;
 }
+
+/* --- Assurance Ledger 3분할 셸 (§7.3) --- */
+
+.console {
+  border: 1px solid var(--ink);
+  background: var(--surface);
+}
+
+.console-topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.console-brand {
+  font-weight: 600;
+}
+
+.console-block {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.console-mode {
+  margin-left: auto;
+  padding: 1px 7px;
+  border: 1px solid currentColor;
+}
+
+.console-mode[data-mode="LIVE"] {
+  color: var(--safe);
+}
+
+.console-mode[data-mode="REPLAY"] {
+  color: var(--verify);
+}
+
+.console-body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  align-items: stretch;
+}
+
+.console-ledger,
+.console-field {
+  border-right: 1px solid var(--rule);
+}
+
+.console-ledger,
+.console-field,
+.console-spine,
+.console-events {
+  padding: 14px;
+  min-width: 0;
+}
+
+.console-events {
+  border-top: 1px solid var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* 심사 노트북 폭 아래에서는 Spine을 아래로 내린다 (§7.3). */
+@media (max-width: 1024px) {
+  .console-body {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .console-field {
+    border-right: 0;
+  }
+
+  .console-spine {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--rule);
+  }
+}
+
+/* --- 코드 뷰 --- */
+
+.code-view {
+  margin: 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.code-view-file {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.code-view-lines {
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.code-view-line {
+  display: flex;
+  gap: 12px;
+  padding: 0 10px;
+  white-space: pre;
+}
+
+/* 강조는 색만이 아니라 왼쪽 굵은 선으로도 표시한다. */
+.code-view-line[data-highlighted="true"] {
+  background: rgba(196, 61, 50, 0.07);
+  box-shadow: inset 3px 0 0 var(--breach);
+}
+
+.code-view-number {
+  min-width: 3ch;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.console-placeholder {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
