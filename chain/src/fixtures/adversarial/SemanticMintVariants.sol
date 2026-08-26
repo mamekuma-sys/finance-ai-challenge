@@ -310,3 +310,13 @@ contract RevertedBranchMint {
         }
     }
 }
+
+/// @notice Synthetic non-mint fixture. A normal transfer must not be classified as issuance.
+contract BalanceTransfer {
+    mapping(address account => uint256 balance) public balanceOf;
+
+    function transfer(address recipient, uint256 amount) external {
+        balanceOf[msg.sender] -= amount;
+        balanceOf[recipient] += amount;
+    }
+}

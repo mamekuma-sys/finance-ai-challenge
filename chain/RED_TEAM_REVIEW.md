@@ -59,8 +59,8 @@ Unsupported inputs are not counted as binary positives or negatives in Precision
 
 | Rule | TP | FP | TN | FN | Needs review | Precision | Recall |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `MINT_ACCESS_CONTROL_MISSING` | 9 | 0 | 13 | 0 | 7 | 1.00 | 1.00 |
-| `MINT_COLLATERAL_CAP_MISSING` | 9 | 0 | 13 | 0 | 7 | 1.00 | 1.00 |
+| `MINT_ACCESS_CONTROL_MISSING` | 9 | 0 | 14 | 0 | 7 | 1.00 | 1.00 |
+| `MINT_COLLATERAL_CAP_MISSING` | 9 | 0 | 14 | 0 | 7 | 1.00 | 1.00 |
 | `ORACLE_VALIDATION_MISSING` | 7 | 0 | 7 | 0 | 3 | 1.00 | 1.00 |
 
 These values describe only the checked-in synthetic corpus; they are not a production accuracy

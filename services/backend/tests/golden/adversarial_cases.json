@@ -81,6 +81,12 @@
     },
     {
       "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BalanceTransfer",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
       "contract": "ReversedGuardMint",
       "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
       "expected": "NONE"
@@ -227,6 +233,12 @@
     {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
       "contract": "RevertedBranchMint",
+      "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BalanceTransfer",
       "path": "chain/src/fixtures/adversarial/SemanticMintVariants.sol",
       "expected": "NONE"
     },
