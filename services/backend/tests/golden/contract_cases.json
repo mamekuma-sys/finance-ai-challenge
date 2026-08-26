@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "rule_version": "1.0.0",
+      "severity": "CRITICAL",
+      "vulnerable": [
+        {
+          "contract": "VulnerableRwaToken",
+          "path": "chain/src/fixtures/VulnerableRwaToken.sol",
+          "line": 12,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["authorization"]
+        },
+        {
+          "contract": "VulnerableHelperMint",
+          "path": "chain/src/fixtures/access/VulnerableHelperMint.sol",
+          "line": 14,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["authorization"]
+        },
+        {
+          "contract": "VulnerableAlternateMint",
+          "path": "chain/src/fixtures/access/VulnerableAlternateMint.sol",
+          "line": 21,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["authorization"]
+        }
+      ],
+      "safe": [
+        {
+          "contract": "FixedRwaToken",
+          "path": "chain/src/fixtures/FixedRwaToken.sol"
+        },
+        {
+          "contract": "ModifierProtectedMint",
+          "path": "chain/src/fixtures/access/ModifierProtectedMint.sol"
+        },
+        {
+          "contract": "InheritedHelperProtectedMint",
+          "path": "chain/src/fixtures/access/InheritedHelperProtectedMint.sol"
+        }
+      ]
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "rule_version": "1.0.0",
+      "severity": "CRITICAL",
+      "vulnerable": [
+        {
+          "contract": "VulnerableRwaToken",
+          "path": "chain/src/fixtures/VulnerableRwaToken.sol",
+          "line": 12,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["collateral_guard", "cap_guard"]
+        },
+        {
+          "contract": "CollateralOnlyMint",
+          "path": "chain/src/fixtures/collateral/CollateralOnlyMint.sol",
+          "line": 25,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["cap_guard"]
+        },
+        {
+          "contract": "CapOnlyMint",
+          "path": "chain/src/fixtures/collateral/CapOnlyMint.sol",
+          "line": 21,
+          "excerpt_contains": "totalSupply += amount",
+          "missing_guards": ["collateral_guard"]
+        }
+      ],
+      "safe": [
+        {
+          "contract": "FixedRwaToken",
+          "path": "chain/src/fixtures/FixedRwaToken.sol"
+        },
+        {
+          "contract": "ModifierCollateralCapMint",
+          "path": "chain/src/fixtures/collateral/ModifierCollateralCapMint.sol"
+        },
+        {
+          "contract": "HelperCollateralCapMint",
+          "path": "chain/src/fixtures/collateral/HelperCollateralCapMint.sol"
+        }
+      ]
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "rule_version": "1.0.0",
+      "severity": "HIGH",
+      "vulnerable": [
+        {
+          "contract": "VulnerableOracle",
+          "path": "chain/src/fixtures/VulnerableOracle.sol",
+          "line": 13,
+          "excerpt_contains": "answer = answer_",
+          "missing_guards": ["positive_answer", "not_future", "max_age"]
+        },
+        {
+          "contract": "PositiveOnlyOracle",
+          "path": "chain/src/fixtures/oracle/PositiveOnlyOracle.sol",
+          "line": 20,
+          "excerpt_contains": "answer = answer_",
+          "missing_guards": ["not_future", "max_age"]
+        },
+        {
+          "contract": "FreshnessOnlyOracle",
+          "path": "chain/src/fixtures/oracle/FreshnessOnlyOracle.sol",
+          "line": 24,
+          "excerpt_contains": "answer = answer_",
+          "missing_guards": ["positive_answer"]
+        }
+      ],
+      "safe": [
+        {
+          "contract": "FixedOracle",
+          "path": "chain/src/fixtures/FixedOracle.sol"
+        },
+        {
+          "contract": "ModifierValidatedOracle",
+          "path": "chain/src/fixtures/oracle/ModifierValidatedOracle.sol"
+        },
+        {
+          "contract": "HelperValidatedOracle",
+          "path": "chain/src/fixtures/oracle/HelperValidatedOracle.sol"
+        }
+      ]
+    }
+  ]
+}
