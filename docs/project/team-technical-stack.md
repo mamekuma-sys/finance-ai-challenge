@@ -376,17 +376,41 @@ CI 필수 gate:
 
 ---
 
-## 9. 개발 전 남은 기술 결정
+## 9. 개발 전 기술 결정 — 2026-08-26 확정
 
-다음 항목은 아직 저장소 의존성 또는 공급업체가 확정되지 않았다. 네 트랙 개발 전 기획 브랜치에서 결정한다.
+항목 9(석연이형 주담당)의 공급업체 선택이 확정됐다. 아래 표가 결정 기록이며, `미결`만 개발 전에 마저 정한다.
 
-1. `openapi-typescript`와 `openapi-fetch`의 정확한 version 및 생성 script
-2. Supabase Storage 접근 방식과 Python package 사용 여부
-3. always-on Docker 운영 공급업체와 유료 plan
-4. uptime monitor 공급업체와 장애 알림 수신자
-5. Sentry SDK package와 frontend/backend release tagging
-6. 최종 font asset의 self-host 여부와 license 기록
-7. Kaia primary·fallback RPC endpoint 운영 정책
+| # | 항목 | 결정 | 상태 |
+|---:|---|---|---|
+| 1 | `openapi-typescript` / `openapi-fetch` version과 생성 script | `openapi-typescript@7.13.0`(dev), `openapi-fetch@0.17.0` 둘 다 exact pin. 생성 명령은 `npm run gen:api` | **확정·적용 완료** |
+| 2 | Supabase Storage 접근 방식 | Supabase PostgreSQL + Storage 사용. 업로드 원문과 report artifact 저장 | 확정 (Python package 선택은 B) |
+| 3 | always-on Docker 운영 공급업체 | **Railway** — API·worker 동일 image, sleep 없는 유료 plan | 확정 (plan 등급 미결) |
+| 4 | uptime monitor | **UptimeRobot** — 1분 간격 공개 URL 감시 | 확정 (알림 수신자 미결) |
+| 5 | Sentry SDK와 release tagging | **Sentry** 사용. Web은 `@sentry/nextjs@10.71.0` | 확정 (도입 시점은 P0 E2E 통과 후) |
+| 6 | font self-host 여부 | **self-host 확정.** `pretendard` npm package를 그대로 번들. 외부 CDN 의존 없음 | 확정 (NOTICE.md에 OFL 기록 필요) |
+| 7 | Kaia RPC 운영 정책 | primary = **Kaia 공식 Kairos RPC**, fallback = **BlockPI Kairos** | 확정 |
+
+### 배포 경계 요약
+
+```text
+Web            → Vercel
+API · worker   → Railway (Docker, always-on)
+DB · 문서 저장  → Supabase PostgreSQL + Storage
+모니터링        → Sentry + UptimeRobot
+RPC(P1)        → Kaia 공식 Kairos → BlockPI Kairos fallback
+CI             → GitHub Actions + scripts/verify.ps1
+```
+
+### 남은 미결
+
+- Railway plan 등급과 월 비용 상한
+- UptimeRobot 장애 알림 수신자
+- Sentry frontend/backend release tagging 규칙과 도입 시점
+- `pretendard` OFL license의 `NOTICE.md` 기록
+
+### P0 이후로 미뤄도 되는 것
+
+Sentry 도입과 LIVE RPC 연결은 P0 E2E를 막지 않으므로 뒤로 미룬다. P0 수직 경로가 통과한 뒤 붙인다.
 
 새 framework나 운영 부품을 추가할 때는 “어느 수용 기준을 해결하는가, P0 장애 면적을 늘리지 않는가, 네 명이 유지할 수 있는가”를 PR에 기록한다.
 
