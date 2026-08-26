@@ -527,7 +527,9 @@ class _AstAnalyzer:
         if node_type in {"RevertStatement", "Return"}:
             return []
         if node_type == "InlineAssembly":
-            return [self._unsupported(state, "inline assembly") for state in states]
+            states = [self._unsupported(state, "inline assembly") for state in states]
+            self._record_unsupported_entry_mutation(statement, states, entrypoint, contract_name)
+            return states
         if node_type == "IfStatement":
             condition = statement.get("condition", {})
             true_body = statement.get("trueBody")
@@ -622,10 +624,15 @@ class _AstAnalyzer:
                 stack=stack,
             )
         if isinstance(called, dict) and called.get("nodeType") == "MemberAccess":
-            return [
+            states = [
                 self._unsupported(state, f"external or dynamic call: {called_name}")
                 for state in states
             ]
+            if called_name in {"delegatecall", "callcode"}:
+                self._record_unsupported_entry_mutation(
+                    expression, states, entrypoint, contract_name
+                )
+            return states
         return states
 
     def _record_mutation(
@@ -657,6 +664,33 @@ class _AstAnalyzer:
                     kind=kind,
                     variable_name=variable_name,
                     node=expression,
+                    state=state,
+                    entrypoint=entrypoint,
+                    contract_name=contract_name,
+                )
+            )
+
+    def _record_unsupported_entry_mutation(
+        self,
+        node: JsonObject,
+        states: list[_ExecutionState],
+        entrypoint: str,
+        contract_name: str,
+    ) -> None:
+        normalized_entrypoint = _normalize_name(entrypoint)
+        kind: str | None = None
+        if any(token in normalized_entrypoint for token in ("mint", "issue")):
+            kind = "mint"
+        elif any(token in normalized_entrypoint for token in ("oracle", "update", "price")):
+            kind = "oracle"
+        if kind is None:
+            return
+        for state in states:
+            self.mutations.append(
+                _Mutation(
+                    kind=kind,
+                    variable_name="unsupported_dynamic_state",
+                    node=node,
                     state=state,
                     entrypoint=entrypoint,
                     contract_name=contract_name,

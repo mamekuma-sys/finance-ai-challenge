@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "cases": [
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "ConditionalGuardMint",
+      "path": "chain/src/fixtures/adversarial/ConditionalGuardMint.sol",
+      "expected": "CONFIRMED",
+      "line": 23
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "RoleMappingMint",
+      "path": "chain/src/fixtures/adversarial/RoleMappingMint.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "ExternalValidatedMint",
+      "path": "chain/src/fixtures/adversarial/ExternalValidatedMint.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 19
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "DelegateMintProxy",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 13
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "AssemblyMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 22
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "ConditionalGuardMint",
+      "path": "chain/src/fixtures/adversarial/ConditionalGuardMint.sol",
+      "expected": "CONFIRMED",
+      "line": 23
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "RequireGuardedMint",
+      "path": "chain/src/fixtures/adversarial/RequireGuardedMint.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "ExternalValidatedMint",
+      "path": "chain/src/fixtures/adversarial/ExternalValidatedMint.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 19
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "DelegateMintProxy",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 13
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "AssemblyMint",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 22
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "ConditionalValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/ConditionalValidatedOracle.sol",
+      "expected": "CONFIRMED",
+      "line": 21
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "RequireValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/RequireValidatedOracle.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "ExternalValidatedOracle",
+      "path": "chain/src/fixtures/adversarial/ExternalValidatedOracle.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 20
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "AssemblyOracle",
+      "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 34
+    }
+  ]
+}
