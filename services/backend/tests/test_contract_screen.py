@@ -66,3 +66,19 @@ def test_compile_failure_is_unknown_and_never_confirmed() -> None:
     assert len(findings) == 3
     assert all(finding.status is FindingStatus.UNKNOWN for finding in findings)
     assert all(finding.code_location.file == "Broken.sol" for finding in findings)
+
+
+def test_incomplete_inheritance_source_is_unknown() -> None:
+    findings = analyze_contract_sources(
+        scan_id="scan_incomplete_inheritance",
+        sources={
+            "Incomplete.sol": """
+                pragma solidity ^0.8.24;
+                contract Incomplete is MissingBase {}
+            """
+        },
+    )
+
+    assert len(findings) == 3
+    assert all(finding.status is FindingStatus.UNKNOWN for finding in findings)
+    assert all(finding.code_location.file == "Incomplete.sol" for finding in findings)
