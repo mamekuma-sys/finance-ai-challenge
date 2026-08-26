@@ -26,17 +26,17 @@ const SCREENS = [
   { name: "S1 관제 홈", heading: "관제 홈", render: () => HomePage({ searchParams: noSearch }) },
   {
     name: "S3 발행조건 검토",
-    heading: "발행조건 검토",
+    heading: "발행조건",
     render: () => DocumentPage({ params, searchParams: noSearch }),
   },
   {
     name: "S4 컨트랙트 검증",
-    heading: "컨트랙트 검증 결과",
+    heading: "검증 결과",
     render: () => ScanPage({ params, searchParams: noSearch }),
   },
   {
     name: "S5 자산 상세",
-    heading: "자산 상세",
+    heading: "Han River Office 01",
     render: () => AssetDetailPage({ params, searchParams: noSearch }),
   },
   {

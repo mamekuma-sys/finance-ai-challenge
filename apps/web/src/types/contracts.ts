@@ -31,19 +31,3 @@ export interface SpineNode {
   title: string;
   locator: string;
 }
-
-export interface DemoFinding {
-  assetName: string;
-  assetId: string;
-  title: string;
-  severity: Severity;
-  status: FindingStatus;
-  risk: number;
-  mode: EvidenceMode;
-  ruleVersion: string;
-  documentQuote: string;
-  documentLocator: string;
-  codeExcerpt: string;
-  codeLocator: string;
-  spine: SpineNode[];
-}
