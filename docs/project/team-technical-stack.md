@@ -387,7 +387,7 @@ CI 필수 gate:
 | 3 | always-on Docker 운영 공급업체 | **Railway** — API·worker 동일 image, sleep 없는 유료 plan | 확정 (plan 등급 미결) |
 | 4 | uptime monitor | **UptimeRobot** — 1분 간격 공개 URL 감시 | 확정 (알림 수신자 미결) |
 | 5 | Sentry SDK와 release tagging | **Sentry** 사용. Web은 `@sentry/nextjs@10.71.0` | 확정 (도입 시점은 P0 E2E 통과 후) |
-| 6 | font self-host 여부 | **self-host 확정.** `pretendard` npm package를 그대로 번들. 외부 CDN 의존 없음 | 확정 (NOTICE.md에 OFL 기록 필요) |
+| 6 | font self-host 여부와 서체 | **self-host 확정.** 본문 `pretendard`(dynamic subset), 수치·해시·코드 `@fontsource/ibm-plex-mono`. 외부 CDN 의존 없음 | **부분 확정 — 제목 서체 미결.** 아래 충돌 참고 |
 | 7 | Kaia RPC 운영 정책 | primary = **Kaia 공식 Kairos RPC**, fallback = **BlockPI Kairos** | 확정 |
 
 ### 배포 경계 요약
@@ -401,12 +401,27 @@ RPC(P1)        → Kaia 공식 Kairos → BlockPI Kairos fallback
 CI             → GitHub Actions + scripts/verify.ps1
 ```
 
+### 서체 문서 충돌 — 전원 확인 필요
+
+`stack-and-visual-direction.md` §7.5와 이 문서, 그리고 `globals.css`가 서로 다른 본문 서체를 지정하고 있었다.
+
+| 출처 | 본문 서체 |
+|---|---|
+| `stack-and-visual-direction.md` §7.5 (AGENTS.md가 지정한 **시각 단일 진실**) | Wanted Sans Variable |
+| 이 문서 §3, `globals.css:28` | Pretendard |
+
+규칙대로면 시각 단일 진실이 이기지만, 서체 교체는 A 단독 결정 사안이 아니다. P0 E2E를 막지 않으므로 아래로 처리한다.
+
+- **확정:** 본문 Pretendard(잠정), 수치·해시·코드 IBM Plex Mono, self-host
+- **미결:** 제목 서체와 §7.5 정정 여부 — P0 통과 후 전원 합의로 결정
+
 ### 남은 미결
 
 - Railway plan 등급과 월 비용 상한
 - UptimeRobot 장애 알림 수신자
 - Sentry frontend/backend release tagging 규칙과 도입 시점
-- `pretendard` OFL license의 `NOTICE.md` 기록
+- `pretendard`와 `@fontsource/ibm-plex-mono` license의 `NOTICE.md` 기록
+- 제목 서체 확정과 `stack-and-visual-direction.md` §7.5 정정 여부
 
 ### P0 이후로 미뤄도 되는 것
 
