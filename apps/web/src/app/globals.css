@@ -563,3 +563,113 @@ a {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* --- 리포트와 온체인 영수증 --- */
+
+.report-section {
+  margin: 22px 0;
+}
+
+.report-section h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.report-mismatch {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.report-lineage {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.report-lineage > div {
+  display: contents;
+}
+
+.report-lineage dt {
+  color: var(--muted);
+}
+
+.report-lineage dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.report-limitation {
+  margin: 14px 0 0;
+  padding: 9px 11px;
+  border-left: 3px solid var(--warning);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.block-receipt {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.block-receipt-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.block-receipt-mode {
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.block-receipt[data-mode="LIVE"] .block-receipt-mode {
+  color: var(--safe);
+}
+
+.block-receipt[data-mode="REPLAY"] .block-receipt-mode {
+  color: var(--verify);
+}
+
+.block-receipt-body {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px 14px;
+  margin: 0;
+  padding: 9px 11px;
+}
+
+.block-receipt-body > div {
+  display: contents;
+}
+
+.block-receipt-body dt {
+  color: var(--muted);
+}
+
+.block-receipt-body dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.block-receipt a {
+  display: block;
+  padding: 7px 11px;
+  border-top: 1px solid var(--rule);
+  color: var(--verify);
+}

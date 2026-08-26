@@ -10,4 +10,9 @@ import type { paths } from "@/types/api";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-export const api = createClient<paths>({ baseUrl });
+export const api = createClient<paths>({
+  baseUrl,
+  // createClient가 globalThis.fetch를 생성 시점에 붙잡지 않도록 감싼다.
+  // 모듈 최상위에서 한 번 캡처되면 런타임에 교체된 fetch를 쓰지 못한다.
+  fetch: (request) => globalThis.fetch(request),
+});

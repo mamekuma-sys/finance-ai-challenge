@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SCREEN_STATES } from "@/lib/screen-state";
 import AssetDetailPage from "../assets/[id]/page";
@@ -8,6 +8,16 @@ import DocumentPage from "../assets/[id]/document/page";
 import ScanPage from "../assets/[id]/scan/page";
 import HomePage from "../page";
 import ReportPage from "../reports/[id]/page";
+import { stubEvidenceReportFetch } from "@/test/evidence-report-fixture";
+
+beforeEach(() => {
+  stubEvidenceReportFetch();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 
 const params = Promise.resolve({ id: "asset_synthetic_hanriver_01" });
 const noSearch = Promise.resolve({});
