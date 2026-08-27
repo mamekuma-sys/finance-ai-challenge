@@ -40,6 +40,25 @@ class ScanStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class JobType(StrEnum):
+    DOCUMENT_EXTRACTION = "DOCUMENT_EXTRACTION"
+    CONTRACT_SCAN = "CONTRACT_SCAN"
+
+
+class JobStatus(StrEnum):
+    """Execution state of a worker job.
+
+    Deliberately mirrors ScanStatus vocabulary but is a separate contract: a job is one
+    execution attempt, a ScanRun is the domain result the user and the report read.
+    """
+
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+
+
 class DataFreshness(StrEnum):
     """Derived from the current clock, so it never belongs on immutable evidence."""
 
