@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { CodeView } from "@/components/code-view";
 import { MismatchList } from "@/components/mismatch-list";
 import { RiskRuler } from "@/components/risk-ruler";
+import { VerdictBanner } from "@/components/verdict-banner";
 import { DEMO_CODE } from "@/lib/demo-screens";
 import { fetchDemoEvidenceReport } from "@/lib/evidence-report";
 import { parseScreenState } from "@/lib/screen-state";
@@ -29,7 +30,11 @@ export default async function ScanPage({
       mode={evidence?.mode ?? "REPLAY"}
       state={state}
     >
-      <RiskRuler findings={report.code_findings} />
+      <VerdictBanner report={report} assetId={id} />
+
+      <section className="screen-section" aria-label="위험 점수">
+        <RiskRuler findings={report.code_findings} />
+      </section>
 
       <section className="screen-section" aria-label="문서와 코드 불일치">
         <h2 className="panel-title">문서와 코드 불일치</h2>

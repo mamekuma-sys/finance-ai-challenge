@@ -4,13 +4,20 @@
   --paper: #e8ece9;
   --surface: #f7f8f6;
   --ink: #172126;
-  --muted: #66716f;
+  --muted: #4d5856;
+  --muted-soft: #6b7674;
   --rule: #b8c2bd;
   --verify: #2d5bff;
   --safe: #27725b;
   --warning: #aa6817;
   --breach: #c43d32;
   --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* 본문 14px 기준은 stack-and-visual-direction.md §7.5를 따른다. */
+  --text-body: 14px;
+  --text-small: 13px;
+  --text-label: 12px;
+  --text-micro: 11px;
 }
 
 * {
@@ -26,6 +33,8 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: Pretendard, "IBM Plex Sans KR", system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: 1.55;
   background:
     linear-gradient(rgba(23, 33, 38, 0.035) 1px, transparent 1px),
     var(--paper);
@@ -90,50 +99,53 @@ a {
 
 /* ==================================================================
    제품 셸 — stack-and-visual-direction.md §7
+   본문 14px, 라벨 12px. 수치·해시·코드에만 mono를 쓴다.
    ================================================================== */
 
 .app {
-  width: min(1440px, calc(100% - 32px));
-  margin: 16px auto 48px;
+  width: min(1400px, calc(100% - 40px));
+  margin: 20px auto 56px;
   border: 1px solid var(--ink);
   background: var(--surface);
-  box-shadow: 8px 8px 0 rgba(23, 33, 38, 0.12);
+  box-shadow: 6px 6px 0 rgba(23, 33, 38, 0.1);
 }
 
 .app-topbar {
   display: flex;
   align-items: center;
-  gap: 20px;
-  min-height: 52px;
-  padding: 0 18px;
+  gap: 16px;
+  min-height: 56px;
+  padding: 0 22px;
   border-bottom: 1px solid var(--ink);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
 }
 
 .app-brand {
+  font-family: var(--mono);
+  font-size: var(--text-label);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
 }
 
 .app-asset {
-  padding-left: 20px;
+  padding-left: 16px;
   border-left: 1px solid var(--rule);
-  font-family: Pretendard, "IBM Plex Sans KR", system-ui, sans-serif;
-  font-size: 13px;
-  letter-spacing: 0;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .app-block {
   margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--text-micro);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .app-mode {
-  padding: 2px 8px;
+  padding: 3px 9px;
   border: 1px solid currentColor;
+  font-size: var(--text-micro);
+  font-weight: 600;
 }
 
 .app-mode[data-mode="LIVE"] {
@@ -151,77 +163,168 @@ a {
 }
 
 .app-nav a {
-  padding: 11px 18px;
-  border-right: 1px solid var(--rule);
+  padding: 13px 20px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-small);
+  font-weight: 500;
   text-decoration: none;
 }
 
 .app-nav a:hover {
   color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-/* 현재 위치는 색만이 아니라 아래 굵은 선으로도 표시한다. */
+/* 현재 위치는 색만이 아니라 아래 굵은 선과 굵기로도 표시한다. */
 .app-nav a[aria-current="page"] {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
   background: var(--surface);
   box-shadow: inset 0 -3px 0 var(--verify);
 }
 
 .app-main {
-  padding: 20px 18px 26px;
+  padding: 26px 22px 34px;
 }
 
 .screen-title {
-  margin: 0 0 4px;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
 .screen-lead {
-  margin: 0 0 20px;
+  margin: 0 0 24px;
+  max-width: 68ch;
   color: var(--muted);
-  font-size: 13.5px;
+  font-size: var(--text-small);
 }
 
 .screen-section {
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid var(--rule);
+  margin-top: 32px;
 }
 
 .screen-note {
-  margin: 12px 0 0;
-  padding: 8px 11px;
+  margin: 14px 0 0;
+  padding: 10px 13px;
   border-left: 3px solid var(--rule);
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--text-small);
 }
 
 .panel-title {
-  margin: 0 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 0 0 14px;
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--muted);
-  text-transform: uppercase;
 }
 
 .panel-empty {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-small);
+}
+
+/* --- 판정 배너: 화면에서 가장 무거운 요소 --- */
+
+.verdict {
+  padding: 20px 22px;
+  border: 1px solid var(--ink);
+  border-left-width: 6px;
+  background: var(--paper);
+}
+
+.verdict[data-tone="CRITICAL"] {
+  border-left-color: var(--breach);
+}
+
+.verdict[data-tone="HIGH"] {
+  border-left-color: var(--warning);
+}
+
+.verdict[data-tone="clear"] {
+  border-left-color: var(--safe);
+}
+
+.verdict-eyebrow {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.verdict h2 {
+  margin: 0 0 10px;
+  max-width: 46ch;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.verdict-detail {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-body);
+  color: var(--muted);
+}
+
+.verdict-detail strong {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13.5px;
+}
+
+.verdict-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.verdict-severity {
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  font-size: var(--text-label);
+  font-weight: 700;
+}
+
+.verdict[data-tone="CRITICAL"] .verdict-severity {
+  color: var(--breach);
+}
+
+.verdict[data-tone="HIGH"] .verdict-severity {
+  color: var(--warning);
+}
+
+.verdict-action {
+  padding: 7px 15px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.verdict-action + .verdict-action {
+  background: transparent;
+  color: var(--ink);
+}
+
+.verdict-action:hover {
+  opacity: 0.85;
 }
 
 /* --- 3분할 본문 (§7.3) --- */
 
 .console-body {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 320px;
-  margin: 18px -18px 0;
+  grid-template-columns: 240px minmax(0, 1fr) 340px;
+  margin: 26px -22px 0;
   border-top: 1px solid var(--rule);
 }
 
@@ -234,18 +337,18 @@ a {
 .console-field,
 .console-spine,
 .console-events {
-  padding: 16px 18px;
+  padding: 20px 22px;
   min-width: 0;
 }
 
 .console-events {
-  margin: 0 -18px;
+  margin: 0 -22px;
   border-top: 1px solid var(--ink);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .console-body {
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: 220px minmax(0, 1fr);
   }
 
   .console-field {
@@ -268,24 +371,26 @@ a {
 
 .ledger-row {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr);
-  gap: 2px 8px;
-  padding: 9px 10px;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 3px 10px;
+  padding: 12px 13px;
+  margin-bottom: 8px;
   border: 1px solid var(--rule);
-  margin-bottom: 6px;
+  border-left-width: 4px;
+  background: var(--paper);
   color: inherit;
   text-decoration: none;
-  background: var(--paper);
 }
 
 .ledger-row:hover {
   border-color: var(--ink);
+  border-left-color: var(--breach);
 }
 
 .ledger-marker {
   grid-row: span 2;
   align-self: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .ledger-marker[data-severity="CRITICAL"] {
@@ -297,45 +402,48 @@ a {
 }
 
 .ledger-name {
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: var(--text-body);
+  font-weight: 600;
 }
 
 .ledger-meta {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
+  font-size: var(--text-label);
   color: var(--muted);
 }
 
 .ledger-empty {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-small);
 }
 
 /* --- Risk Ruler (§7.7) — 원형 게이지를 쓰지 않는다 --- */
 
 .risk {
-  padding: 14px;
+  padding: 18px;
   border: 1px solid var(--rule);
   background: var(--paper);
 }
 
 .risk-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
+}
+
+.risk-label {
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
+  font-size: var(--text-micro);
+  letter-spacing: 0.12em;
   color: var(--muted);
 }
 
 .risk-grade {
   margin-left: auto;
-  padding: 1px 7px;
+  padding: 3px 10px;
   border: 1px solid currentColor;
+  font-size: var(--text-label);
+  font-weight: 700;
 }
 
 .risk-grade[data-grade="Critical"] {
@@ -356,17 +464,17 @@ a {
 }
 
 .risk-score {
-  margin: 4px 0 10px;
+  margin: 6px 0 14px;
   font-family: var(--mono);
-  font-size: 44px;
-  font-weight: 600;
+  font-size: 46px;
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .risk-track {
   position: relative;
-  height: 8px;
+  height: 10px;
   border: 1px solid var(--ink);
   background:
     repeating-linear-gradient(
@@ -380,48 +488,50 @@ a {
 
 .risk-marker {
   position: absolute;
-  top: -5px;
-  width: 2px;
-  height: 16px;
+  top: -6px;
+  width: 3px;
+  height: 20px;
   margin-left: -1px;
   background: var(--breach);
 }
 
 .risk-ticks {
   position: absolute;
-  top: 12px;
+  top: 15px;
   left: 0;
   display: flex;
   justify-content: space-between;
   width: 100%;
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 10px;
   color: var(--muted);
 }
 
 .risk-contributors {
-  margin: 26px 0 0;
+  margin: 32px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 12px;
 }
 
 .risk-contributors li {
   display: flex;
-  gap: 10px;
-  padding: 4px 0;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--rule);
+  font-size: var(--text-small);
 }
 
 .risk-rule {
   font-family: var(--mono);
+  font-size: var(--text-label);
 }
 
 .risk-severity {
   margin-left: auto;
   color: var(--breach);
-  font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-label);
+  font-weight: 700;
 }
 
 .risk-empty {
@@ -430,8 +540,8 @@ a {
 }
 
 .risk-provisional {
-  margin: 10px 0 0;
-  font-size: 11px;
+  margin: 12px 0 0;
+  font-size: var(--text-label);
   color: var(--muted);
 }
 
@@ -439,35 +549,39 @@ a {
 
 .control-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
 }
 
 .control {
-  padding: 14px;
+  padding: 17px;
   border: 1px solid var(--rule);
   background: var(--paper);
 }
 
 [data-selected="true"] .control {
   border-color: var(--verify);
-  box-shadow: inset 3px 0 0 var(--verify);
+  box-shadow: inset 4px 0 0 var(--verify);
 }
 
 .control-head {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.control-field {
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  font-size: var(--text-label);
+  font-weight: 600;
 }
 
 .control-status {
   margin-left: auto;
-  padding: 1px 6px;
+  padding: 3px 9px;
   border: 1px solid currentColor;
+  font-size: var(--text-micro);
+  font-weight: 700;
 }
 
 .control[data-confirmed="true"] .control-status {
@@ -479,35 +593,36 @@ a {
 }
 
 .control-value {
-  margin: 8px 0;
+  margin: 12px 0;
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: 25px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .control-unit {
-  margin-left: 6px;
-  font-size: 12px;
+  margin-left: 7px;
+  font-size: var(--text-small);
   color: var(--muted);
 }
 
 .control-quote {
   margin: 0;
-  padding: 9px 11px;
+  padding: 12px 14px;
   border-left: 3px solid var(--rule);
   background: var(--surface);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: var(--text-body);
+  line-height: 1.65;
 }
 
 .control-locator {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-micro);
   color: var(--muted);
 }
 
-/* --- 불일치 --- */
+/* --- 불일치: 이 제품의 핵심 대조 --- */
 
 .mismatch-list {
   margin: 0;
@@ -516,19 +631,22 @@ a {
 }
 
 .mismatch {
-  margin-bottom: 14px;
-  border: 1px solid var(--rule);
+  margin-bottom: 18px;
+  border: 1px solid var(--ink);
   background: var(--paper);
 }
 
 .mismatch-head {
   display: flex;
-  gap: 10px;
-  padding: 8px 12px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
   border-bottom: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
+}
+
+.mismatch-severity {
+  font-size: var(--text-label);
+  font-weight: 700;
 }
 
 .mismatch-severity[data-severity="CRITICAL"] {
@@ -541,48 +659,59 @@ a {
 
 .mismatch-status {
   margin-left: auto;
-  color: var(--muted);
+  padding: 3px 10px;
+  border: 1px solid var(--rule);
+  font-size: var(--text-label);
+  font-weight: 600;
 }
 
 .mismatch-sides {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .mismatch-sides > div {
-  padding: 12px;
+  padding: 18px 16px;
 }
 
 .mismatch-sides > div:first-child {
   border-right: 1px solid var(--rule);
+  background: var(--surface);
 }
 
+/* 좌우 대조가 이 제품의 핵심이므로 라벨을 읽히게 둔다. */
 .mismatch-eyebrow {
-  margin: 0 0 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  font-size: var(--text-label);
+  font-weight: 700;
   color: var(--muted);
 }
 
 .mismatch-control,
 .mismatch-finding {
-  margin: 0 0 8px;
-  font-size: 13.5px;
+  margin: 0 0 12px;
+  font-size: 15px;
   line-height: 1.5;
+}
+
+.mismatch-control {
+  font-family: var(--mono);
+  font-size: var(--text-body);
 }
 
 .mismatch-sides a {
   color: var(--verify);
-  font-size: 12px;
+  font-size: var(--text-small);
+  font-weight: 600;
 }
 
 .mismatch-clear {
   margin: 0;
-  padding: 12px 14px;
-  border-left: 3px solid var(--safe);
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+  border-left: 5px solid var(--safe);
   background: var(--paper);
-  font-size: 13.5px;
+  font-size: var(--text-body);
 }
 
 /* --- 상태 목록 --- */
@@ -591,25 +720,26 @@ a {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
 }
 
 .status-list li {
   display: flex;
-  gap: 14px;
-  padding: 9px 0;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--rule);
+  font-size: var(--text-small);
 }
 
 .status-list li > span:first-child {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 
 .status-list li > span:last-child {
   margin-left: auto;
-  font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-label);
+  font-weight: 600;
   color: var(--muted);
 }
 
@@ -631,20 +761,20 @@ a {
 .error-notice {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 14px 0;
-  padding: 10px 12px;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 13px 15px;
   border: 1px solid var(--rule);
   background: var(--paper);
-  font-size: 13.5px;
+  font-size: var(--text-body);
 }
 
 .state-notice-label {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  padding: 1px 6px;
+  padding: 3px 9px;
   border: 1px solid currentColor;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .state-notice[data-state="partial"] .state-notice-label,
@@ -659,19 +789,19 @@ a {
 .state-notice-meta {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-micro);
   color: var(--muted);
 }
 
 .loading-notice {
-  margin: 22px 18px;
-  font-size: 13.5px;
+  margin: 26px 22px;
+  font-size: var(--text-body);
   color: var(--muted);
 }
 
 .error-notice {
-  margin: 22px 18px;
-  border-color: var(--breach);
+  margin: 26px 22px;
+  border-left: 5px solid var(--breach);
 }
 
 .error-notice p {
@@ -680,9 +810,12 @@ a {
 
 .error-notice button {
   margin-left: auto;
-  padding: 5px 12px;
+  padding: 7px 15px;
   border: 1px solid var(--ink);
-  background: transparent;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--text-small);
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -695,63 +828,60 @@ a {
 }
 
 .code-view-file {
-  padding: 7px 11px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--rule);
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-label);
   color: var(--muted);
 }
 
 .code-view-lines {
   margin: 0;
-  padding: 7px 0;
+  padding: 10px 0;
   list-style: none;
   overflow-x: auto;
   font-family: var(--mono);
-  font-size: 12.5px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.8;
 }
 
 .code-view-line {
   display: flex;
-  gap: 14px;
-  padding: 0 11px;
+  gap: 16px;
+  padding: 0 14px;
   white-space: pre;
 }
 
 /* 강조는 색만이 아니라 왼쪽 굵은 선으로도 표시한다. */
 .code-view-line[data-highlighted="true"] {
-  background: rgba(196, 61, 50, 0.07);
-  box-shadow: inset 3px 0 0 var(--breach);
+  background: rgba(196, 61, 50, 0.08);
+  box-shadow: inset 4px 0 0 var(--breach);
 }
 
 .code-view-number {
   min-width: 3ch;
   text-align: right;
-  color: var(--muted);
+  color: var(--muted-soft);
   font-variant-numeric: tabular-nums;
 }
 
 /* --- 리포트 --- */
 
 .report-section {
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid var(--rule);
+  margin-top: 32px;
 }
 
 .report-section h2 {
-  margin: 0 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 0 0 14px;
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--muted);
-  text-transform: uppercase;
 }
 
 .report-mismatch {
-  margin-bottom: 14px;
-  padding: 14px;
+  margin-bottom: 16px;
+  padding: 18px;
   border: 1px solid var(--rule);
   background: var(--paper);
 }
@@ -759,10 +889,10 @@ a {
 .report-lineage {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 5px 18px;
+  gap: 8px 22px;
   margin: 0;
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: var(--text-label);
 }
 
 .report-lineage > div {
@@ -779,11 +909,12 @@ a {
 }
 
 .report-limitation {
-  margin: 16px 0 0;
-  padding: 10px 12px;
-  border-left: 3px solid var(--warning);
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-left: 5px solid var(--warning);
   background: var(--paper);
-  font-size: 13px;
+  font-size: var(--text-body);
 }
 
 /* --- 온체인 영수증 --- */
@@ -791,24 +922,24 @@ a {
 .block-receipt {
   border: 1px solid var(--rule);
   background: var(--paper);
-  font-family: var(--mono);
-  font-size: 11.5px;
 }
 
 .block-receipt-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--rule);
+  font-size: var(--text-body);
 }
 
 .block-receipt-mode {
   margin-left: auto;
-  padding: 1px 6px;
+  padding: 3px 9px;
   border: 1px solid currentColor;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .block-receipt[data-mode="LIVE"] .block-receipt-mode {
@@ -822,9 +953,11 @@ a {
 .block-receipt-body {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 4px 16px;
+  gap: 8px 24px;
   margin: 0;
-  padding: 10px 12px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: var(--text-label);
 }
 
 .block-receipt-body > div {
@@ -843,9 +976,11 @@ a {
 
 .block-receipt a {
   display: block;
-  padding: 8px 12px;
+  padding: 12px 16px;
   border-top: 1px solid var(--rule);
   color: var(--verify);
+  font-size: var(--text-small);
+  font-weight: 600;
 }
 
 /* --- Evidence Spine (§7.4) --- */
@@ -859,19 +994,19 @@ a {
 .spine-node {
   position: relative;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 10px;
-  padding: 0 0 18px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  padding: 0 0 22px;
 }
 
 /* 노드를 잇는 세로선. 마지막 노드에서는 끊는다. */
 .spine-node::before {
   content: "";
   position: absolute;
-  left: 25px;
-  top: 18px;
+  left: 28px;
+  top: 20px;
   bottom: 0;
-  width: 1px;
+  width: 2px;
   background: var(--rule);
 }
 
@@ -885,30 +1020,31 @@ a {
 
 .spine-label {
   align-self: start;
-  padding: 2px 0;
-  border-top: 2px solid var(--ink);
+  padding: 4px 0;
+  border-top: 3px solid var(--ink);
   font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-align: center;
 }
 
 .spine-content {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 
 .spine-content strong {
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: var(--text-body);
+  font-weight: 600;
   line-height: 1.45;
 }
 
 .spine-content span {
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--text-micro);
   color: var(--muted);
   overflow-wrap: anywhere;
 }
@@ -918,4 +1054,49 @@ a {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* 좌측 원장 아래 위험 점수. 눈금자가 과하게 늘어지지 않게 폭을 제한한다. */
+.ledger-risk {
+  margin-top: 20px;
+}
+
+.ledger-risk .risk-score {
+  font-size: 38px;
+}
+
+.risk {
+  max-width: 680px;
+}
+
+.verdict-detail {
+  max-width: 70ch;
+}
+
+/* 한국어는 단어 중간에서 줄바꿈하지 않는다. keep-all이 없으면
+   "강제하지 않습 / 니다" 처럼 어절이 쪼개진다. */
+body,
+.verdict h2,
+.verdict-detail,
+.screen-lead,
+.screen-note,
+.control-quote,
+.mismatch-control,
+.mismatch-finding,
+.spine-content strong,
+.report-limitation,
+.mismatch-clear,
+.panel-empty {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 좁은 원장 컬럼에서는 눈금 숫자가 뭉치므로 양 끝만 남긴다. */
+.ledger-risk .risk-ticks span:not(:first-child):not(:last-child) {
+  display: none;
+}
+
+.ledger-risk .risk-contributors li {
+  flex-wrap: wrap;
+  gap: 4px;
 }

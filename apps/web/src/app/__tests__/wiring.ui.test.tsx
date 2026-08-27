@@ -22,7 +22,7 @@ describe("S1 관제 홈은 3분할 셸을 쓴다", () => {
   it("renders the four console regions", async () => {
     render(await HomePage({ searchParams: noSearch }));
 
-    for (const name of ["자산 원장", "위험 요약", "증거 연결", "이벤트 원장"]) {
+    for (const name of ["자산 원장", "문서와 코드 불일치", "증거 연결", "이벤트 원장"]) {
       expect(screen.getByRole("region", { name })).toBeInTheDocument();
     }
   });

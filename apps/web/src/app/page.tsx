@@ -2,8 +2,9 @@ import { AppShell } from "@/components/app-shell";
 import { AssetLedger } from "@/components/asset-ledger";
 import { BlockReceipt } from "@/components/block-receipt";
 import { EvidenceSpine } from "@/components/evidence-spine";
+import { MismatchList } from "@/components/mismatch-list";
 import { RiskRuler } from "@/components/risk-ruler";
-import { assetNameOf } from "@/lib/asset-directory";
+import { VerdictBanner } from "@/components/verdict-banner";
 import { fetchDemoEvidenceReport, toSpineNodes } from "@/lib/evidence-report";
 import { parseScreenState } from "@/lib/screen-state";
 
@@ -36,6 +37,8 @@ export default async function HomePage({
       state={state}
       fixtureVersion={evidence?.fixture_version ?? undefined}
     >
+      <VerdictBanner report={report} assetId={assetId} />
+
       <div className="console-body">
         <section className="console-ledger" aria-label="자산 원장">
           <h2 className="panel-title">자산</h2>
@@ -49,11 +52,14 @@ export default async function HomePage({
               },
             ]}
           />
+          <div className="ledger-risk">
+            <RiskRuler findings={report.code_findings} />
+          </div>
         </section>
 
-        <section className="console-field" aria-label="위험 요약">
-          <h2 className="panel-title">{assetNameOf(assetId)}</h2>
-          <RiskRuler findings={report.code_findings} />
+        <section className="console-field" aria-label="문서와 코드 불일치">
+          <h2 className="panel-title">문서와 코드 불일치</h2>
+          <MismatchList report={report} assetId={assetId} />
         </section>
 
         <section className="console-spine" aria-label="증거 연결">
