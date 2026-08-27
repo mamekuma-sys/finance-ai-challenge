@@ -16,7 +16,7 @@ from rwa_guard.domain.contracts import CodeFinding, CodeLocation, FindingStatus,
 
 JsonObject = dict[str, Any]
 
-ANALYZER_VERSION = "1.1.0"
+ANALYZER_VERSION = "1.2.0"
 
 
 @dataclass(frozen=True)
@@ -217,15 +217,21 @@ def analyze_compiled_sources(
     target_contract: str | None = None,
     source_hash: str | None = None,
 ) -> tuple[CodeFinding, ...]:
+    original_sources = {
+        compiled.original_path_by_compiler_path.get(path, path): content
+        for path, content in compiled.sources.items()
+    }
+    digest = source_hash or _source_hash(original_sources)
     analyzer = _AstAnalyzer(compiled)
+    if not analyzer.has_analyzable_contract(target_contract):
+        reason = (
+            f"target contract not found or not analyzable: {target_contract}"
+            if target_contract is not None
+            else "compiler AST contains no analyzable contract"
+        )
+        return _unknown_findings(scan_id, original_sources, digest, reason)
     mutations = analyzer.analyze(target_contract)
-    digest = source_hash or _source_hash(
-        {
-            compiled.original_path_by_compiler_path.get(path, path): content
-            for path, content in compiled.sources.items()
-        }
-    )
-    findings: list[CodeFinding] = []
+    ordered_findings: list[tuple[tuple[str, str, int, str, str], CodeFinding]] = []
     emitted_paths: set[tuple[str, str, str, tuple[str, ...]]] = set()
 
     for mutation in mutations:
@@ -247,26 +253,34 @@ def analyze_compiled_sources(
             if path_key in emitted_paths:
                 continue
             emitted_paths.add(path_key)
-            findings.append(
-                _build_finding(
-                    scan_id=scan_id,
-                    compiled=compiled,
-                    source_hash=digest,
-                    mutation=mutation,
-                    rule=rule,
-                    missing=missing,
+            finding = _build_finding(
+                scan_id=scan_id,
+                compiled=compiled,
+                source_hash=digest,
+                mutation=mutation,
+                rule=rule,
+                missing=missing,
+            )
+            ordered_findings.append(
+                (
+                    (
+                        finding.rule_id,
+                        finding.code_location.file,
+                        finding.code_location.start_line,
+                        mutation.entrypoint,
+                        finding.finding_id,
+                    ),
+                    finding,
                 )
             )
 
-    findings.sort(
-        key=lambda finding: (
-            finding.rule_id,
-            finding.code_location.file,
-            finding.code_location.start_line,
-            finding.finding_id,
+    return tuple(
+        finding
+        for _, finding in sorted(
+            ordered_findings,
+            key=lambda item: item[0],
         )
     )
-    return tuple(findings)
 
 
 def compare_rescan(
@@ -303,12 +317,21 @@ class _AstAnalyzer:
         self.state_variables: dict[int, str] = {}
         self.path_by_source_id: dict[int, str] = {}
         self.mutations: list[_Mutation] = []
+        self.active_contract: JsonObject | None = None
         for ast in compiled.asts:
             source_id = _source_id(ast)
             path = ast.get("absolutePath")
             if source_id is not None and isinstance(path, str):
                 self.path_by_source_id[source_id] = path
             self._index(ast, None)
+
+    def has_analyzable_contract(self, target_contract: str | None) -> bool:
+        return any(
+            contract.get("contractKind") == "contract"
+            and not contract.get("abstract", False)
+            and (target_contract is None or contract.get("name") == target_contract)
+            for contract in self.contracts.values()
+        )
 
     def analyze(self, target_contract: str | None) -> tuple[_Mutation, ...]:
         contracts = [
@@ -326,8 +349,9 @@ class _AstAnalyzer:
         for contract in sorted(
             contracts, key=lambda item: (str(item.get("name")), int(item["id"]))
         ):
+            self.active_contract = contract
             for function in self._entrypoints(contract):
-                label = f"{contract['name']}.{function.get('name') or function.get('kind')}"
+                label = f"{contract['name']}.{_function_signature(function)}"
                 initial = _ExecutionState(call_path=(label,))
                 mutation_start = len(self.mutations)
                 final_states = self._execute_function(
@@ -341,7 +365,15 @@ class _AstAnalyzer:
                 if not final_states:
                     del self.mutations[mutation_start:]
                     continue
-                entry_mutations = self.mutations[mutation_start:]
+                entry_mutations = [
+                    mutation
+                    for mutation in self.mutations[mutation_start:]
+                    if any(
+                        final_state.path[: len(mutation.state.path)] == mutation.state.path
+                        for final_state in final_states
+                    )
+                ]
+                self.mutations[mutation_start:] = entry_mutations
                 global_reasons = frozenset(
                     reason
                     for mutation in entry_mutations
@@ -478,6 +510,84 @@ class _AstAnalyzer:
                     functions.append(node)
         return tuple(functions)
 
+    def _resolve_function(self, declaration: int) -> JsonObject | None:
+        function = self.functions.get(declaration)
+        if function is None or function.get("visibility") == "private":
+            return function
+        return self._resolve_override(
+            function,
+            nodes=self.functions,
+            node_type="FunctionDefinition",
+            base_key="baseFunctions",
+        )
+
+    def _resolve_modifier(self, declaration: int) -> JsonObject | None:
+        modifier = self.modifiers.get(declaration)
+        if modifier is None:
+            return None
+        return self._resolve_override(
+            modifier,
+            nodes=self.modifiers,
+            node_type="ModifierDefinition",
+            base_key="baseModifiers",
+        )
+
+    def _resolve_override(
+        self,
+        declaration: JsonObject,
+        *,
+        nodes: Mapping[int, JsonObject],
+        node_type: str,
+        base_key: str,
+    ) -> JsonObject:
+        if self.active_contract is None:
+            return declaration
+        declaration_id = int(declaration["id"])
+        signature = _callable_signature(declaration)
+        for contract_id in self.active_contract.get("linearizedBaseContracts", []):
+            contract = self.contracts.get(contract_id)
+            if contract is None:
+                continue
+            for candidate in contract.get("nodes", []):
+                if (
+                    not isinstance(candidate, dict)
+                    or candidate.get("nodeType") != node_type
+                    or _callable_signature(candidate) != signature
+                    or not isinstance(candidate.get("body"), dict)
+                ):
+                    continue
+                if self._overrides_declaration(
+                    candidate,
+                    declaration_id=declaration_id,
+                    nodes=nodes,
+                    base_key=base_key,
+                ):
+                    return candidate
+        return declaration
+
+    @staticmethod
+    def _overrides_declaration(
+        candidate: JsonObject,
+        *,
+        declaration_id: int,
+        nodes: Mapping[int, JsonObject],
+        base_key: str,
+    ) -> bool:
+        pending = [int(candidate["id"])]
+        visited: set[int] = set()
+        while pending:
+            current_id = pending.pop()
+            if current_id == declaration_id:
+                return True
+            if current_id in visited:
+                continue
+            visited.add(current_id)
+            current = nodes.get(current_id, {})
+            pending.extend(
+                base_id for base_id in current.get(base_key, []) if isinstance(base_id, int)
+            )
+        return False
+
     def _execute_function(
         self,
         function: JsonObject,
@@ -500,7 +610,7 @@ class _AstAnalyzer:
         resolved_modifiers: list[tuple[JsonObject, JsonObject]] = []
         for invocation in function.get("modifiers", []):
             modifier_id = _referenced_declaration(invocation.get("modifierName"))
-            modifier = self.modifiers.get(modifier_id)
+            modifier = self._resolve_modifier(modifier_id)
             if modifier is None:
                 states = [self._unsupported(state, "unresolved modifier") for state in states]
                 continue
@@ -652,7 +762,7 @@ class _AstAnalyzer:
         stack: tuple[int, ...],
     ) -> list[_ExecutionState]:
         node_type = statement.get("nodeType")
-        if node_type == "Block":
+        if node_type in {"Block", "UncheckedBlock"}:
             return self._execute_block(
                 statement,
                 states,
@@ -663,6 +773,15 @@ class _AstAnalyzer:
         if node_type == "RevertStatement":
             return []
         if node_type == "Return":
+            expression = statement.get("expression")
+            if isinstance(expression, dict):
+                states = self._execute_expression(
+                    expression,
+                    states,
+                    entrypoint=entrypoint,
+                    contract_name=contract_name,
+                    stack=stack,
+                )
             return [replace(state, halted=True) for state in states]
         if node_type == "InlineAssembly":
             states = [self._unsupported(state, "inline assembly") for state in states]
@@ -670,6 +789,7 @@ class _AstAnalyzer:
             return states
         if node_type == "IfStatement":
             condition = statement.get("condition", {})
+            states = self._mark_guard_expression_calls(condition, states)
             true_body = statement.get("trueBody")
             false_body = statement.get("falseBody")
             branch_id = str(statement.get("src", "unknown"))
@@ -770,15 +890,21 @@ class _AstAnalyzer:
         called_name = _call_name(called)
         if called_name in {"require", "assert"}:
             arguments = expression.get("arguments", [])
-            guards = (
-                self._classify_guards(arguments[0], truth=True, states=states)
-                if arguments
-                else frozenset()
-            )
-            return [replace(state, guards=state.guards | guards) for state in states]
+            if not arguments:
+                return states
+            condition = arguments[0]
+            states = self._mark_guard_expression_calls(condition, states)
+            surviving: list[_ExecutionState] = []
+            for state in states:
+                expanded = self._expand_expression(condition, state)
+                if _literal_boolean(expanded) is False:
+                    continue
+                guards = self._guard_facts(expanded, truth=True, state=state)
+                surviving.append(replace(state, guards=state.guards | guards))
+            return surviving
 
         declaration = _referenced_declaration(called)
-        function = self.functions.get(declaration)
+        function = self._resolve_function(declaration)
         if function is not None and not (
             isinstance(called, dict) and called.get("nodeType") == "MemberAccess"
         ):
@@ -832,7 +958,6 @@ class _AstAnalyzer:
                 replace(
                     state,
                     bindings=tuple(sorted(bindings.items())),
-                    binding_frames=(*state.binding_frames, state.bindings),
                 )
             )
         return bound
@@ -887,7 +1012,13 @@ class _AstAnalyzer:
                 parameter_id = parameter.get("id") if isinstance(parameter, dict) else None
                 if isinstance(parameter_id, int) and isinstance(argument, dict):
                     bindings[parameter_id] = self._expand_expression(argument, state)
-            bound.append(replace(state, bindings=tuple(sorted(bindings.items()))))
+            bound.append(
+                replace(
+                    state,
+                    bindings=tuple(sorted(bindings.items())),
+                    binding_frames=(*state.binding_frames, state.bindings),
+                )
+            )
         return bound
 
     def _add_condition_guards(
@@ -905,16 +1036,40 @@ class _AstAnalyzer:
             for state in states
         ]
 
-    def _classify_guards(
-        self,
-        expression: Any,
-        *,
-        truth: bool,
-        states: Sequence[_ExecutionState],
-    ) -> frozenset[_GuardFact]:
-        if not states:
-            return frozenset()
-        return self._guard_facts(expression, truth=truth, state=states[0])
+    def _mark_guard_expression_calls(
+        self, expression: Any, states: list[_ExecutionState]
+    ) -> list[_ExecutionState]:
+        reasons = self._guard_call_reasons(expression)
+        if not reasons:
+            return states
+        return [replace(state, unsupported=state.unsupported | reasons) for state in states]
+
+    def _guard_call_reasons(self, expression: Any) -> frozenset[str]:
+        reasons: set[str] = set()
+
+        def visit(node: Any) -> None:
+            if isinstance(node, list):
+                for child in node:
+                    visit(child)
+                return
+            if not isinstance(node, dict):
+                return
+            if node.get("nodeType") == "FunctionCall":
+                called = node.get("expression")
+                called_name = _call_name(called)
+                declaration = _referenced_declaration(called)
+                if isinstance(called, dict) and called.get("nodeType") == "MemberAccess":
+                    reasons.add(f"external or dynamic guard call: {called_name}")
+                elif declaration in self.functions:
+                    reasons.add(f"boolean-return guard helper: {called_name}")
+                else:
+                    reasons.add(f"unresolved guard call or type conversion: {called_name}")
+            for value in node.values():
+                if isinstance(value, (dict, list)):
+                    visit(value)
+
+        visit(expression)
+        return frozenset(reasons)
 
     def _guard_facts(
         self, expression: Any, *, truth: bool, state: _ExecutionState
@@ -922,6 +1077,8 @@ class _AstAnalyzer:
         if not isinstance(expression, dict):
             return frozenset()
         expression = self._expand_expression(expression, state)
+        if self._guard_call_reasons(expression):
+            return frozenset()
         node_type = expression.get("nodeType")
         if node_type == "UnaryOperation" and expression.get("operator") == "!":
             return self._guard_facts(expression.get("subExpression"), truth=not truth, state=state)
@@ -1072,11 +1229,6 @@ class _AstAnalyzer:
             )
             return bool(role_variables) and self._contains_msg_sender(
                 expression.get("indexExpression")
-            )
-        if expression.get("nodeType") == "FunctionCall":
-            name = _normalize_name(_call_name(expression.get("expression")))
-            return name in {"hasrole", "isauthorized", "isallowlisted"} and any(
-                self._contains_msg_sender(argument) for argument in expression.get("arguments", [])
             )
         return False
 
@@ -1282,8 +1434,10 @@ class _AstAnalyzer:
         operator = expression.get("operator")
         if operator == "+=":
             return True
-        if operator in {"-=", "*=", "/=", "%="}:
+        if operator in {"-=", "/=", "%="}:
             return False
+        if operator == "*=":
+            return None
         if operator != "=":
             return None
         right = self._expand_expression(expression.get("rightHandSide", {}), state)
@@ -1541,12 +1695,16 @@ def _node_label(node: JsonObject, parents: Mapping[int, JsonObject]) -> str:
 
 
 def _function_signature(function: JsonObject) -> str:
-    parameters = function.get("parameters", {}).get("parameters", [])
+    return _callable_signature(function)
+
+
+def _callable_signature(callable_node: JsonObject) -> str:
+    parameters = callable_node.get("parameters", {}).get("parameters", [])
     types = [
         str(parameter.get("typeDescriptions", {}).get("typeString", "?"))
         for parameter in parameters
     ]
-    return f"{function.get('name')}({','.join(types)})"
+    return f"{callable_node.get('name')}({','.join(types)})"
 
 
 def _parse_src(src: str) -> tuple[int, int, int]:

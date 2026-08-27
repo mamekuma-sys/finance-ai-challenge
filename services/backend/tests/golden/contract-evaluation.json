@@ -1,35 +1,35 @@
 {
-  "dataset_version": "1.0.0",
+  "dataset_version": "1.1.0",
   "is_synthetic": true,
   "precision_recall_threshold": 0.8,
   "rules": [
     {
       "rule_id": "MINT_ACCESS_CONTROL_MISSING",
-      "tp": 9,
+      "tp": 17,
       "fp": 0,
-      "tn": 14,
+      "tn": 20,
       "fn": 0,
-      "needs_review": 7,
+      "needs_review": 10,
       "precision": 1.0,
       "recall": 1.0
     },
     {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
-      "tp": 9,
+      "tp": 17,
       "fp": 0,
-      "tn": 14,
+      "tn": 21,
       "fn": 0,
-      "needs_review": 7,
+      "needs_review": 9,
       "precision": 1.0,
       "recall": 1.0
     },
     {
       "rule_id": "ORACLE_VALIDATION_MISSING",
-      "tp": 7,
+      "tp": 10,
       "fp": 0,
-      "tn": 7,
+      "tn": 10,
       "fn": 0,
-      "needs_review": 3,
+      "needs_review": 4,
       "precision": 1.0,
       "recall": 1.0
     }

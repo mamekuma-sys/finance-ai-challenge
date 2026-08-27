@@ -159,6 +159,119 @@
       "line": 73
     },
     {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "UnguardedHookOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 19
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "GuardedHookOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "UnguardedModifierOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 91
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "GuardedModifierOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BranchAliasBypassMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 34
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "AliasedHelperMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "NameCollisionMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 79
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "NameCollisionReadOnly",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "LateGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 112
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "RequireFalseRollbackMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "UncheckedMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 135
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "ReturnHelperMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 149
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "OverloadedMintEntrypoints",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 167
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "MultiplicativeSupplyMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 176
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "BooleanRoleGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 199
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "ConditionalExternalGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 214
+    },
+    {
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "contract": "PathSpecificRollbackMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
       "contract": "ConditionalGuardMint",
       "path": "chain/src/fixtures/adversarial/ConditionalGuardMint.sol",
@@ -316,6 +429,118 @@
       "line": 73
     },
     {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "UnguardedHookOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 19
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "GuardedHookOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "UnguardedModifierOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 91
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "GuardedModifierOverrideMint",
+      "path": "chain/src/fixtures/adversarial/InheritanceOverrideVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BranchAliasBypassMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 34
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "AliasedHelperMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "NameCollisionMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 79
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "NameCollisionReadOnly",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "LateGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 112
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "RequireFalseRollbackMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "UncheckedMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 135
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "ReturnHelperMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 149
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "OverloadedMintEntrypoints",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 167
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "MultiplicativeSupplyMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 176
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "BooleanRoleGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "ConditionalExternalGuardMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 214
+    },
+    {
+      "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+      "contract": "PathSpecificRollbackMint",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
       "rule_id": "ORACLE_VALIDATION_MISSING",
       "contract": "ConditionalValidatedOracle",
       "path": "chain/src/fixtures/adversarial/ConditionalValidatedOracle.sol",
@@ -387,6 +612,52 @@
       "path": "chain/src/fixtures/adversarial/UnsupportedDynamicPaths.sol",
       "expected": "NEEDS_REVIEW",
       "line": 83
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "BranchAliasBypassOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 239
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "AliasedHelperOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "NameCollisionOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 289
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "NameCollisionReadOnly",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "LateValidationOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "CONFIRMED",
+      "line": 305
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "RequireFalseRollbackOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NONE"
+    },
+    {
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "contract": "ConditionalExternalGuardOracle",
+      "path": "chain/src/fixtures/adversarial/PathAndNameVariants.sol",
+      "expected": "NEEDS_REVIEW",
+      "line": 337
     }
   ]
 }

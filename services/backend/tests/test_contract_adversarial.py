@@ -6,7 +6,12 @@ from typing import Any
 import pytest
 
 from rwa_guard.domain.contracts import CodeFinding, FindingStatus
-from rwa_guard.pipelines.contract import CompiledSources, FoundryCompiler, analyze_compiled_sources
+from rwa_guard.pipelines.contract import (
+    CompiledSources,
+    FoundryCompiler,
+    analyze_compiled_sources,
+    analyze_contract_sources,
+)
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 GOLDEN = Path(__file__).parent / "golden" / "contract_cases.json"
@@ -39,11 +44,83 @@ def test_adversarial_cases_separate_confirmed_safe_and_review(
         assert {finding.status.value for finding in findings} == {case["expected"]}
         assert findings[0].code_location.file == case["path"]
         assert findings[0].code_location.start_line == case["line"]
+        assert findings[0].code_location.excerpt
+        assert findings[0].finding_id.startswith("finding_")
+        assert findings[0].tool_versions["rule"] == "1.0.0"
+        assert findings[0].tool_versions["rwa_guard_contract"] == "1.2.0"
         if case["expected"] == "NEEDS_REVIEW":
             assert any(
                 evidence.startswith("unsupported=")
                 for evidence in findings[0].deterministic_evidence
             )
+
+
+def test_adversarial_results_are_byte_equivalent_across_repeated_analysis(
+    adversarial_compiled: CompiledSources,
+) -> None:
+    contracts = sorted({case["contract"] for case in _read(ADVERSARIAL)["cases"]})
+
+    for contract in contracts:
+        first = analyze_compiled_sources(
+            scan_id="scan_first", compiled=adversarial_compiled, target_contract=contract
+        )
+        second = analyze_compiled_sources(
+            scan_id="scan_second", compiled=adversarial_compiled, target_contract=contract
+        )
+
+        assert _core_finding_bytes(first) == _core_finding_bytes(second)
+
+
+def test_overloaded_entrypoints_have_distinct_stable_ids_and_signature_order(
+    adversarial_compiled: CompiledSources,
+) -> None:
+    findings = analyze_compiled_sources(
+        scan_id="scan_overloads",
+        compiled=adversarial_compiled,
+        target_contract="OverloadedMintEntrypoints",
+    )
+
+    for rule_id in ("MINT_ACCESS_CONTROL_MISSING", "MINT_COLLATERAL_CAP_MISSING"):
+        rule_findings = [finding for finding in findings if finding.rule_id == rule_id]
+        entrypoints = [
+            next(
+                item.removeprefix("entrypoint=")
+                for item in finding.deterministic_evidence
+                if item.startswith("entrypoint=")
+            )
+            for finding in rule_findings
+        ]
+        assert entrypoints == [
+            "OverloadedMintEntrypoints.mint(address,uint256)",
+            "OverloadedMintEntrypoints.mint(uint256)",
+        ]
+        assert len({finding.finding_id for finding in rule_findings}) == 2
+
+
+def test_compile_failure_unknown_is_byte_equivalent() -> None:
+    sources = {"Broken.sol": "pragma solidity ^0.8.24; contract Broken {"}
+
+    first = analyze_contract_sources(scan_id="scan_first", sources=sources)
+    second = analyze_contract_sources(scan_id="scan_second", sources=sources)
+
+    assert {finding.status for finding in first} == {FindingStatus.UNKNOWN}
+    assert _core_finding_bytes(first) == _core_finding_bytes(second)
+
+
+def test_missing_ast_is_unknown_instead_of_silent_safe() -> None:
+    compiled = CompiledSources(
+        sources={"src/Empty.sol": "pragma solidity ^0.8.24;"},
+        asts=(),
+        compiler_version="0.8.24",
+        forge_version="synthetic",
+        original_path_by_compiler_path={"src/Empty.sol": "Empty.sol"},
+    )
+
+    findings = analyze_compiled_sources(scan_id="scan_empty_ast", compiled=compiled)
+
+    assert len(findings) == 3
+    assert {finding.status for finding in findings} == {FindingStatus.UNKNOWN}
+    assert all(finding.code_location.file == "Empty.sol" for finding in findings)
 
 
 def test_all_adversarial_sources_are_declared_synthetic() -> None:
@@ -129,3 +206,13 @@ def _record_binary(counts: dict[str, int], predicted: bool, actual: bool) -> Non
         counts["fn"] += 1
     else:
         counts["tn"] += 1
+
+
+def _core_finding_bytes(findings: tuple[CodeFinding, ...]) -> bytes:
+    payload = [finding.model_dump(mode="json", exclude={"scan_id"}) for finding in findings]
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()

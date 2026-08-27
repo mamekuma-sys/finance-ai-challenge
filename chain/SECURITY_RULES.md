@@ -6,6 +6,28 @@ must follow `CodeFinding`; text or AI screening alone can never create a `CONFIR
 The final adversarial review record and executable corpus metrics are documented in
 [`RED_TEAM_REVIEW.md`](RED_TEAM_REVIEW.md).
 
+## Threat model and trust boundary
+
+The submitted Solidity source set is hostile input. An author may use inheritance, virtual
+overrides, modifier indirection, helper calls, local aliases, misleading identifiers, overloaded
+entry points, branch-specific values, late checks, or rollback-only paths to hide the effective
+entry point-to-mutation behavior. The compiler-complete UTF-8 source bytes are the evidence root;
+comments, event names, ABI names, and detector prose are never proof of a guard.
+
+RWA Guard trusts the pinned `solc 0.8.24` AST and source map, then applies a bounded deterministic
+path interpretation. Each branch carries its own guard facts and local bindings. Calls into
+resolvable internal functions, inherited virtual hooks, and virtual modifiers use the most-derived
+implementation selected by Solidity's linearization. A guard counts only when its successful fact
+is tied to the exact caller/value/storage subjects and dominates the protected mutation. A guard
+after mutation does not satisfy this structural rule. An unconditional revert, including
+`require(false)`, removes a non-committing path instead of producing a finding.
+
+The engine does not trust boolean-return guard helpers, external calls, runtime dispatch, arbitrary
+type conversions, or ambiguous arithmetic enough to declare a path safe. A compiling path that
+depends on those semantics is `NEEDS_REVIEW`; missing or unusable compiler AST, incomplete sources,
+and compilation failure are `UNKNOWN`. This is a bounded P0 analyzer, not a claim of complete
+Solidity verification or production accuracy.
+
 ## Shared analysis contract
 
 - Supported input is a compiling Solidity `0.8.x` source set supplied directly to RWA Guard.
@@ -29,14 +51,30 @@ The final adversarial review record and executable corpus metrics are documented
   unrelated lines. Further paths and guard locations belong in `deterministic_evidence`.
 - `tool_versions` contains at least `rwa_guard_contract`, the exact rule version, and `solc`.
 - Findings are sorted by rule ID, relative file, start line, and entry point signature.
+- Overloaded entry points retain their canonical parameter types in evidence and finding identity.
+- Byte-equivalent core output excludes only the caller-supplied `scan_id`; JSON object keys are
+  serialized canonically by the regression harness.
 
 P0 supports direct contracts, ordinary inheritance resolvable within the submitted source set,
 modifiers, internal/private helpers, `require`, `revert`-style `if` guards, role mappings,
-issuer/owner address comparisons, and straightforward Solidity arithmetic/comparisons.
+issuer/owner address comparisons, branch-local aliases, `unchecked` blocks, internal calls used as
+return expressions, virtual hook/modifier overrides, and straightforward Solidity
+arithmetic/comparisons.
 
 P0 does not claim support for arbitrary proxies, `delegatecall`, runtime function pointers,
 guard logic hidden behind unknown external calls, Yul/inline-assembly mutations, generated source,
-or contracts whose complete inheritance/source set is unavailable.
+boolean-return guard helper semantics, tuple/destructuring data flow, arbitrary storage aliases,
+complex arithmetic such as multiplicative supply updates, or contracts whose complete
+inheritance/source set is unavailable.
+
+## Slither cross-check boundary
+
+Slither `0.11.6` was run against the full synthetic chain corpus with 102 built-in detectors. It
+correctly surfaced the checked-in `delegatecall`, inline assembly, and local-shadowing signals, but
+it has no built-in detector that proves the three RWA Guard P0 predicates. Its timestamp detector
+also reports both valid freshness guards and invalid oracle paths, so the signal is not a
+classification oracle. Slither remains optional cross-check evidence only: it cannot replace the
+AST engine and cannot create a `CONFIRMED` P0 finding by itself.
 
 ## `MINT_ACCESS_CONTROL_MISSING`
 

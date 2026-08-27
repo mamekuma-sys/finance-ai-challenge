@@ -102,23 +102,34 @@ def test_ast_detector_matches_golden_vulnerable_and_safe_cases(
             assert not _findings_for_rule(compiled_golden_sources, case["contract"], rule_id)
 
 
-def test_same_ast_and_rule_version_produce_deterministic_core_finding(
-    compiled_golden_sources: CompiledSources,
-) -> None:
+def test_same_source_and_rule_version_produce_byte_equivalent_core_findings() -> None:
+    path = "chain/src/fixtures/VulnerableRwaToken.sol"
+    sources = {path: (REPOSITORY / path).read_text(encoding="utf-8")}
     first = analyze_compiled_sources(
         scan_id="scan_one",
-        compiled=compiled_golden_sources,
+        compiled=FoundryCompiler().compile(sources),
         target_contract="VulnerableRwaToken",
     )
     second = analyze_compiled_sources(
         scan_id="scan_two",
-        compiled=compiled_golden_sources,
+        compiled=FoundryCompiler().compile(sources),
         target_contract="VulnerableRwaToken",
     )
 
-    assert [finding.model_dump(exclude={"scan_id"}) for finding in first] == [
-        finding.model_dump(exclude={"scan_id"}) for finding in second
-    ]
+    first_bytes = json.dumps(
+        [finding.model_dump(mode="json", exclude={"scan_id"}) for finding in first],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    second_bytes = json.dumps(
+        [finding.model_dump(mode="json", exclude={"scan_id"}) for finding in second],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+
+    assert first_bytes == second_bytes
 
 
 def test_vulnerable_to_fixed_rescan_is_resolved(
