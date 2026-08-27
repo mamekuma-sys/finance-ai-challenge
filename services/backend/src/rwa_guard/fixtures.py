@@ -36,20 +36,29 @@ def build_demo_report() -> EvidenceReport:
     )
     finding = CodeFinding(
         scan_id="scan_demo_vulnerable_01",
-        finding_id="finding_mint_cap_missing",
-        rule_id="MINT_CAP_MISSING",
+        finding_id="finding_mint_collateral_cap_missing",
+        rule_id="MINT_COLLATERAL_CAP_MISSING",
         severity=Severity.CRITICAL,
         status=FindingStatus.CONFIRMED,
-        title="mint 실행경로에 발행 한도 검사가 없습니다.",
+        title="mint 실행경로에 담보 또는 발행한도 검사가 없습니다.",
         source_hash="sha256:synthetic-vulnerable-source",
         code_location=CodeLocation(
-            file="fixtures/VulnerableRwaToken.sol",
-            start_line=23,
-            end_line=25,
-            excerpt="function mint(address to, uint256 amount) external { _mint(to, amount); }",
+            file="chain/src/fixtures/VulnerableRwaToken.sol",
+            start_line=12,
+            end_line=12,
+            excerpt="        totalSupply += amount;",
         ),
-        deterministic_evidence=["External mint entrypoint", "No maxSupply comparison"],
-        tool_versions={"custom_rules": "0.1.0"},
+        deterministic_evidence=[
+            "analysis=solc_ast_control_flow",
+            "entrypoint=VulnerableRwaToken.mint",
+            "guard.collateral_guard=missing",
+            "guard.cap_guard=missing",
+        ],
+        tool_versions={
+            "rwa_guard_contract": "1.0.0",
+            "rule": "1.0.0",
+            "solc": "0.8.24+commit.e11b9ed9",
+        },
     )
     mismatch = MismatchFinding(
         mismatch_id="mismatch_max_supply_01",
@@ -57,7 +66,7 @@ def build_demo_report() -> EvidenceReport:
         finding_id=finding.finding_id,
         implementation_status=ImplementationStatus.MISSING,
         severity=Severity.CRITICAL,
-        evidence_links=["control_max_supply", "finding_mint_cap_missing"],
+        evidence_links=["control_max_supply", finding.finding_id],
     )
     event = OnchainEvidence(
         asset_id=control.asset_id,
@@ -76,7 +85,7 @@ def build_demo_report() -> EvidenceReport:
         asset_id=control.asset_id,
         status=ScanStatus.COMPLETED,
         input_hashes={"document": "sha256:synthetic-document", "source": finding.source_hash},
-        rule_versions={"mint-controls": "0.1.0"},
+        rule_versions={"MINT_COLLATERAL_CAP_MISSING": "1.0.0"},
         started_at=datetime(2026, 8, 25, 3, 0, tzinfo=UTC),
         completed_at=datetime(2026, 8, 25, 3, 0, 8, tzinfo=UTC),
     )

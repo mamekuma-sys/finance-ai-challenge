@@ -14,7 +14,7 @@ def test_demo_report_is_synthetic_and_replay() -> None:
     assert payload["onchain_evidence"][0]["mode"] == "REPLAY"
     assert payload["mismatches"][0]["evidence_links"] == [
         "control_max_supply",
-        "finding_mint_cap_missing",
+        "finding_mint_collateral_cap_missing",
     ]
 
 
