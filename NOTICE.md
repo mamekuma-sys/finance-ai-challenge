@@ -10,3 +10,6 @@
   Foundry는 MIT/Apache-2.0 이중 라이선스이며 출처는
   <https://github.com/foundry-rs/foundry>이다. 배포 이미지는 v1.7.1 manifest digest
   `sha256:8347b728d5d393dac1c018691b36f506d23b9dcd78341d40ea0fcb11c3a19cdd`로 고정한다.
+- OpenAPI에서 Web TypeScript 타입을 생성할 때 `openapi-typescript` `7.13.0`을 사용한다.
+  MIT 라이선스이며 출처는 <https://github.com/openapi-ts/openapi-typescript>이다
+  (2026-08-27 확인).

@@ -11,22 +11,98 @@
     "input_hashes",
     "rule_versions",
     "started_at",
-    "is_synthetic"
+    "is_synthetic",
+    "failed_stages"
   ],
   "properties": {
-    "scan_id": { "type": "string" },
-    "asset_id": { "type": "string" },
-    "status": { "enum": ["QUEUED", "RUNNING", "COMPLETED", "PARTIAL", "FAILED"] },
+    "scan_id": {
+      "type": "string"
+    },
+    "asset_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ]
+    },
     "input_hashes": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "rule_versions": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": {
+        "type": "string"
+      }
     },
-    "started_at": { "type": "string", "format": "date-time" },
-    "completed_at": { "type": ["string", "null"], "format": "date-time" },
-    "is_synthetic": { "const": true }
-  }
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "is_synthetic": {
+      "const": true
+    },
+    "failed_stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stage",
+          "reason"
+        ],
+        "properties": {
+          "stage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "PARTIAL"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "failed_stages": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
 }

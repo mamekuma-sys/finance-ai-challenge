@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "DataFreshness": {
+      "description": "Derived from the current clock, so it never belongs on immutable evidence.",
+      "enum": [
+        "FRESH",
+        "AGING",
+        "STALE",
+        "INVALID"
+      ],
+      "title": "DataFreshness",
+      "type": "string"
+    },
+    "EvidenceMode": {
+      "enum": [
+        "LIVE",
+        "REPLAY"
+      ],
+      "title": "EvidenceMode",
+      "type": "string"
+    },
+    "LatestScanRef": {
+      "additionalProperties": false,
+      "properties": {
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ScanStatus"
+        }
+      },
+      "required": [
+        "scan_id",
+        "status"
+      ],
+      "title": "LatestScanRef",
+      "type": "object"
+    },
+    "ScanStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "ScanStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Ledger row for the console home. The server aggregates so the list never ships findings.\n\nOptional fields are null before an asset has been scanned; the console renders its empty\nstate from that instead of showing a zero score.",
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "critical_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Critical Count",
+      "type": "integer"
+    },
+    "evidence_mode": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvidenceMode"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "freshness": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DataFreshness"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "high_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "High Count",
+      "type": "integer"
+    },
+    "highest_severity": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Severity"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "is_synthetic": {
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "latest_scan": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LatestScanRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "asset_id",
+    "name"
+  ],
+  "title": "AssetSummary",
+  "type": "object"
+}

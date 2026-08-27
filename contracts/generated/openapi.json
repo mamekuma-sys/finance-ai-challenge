@@ -1,0 +1,883 @@
+{
+  "components": {
+    "schemas": {
+      "AssetSummary": {
+        "additionalProperties": false,
+        "description": "Ledger row for the console home. The server aggregates so the list never ships findings.\n\nOptional fields are null before an asset has been scanned; the console renders its empty\nstate from that instead of showing a zero score.",
+        "properties": {
+          "asset_id": {
+            "title": "Asset Id",
+            "type": "string"
+          },
+          "critical_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Critical Count",
+            "type": "integer"
+          },
+          "evidence_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataFreshness"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "high_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "High Count",
+            "type": "integer"
+          },
+          "highest_severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Severity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "latest_scan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LatestScanRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id",
+          "name"
+        ],
+        "title": "AssetSummary",
+        "type": "object"
+      },
+      "CodeFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "code_location": {
+            "$ref": "#/components/schemas/CodeLocation"
+          },
+          "deterministic_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Deterministic Evidence",
+            "type": "array"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "source_hash": {
+            "title": "Source Hash",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FindingStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tool_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Tool Versions",
+            "type": "object"
+          }
+        },
+        "required": [
+          "scan_id",
+          "finding_id",
+          "rule_id",
+          "severity",
+          "status",
+          "title",
+          "source_hash",
+          "code_location"
+        ],
+        "title": "CodeFinding",
+        "type": "object"
+      },
+      "CodeLocation": {
+        "additionalProperties": false,
+        "properties": {
+          "end_line": {
+            "minimum": 1.0,
+            "title": "End Line",
+            "type": "integer"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "start_line": {
+            "minimum": 1.0,
+            "title": "Start Line",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file",
+          "start_line",
+          "end_line",
+          "excerpt"
+        ],
+        "title": "CodeLocation",
+        "type": "object"
+      },
+      "ControlSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "title": "Asset Id",
+            "type": "string"
+          },
+          "confirmed": {
+            "default": false,
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "constraint_id": {
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "evidence_span": {
+            "$ref": "#/components/schemas/EvidenceSpan"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "asset_id",
+          "document_id",
+          "constraint_id",
+          "field",
+          "value",
+          "evidence_span"
+        ],
+        "title": "ControlSpec",
+        "type": "object"
+      },
+      "DataFreshness": {
+        "description": "Derived from the current clock, so it never belongs on immutable evidence.",
+        "enum": [
+          "FRESH",
+          "AGING",
+          "STALE",
+          "INVALID"
+        ],
+        "title": "DataFreshness",
+        "type": "string"
+      },
+      "DiffChange": {
+        "enum": [
+          "RESOLVED",
+          "REMAINS",
+          "NEW"
+        ],
+        "title": "DiffChange",
+        "type": "string"
+      },
+      "EvidenceKind": {
+        "enum": [
+          "DOCUMENT",
+          "CODE",
+          "CHAIN"
+        ],
+        "title": "EvidenceKind",
+        "type": "string"
+      },
+      "EvidenceLink": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/EvidenceKind"
+          },
+          "ref": {
+            "minLength": 1,
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "title": "EvidenceLink",
+        "type": "object"
+      },
+      "EvidenceMode": {
+        "enum": [
+          "LIVE",
+          "REPLAY"
+        ],
+        "title": "EvidenceMode",
+        "type": "string"
+      },
+      "EvidenceReport": {
+        "additionalProperties": false,
+        "properties": {
+          "code_findings": {
+            "items": {
+              "$ref": "#/components/schemas/CodeFinding"
+            },
+            "title": "Code Findings",
+            "type": "array"
+          },
+          "controls": {
+            "items": {
+              "$ref": "#/components/schemas/ControlSpec"
+            },
+            "title": "Controls",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "lineage": {
+            "additionalProperties": true,
+            "title": "Lineage",
+            "type": "object"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/MismatchFinding"
+            },
+            "title": "Mismatches",
+            "type": "array"
+          },
+          "onchain_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/OnchainEvidence"
+            },
+            "title": "Onchain Evidence",
+            "type": "array"
+          },
+          "report_id": {
+            "title": "Report Id",
+            "type": "string"
+          },
+          "scan_run": {
+            "$ref": "#/components/schemas/ScanRun"
+          }
+        },
+        "required": [
+          "report_id",
+          "scan_run",
+          "controls",
+          "code_findings",
+          "mismatches",
+          "onchain_evidence",
+          "lineage"
+        ],
+        "title": "EvidenceReport",
+        "type": "object"
+      },
+      "EvidenceSpan": {
+        "additionalProperties": false,
+        "properties": {
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "end": {
+            "exclusiveMinimum": 0.0,
+            "title": "End",
+            "type": "integer"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "quote": {
+            "minLength": 1,
+            "title": "Quote",
+            "type": "string"
+          },
+          "start": {
+            "minimum": 0.0,
+            "title": "Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "document_id",
+          "page",
+          "start",
+          "end",
+          "quote"
+        ],
+        "title": "EvidenceSpan",
+        "type": "object"
+      },
+      "FailedStage": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "stage": {
+            "minLength": 1,
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "reason"
+        ],
+        "title": "FailedStage",
+        "type": "object"
+      },
+      "FindingDiff": {
+        "additionalProperties": false,
+        "description": "Server-computed rescan comparison. Rule versions may differ between the two runs, so the\nconsumer cannot derive this by diffing two finding lists.",
+        "properties": {
+          "base_scan_id": {
+            "title": "Base Scan Id",
+            "type": "string"
+          },
+          "change": {
+            "$ref": "#/components/schemas/DiffChange"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "head_scan_id": {
+            "title": "Head Scan Id",
+            "type": "string"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          }
+        },
+        "required": [
+          "finding_id",
+          "change",
+          "base_scan_id",
+          "head_scan_id",
+          "severity"
+        ],
+        "title": "FindingDiff",
+        "type": "object"
+      },
+      "FindingStatus": {
+        "enum": [
+          "CONFIRMED",
+          "PROBABLE",
+          "NEEDS_REVIEW",
+          "UNKNOWN"
+        ],
+        "title": "FindingStatus",
+        "type": "string"
+      },
+      "HealthResponse": {
+        "properties": {
+          "p0_ready": {
+            "title": "P0 Ready",
+            "type": "boolean"
+          },
+          "p1_chain": {
+            "enum": [
+              "configured",
+              "disabled"
+            ],
+            "title": "P1 Chain",
+            "type": "string"
+          },
+          "service": {
+            "const": "rwa-guard-api",
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "p0_ready",
+          "p1_chain"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "ImplementationStatus": {
+        "enum": [
+          "IMPLEMENTED",
+          "PARTIAL",
+          "MISSING",
+          "UNKNOWN"
+        ],
+        "title": "ImplementationStatus",
+        "type": "string"
+      },
+      "LatestScanRef": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "scan_id": {
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ScanStatus"
+          }
+        },
+        "required": [
+          "scan_id",
+          "status"
+        ],
+        "title": "LatestScanRef",
+        "type": "object"
+      },
+      "MismatchFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "constraint_id": {
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "evidence_links": {
+            "allOf": [
+              {
+                "contains": {
+                  "properties": {
+                    "kind": {
+                      "const": "DOCUMENT"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "kind": {
+                      "const": "CODE"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLink"
+            },
+            "minItems": 2,
+            "title": "Evidence Links",
+            "type": "array"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "implementation_status": {
+            "$ref": "#/components/schemas/ImplementationStatus"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "mismatch_id": {
+            "title": "Mismatch Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          }
+        },
+        "required": [
+          "mismatch_id",
+          "constraint_id",
+          "finding_id",
+          "implementation_status",
+          "severity",
+          "evidence_links"
+        ],
+        "title": "MismatchFinding",
+        "type": "object"
+      },
+      "OnchainEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "title": "Asset Id",
+            "type": "string"
+          },
+          "block_number": {
+            "minimum": 0.0,
+            "title": "Block Number",
+            "type": "integer"
+          },
+          "chain_id": {
+            "title": "Chain Id",
+            "type": "integer"
+          },
+          "changed_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed Value"
+          },
+          "event_name": {
+            "title": "Event Name",
+            "type": "string"
+          },
+          "fixture_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixture Version"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "log_index": {
+            "minimum": 0.0,
+            "title": "Log Index",
+            "type": "integer"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/EvidenceMode"
+          },
+          "previous_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Value"
+          },
+          "tx_hash": {
+            "title": "Tx Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id",
+          "mode",
+          "chain_id",
+          "tx_hash",
+          "log_index",
+          "block_number",
+          "event_name"
+        ],
+        "title": "OnchainEvidence",
+        "type": "object"
+      },
+      "ScanRun": {
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "PARTIAL"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "failed_stages": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "asset_id": {
+            "title": "Asset Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "failed_stages": {
+            "items": {
+              "$ref": "#/components/schemas/FailedStage"
+            },
+            "title": "Failed Stages",
+            "type": "array"
+          },
+          "input_hashes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Input Hashes",
+            "type": "object"
+          },
+          "is_synthetic": {
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "rule_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Rule Versions",
+            "type": "object"
+          },
+          "scan_id": {
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ScanStatus"
+          }
+        },
+        "required": [
+          "scan_id",
+          "asset_id",
+          "status",
+          "input_hashes",
+          "rule_versions",
+          "started_at"
+        ],
+        "title": "ScanRun",
+        "type": "object"
+      },
+      "ScanStatus": {
+        "enum": [
+          "QUEUED",
+          "RUNNING",
+          "COMPLETED",
+          "PARTIAL",
+          "FAILED"
+        ],
+        "title": "ScanStatus",
+        "type": "string"
+      },
+      "Severity": {
+        "enum": [
+          "CRITICAL",
+          "HIGH",
+          "MEDIUM",
+          "LOW",
+          "INFO"
+        ],
+        "title": "Severity",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "description": "Evidence-bound tokenized-security assurance API",
+    "title": "RWA Guard API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/v1/demo/evidence-report": {
+      "get": {
+        "description": "Return a deterministic synthetic report without model or RPC dependencies.",
+        "operationId": "demo_evidence_report_v1_demo_evidence_report_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Demo Evidence Report",
+        "tags": [
+          "demo"
+        ]
+      }
+    }
+  }
+}
