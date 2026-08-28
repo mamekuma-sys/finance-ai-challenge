@@ -98,13 +98,21 @@ def test_asset_summary_is_empty_not_zero_before_first_scan() -> None:
     assert summary.freshness is None
 
 
+def test_shared_contracts_reject_non_synthetic_data() -> None:
+    with pytest.raises(ValidationError):
+        AssetSummary(asset_id="asset_01", name="Real asset", is_synthetic=False)
+
+
 def test_finding_diff_carries_both_scan_ids() -> None:
     diff = FindingDiff(
         finding_id="finding_mint_collateral_cap_missing",
+        rule_id="MINT_COLLATERAL_CAP_MISSING",
         change=DiffChange.RESOLVED,
         base_scan_id="scan_vulnerable",
         head_scan_id="scan_fixed",
         severity=Severity.CRITICAL,
+        base_rule_version="1.0.0",
+        head_rule_version=None,
     )
 
     assert diff.change is DiffChange.RESOLVED

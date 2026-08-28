@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -50,4 +50,9 @@ run(
     generatedTypes,
   ],
   { cwd: webRoot },
+);
+writeFileSync(
+  resolve(webRoot, "src/types/generated/.generated-files.json"),
+  `${JSON.stringify({ files: ["api.ts"] }, null, 2)}\n`,
+  "utf8",
 );

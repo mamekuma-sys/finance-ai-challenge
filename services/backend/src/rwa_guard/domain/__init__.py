@@ -1,4 +1,5 @@
 from .contracts import (
+    ActorType,
     CodeFinding,
     ControlSpec,
     EvidenceReport,
@@ -8,6 +9,7 @@ from .contracts import (
 )
 
 __all__ = [
+    "ActorType",
     "CodeFinding",
     "ControlSpec",
     "EvidenceReport",

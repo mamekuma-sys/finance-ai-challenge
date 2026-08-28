@@ -4,9 +4,7 @@ services:
     environment:
       POSTGRES_DB: rwa_guard
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d rwa_guard"]
       interval: 5s
@@ -18,27 +16,87 @@ services:
 
   api:
     build:
-      context: ../services/backend
+      context: ..
+      dockerfile: services/backend/Dockerfile
     environment:
-      APP_ENV: development
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/rwa_guard
-      PUBLIC_WEB_ORIGIN: http://localhost:3000
-    ports:
-      - "8000:8000"
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/rwa_guard
+      PUBLIC_WEB_ORIGIN: ${PUBLIC_WEB_ORIGIN:-http://localhost:3000}
+      STORAGE_DIRECTORY: /var/lib/rwa-guard
+      RWA_GUARD_FIXTURE_ROOT: /opt/rwa-guard-fixtures
+      OPERATOR_TOKEN: ${OPERATOR_TOKEN:?set OPERATOR_TOKEN in .env}
+      OPERATOR_ID: ${OPERATOR_ID:?set OPERATOR_ID in .env}
+      OPERATOR_ACCESS_CODE: ${OPERATOR_ACCESS_CODE:?set OPERATOR_ACCESS_CODE in .env}
+      ALLOW_INSECURE_DEMO_OPERATOR: false
+      WORKER_HEARTBEAT_FRESHNESS_SECONDS: ${WORKER_HEARTBEAT_FRESHNESS_SECONDS:-30}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - rwa_guard_storage:/var/lib/rwa-guard
 
   worker:
     build:
-      context: ../services/backend
+      context: ..
+      dockerfile: services/backend/Dockerfile
     command: ["python", "-m", "rwa_guard.worker"]
     environment:
-      APP_ENV: development
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/rwa_guard
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD}@postgres:5432/rwa_guard
+      STORAGE_DIRECTORY: /var/lib/rwa-guard
+      RWA_GUARD_FIXTURE_ROOT: /opt/rwa-guard-fixtures
+      WORKER_NAME: ${WORKER_NAME:-rwa-guard-worker}
+      WORKER_POLL_INTERVAL_SECONDS: ${WORKER_POLL_INTERVAL_SECONDS:-1.0}
+      WORKER_LOCK_TIMEOUT_SECONDS: ${WORKER_LOCK_TIMEOUT_SECONDS:-300}
+      WORKER_HEARTBEAT_FRESHNESS_SECONDS: ${WORKER_HEARTBEAT_FRESHNESS_SECONDS:-30}
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - rwa_guard_storage:/var/lib/rwa-guard
+
+  web:
+    build:
+      context: ../apps/web
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "/backend-api"
+        BACKEND_API_BASE_URL: "http://api:8000"
+    environment:
+      NODE_ENV: production
+      PUBLIC_WEB_ORIGIN: ${PUBLIC_WEB_ORIGIN:-http://localhost:3000}
+      NEXT_PUBLIC_API_BASE_URL: /backend-api
+      BACKEND_API_BASE_URL: http://api:8000
+      BACKEND_OPERATOR_TOKEN: ${OPERATOR_TOKEN:?set OPERATOR_TOKEN in .env}
+      OPERATOR_ACCESS_CODE: ${OPERATOR_ACCESS_CODE:?set OPERATOR_ACCESS_CODE in .env}
+      OPERATOR_SESSION_SECRET: ${OPERATOR_SESSION_SECRET:?set OPERATOR_SESSION_SECRET in .env}
+      TRUSTED_CLIENT_IP_HEADER: x-real-ip
+      ALLOW_INSECURE_DEMO_OPERATOR: false
+      ALLOW_INSECURE_LOCAL_SESSION: ${ALLOW_INSECURE_LOCAL_SESSION:-true}
+      NEXT_PUBLIC_POLL_INTERVAL_MS: ${NEXT_PUBLIC_POLL_INTERVAL_MS:-1500}
+      NEXT_PUBLIC_POLL_MAX_ATTEMPTS: ${NEXT_PUBLIC_POLL_MAX_ATTEMPTS:-40}
+      NEXT_PUBLIC_POLL_TIMEOUT_MS: ${NEXT_PUBLIC_POLL_TIMEOUT_MS:-60000}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  proxy:
+    image: nginx:1.27-alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+    depends_on:
+      web:
+        condition: service_started
 
 volumes:
   rwa_guard_postgres:
+  rwa_guard_storage:

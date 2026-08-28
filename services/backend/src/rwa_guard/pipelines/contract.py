@@ -8,11 +8,17 @@ import subprocess
 import tempfile
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
-from enum import StrEnum
 from pathlib import Path, PurePosixPath
 from typing import Any, Protocol
 
-from rwa_guard.domain.contracts import CodeFinding, CodeLocation, FindingStatus, Severity
+from rwa_guard.domain.contracts import (
+    CodeFinding,
+    CodeLocation,
+    DiffChange,
+    FindingDiff,
+    FindingStatus,
+    Severity,
+)
 
 JsonObject = dict[str, Any]
 
@@ -114,6 +120,8 @@ class FoundryCompiler:
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=60,
             )
             if completed.returncode != 0:
@@ -147,10 +155,7 @@ class FoundryCompiler:
             )
 
 
-class RescanStatus(StrEnum):
-    RESOLVED = "RESOLVED"
-    REMAINS = "REMAINS"
-    NEW = "NEW"
+RescanStatus = DiffChange
 
 
 @dataclass(frozen=True)
@@ -284,26 +289,67 @@ def analyze_compiled_sources(
 
 
 def compare_rescan(
-    before: Sequence[CodeFinding], after: Sequence[CodeFinding]
-) -> tuple[RescanResult, ...]:
-    before_rules = {
-        finding.rule_id for finding in before if finding.status is FindingStatus.CONFIRMED
-    }
-    after_rules = {
-        finding.rule_id for finding in after if finding.status is FindingStatus.CONFIRMED
-    }
-    results = [
-        RescanResult(
-            rule_id=rule_id,
-            status=(RescanStatus.REMAINS if rule_id in after_rules else RescanStatus.RESOLVED),
+    before: Sequence[CodeFinding],
+    after: Sequence[CodeFinding],
+    *,
+    base_scan_id: str | None = None,
+    head_scan_id: str | None = None,
+) -> tuple[FindingDiff, ...]:
+    base_id = base_scan_id or _scan_id(before, "base_scan_unknown")
+    head_id = head_scan_id or _scan_id(after, "head_scan_unknown")
+    base = {_finding_identity(item): item for item in before if _diff_eligible(item)}
+    head = {_finding_identity(item): item for item in after if _diff_eligible(item)}
+    results: list[FindingDiff] = []
+    for identity in sorted(base.keys() | head.keys()):
+        old = base.get(identity)
+        new = head.get(identity)
+        if old is not None and new is not None:
+            change = DiffChange.REMAINS
+            representative = new
+        elif old is not None:
+            change = DiffChange.RESOLVED
+            representative = old
+        else:
+            change = DiffChange.NEW
+            assert new is not None
+            representative = new
+        results.append(
+            FindingDiff(
+                finding_id=representative.finding_id,
+                rule_id=representative.rule_id,
+                change=change,
+                base_scan_id=base_id,
+                head_scan_id=head_id,
+                severity=representative.severity,
+                base_rule_version=_rule_version(old),
+                head_rule_version=_rule_version(new),
+            )
         )
-        for rule_id in sorted(before_rules)
-    ]
-    results.extend(
-        RescanResult(rule_id=rule_id, status=RescanStatus.NEW)
-        for rule_id in sorted(after_rules - before_rules)
-    )
     return tuple(results)
+
+
+def _scan_id(findings: Sequence[CodeFinding], fallback: str) -> str:
+    return findings[0].scan_id if findings else fallback
+
+
+def _rule_version(finding: CodeFinding | None) -> str | None:
+    return finding.tool_versions.get("rule") if finding is not None else None
+
+
+def _diff_eligible(finding: CodeFinding) -> bool:
+    return finding.status is FindingStatus.CONFIRMED
+
+
+def _finding_identity(finding: CodeFinding) -> tuple[str, str, int, int, str, str | None]:
+    location = finding.code_location
+    return (
+        finding.rule_id,
+        location.file,
+        location.start_line,
+        location.end_line,
+        finding.title,
+        _rule_version(finding),
+    )
 
 
 class _AstAnalyzer:
@@ -1740,7 +1786,13 @@ def _safe_source_path(path: str) -> str:
 
 def _find_forge() -> str:
     configured = os.environ.get("RWA_GUARD_FORGE_BIN")
-    candidates = [configured, shutil.which("forge"), str(Path.home() / ".foundry/bin/forge")]
+    foundry_home = Path.home() / ".foundry" / "bin"
+    candidates = [
+        configured,
+        shutil.which("forge"),
+        str(foundry_home / "forge.exe"),
+        str(foundry_home / "forge"),
+    ]
     for candidate in candidates:
         if candidate and Path(candidate).is_file():
             return candidate
@@ -1753,6 +1805,8 @@ def _forge_version(executable: str) -> str:
         check=False,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
     first_line = (completed.stdout or completed.stderr).splitlines()

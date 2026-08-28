@@ -11,10 +11,221 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Health */
-        get: operations["health_health_get"];
+        /** Health Route */
+        get: operations["health_route_health_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/operator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Operator Health
+         * @description Verify the configured operator bearer context without mutating state.
+         */
+        get: operations["operator_health_health_operator_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ready */
+        get: operations["ready_health_ready_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Alerts */
+        get: operations["list_alerts_v1_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts/{alert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Alert */
+        patch: operations["patch_alert_v1_alerts__alert_id__patch"];
+        trace?: never;
+    };
+    "/v1/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assets */
+        get: operations["list_assets_v1_assets_get"];
+        put?: never;
+        /** Create Asset */
+        post: operations["create_asset_v1_assets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Asset */
+        get: operations["get_asset_v1_assets__asset_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{asset_id}/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Contract */
+        post: operations["create_contract_v1_assets__asset_id__contracts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{asset_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Document */
+        post: operations["upload_document_v1_assets__asset_id__documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{asset_id}/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Policies */
+        patch: operations["patch_policies_v1_assets__asset_id__policies_patch"];
+        trace?: never;
+    };
+    "/v1/assets/{asset_id}/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Scan */
+        post: operations["create_scan_v1_assets__asset_id__scans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dashboard */
+        get: operations["dashboard_v1_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demo/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Demo Bootstrap
+         * @description Persist the deterministic REPLAY fixture without AI, RPC, or a worker.
+         */
+        post: operations["demo_bootstrap_v1_demo_bootstrap_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -28,11 +239,110 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Demo Evidence Report
-         * @description Return a deterministic synthetic report without model or RPC dependencies.
-         */
+        /** Demo Evidence Report */
         get: operations["demo_evidence_report_v1_demo_evidence_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Document */
+        get: operations["get_document_v1_documents__document_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/documents/{document_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Document Content */
+        get: operations["get_document_content_v1_documents__document_id__content_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/operator/session/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Operator Session */
+        post: operations["verify_operator_session_v1_operator_session_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Report */
+        get: operations["get_report_v1_reports__report_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/{report_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Report */
+        get: operations["download_report_v1_reports__report_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/scans/{scan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scan */
+        get: operations["get_scan_v1_scans__scan_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -45,6 +355,116 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AlertPatchRequest */
+        AlertPatchRequest: {
+            /**
+             * Expected Updated At
+             * Format: date-time
+             */
+            expected_updated_at: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Memo */
+            memo?: string | null;
+            status?: components["schemas"]["AlertStatus"] | null;
+        };
+        /**
+         * AlertStatus
+         * @enum {string}
+         */
+        AlertStatus: "NEW" | "ACKNOWLEDGED" | "INVESTIGATING" | "RESOLVED" | "FALSE_POSITIVE";
+        /** AlertSummary */
+        AlertSummary: {
+            /** Alert Id */
+            alert_id: string;
+            /** Alert Type */
+            alert_type: string;
+            /** Asset Id */
+            asset_id: string;
+            /** Asset Name */
+            asset_name: string;
+            /** Cause */
+            cause: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence Links */
+            evidence_links: components["schemas"]["EvidenceLink"][];
+            evidence_mode: components["schemas"]["EvidenceMode"];
+            /** Fixture Version */
+            fixture_version?: string | null;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Memo */
+            memo?: string | null;
+            severity: components["schemas"]["Severity"];
+            status: components["schemas"]["AlertStatus"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** AssetDetail */
+        AssetDetail: {
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Asset Type
+             * @constant
+             */
+            asset_type: "SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE";
+            /** Contracts */
+            contracts?: components["schemas"]["ContractCreateResponse"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Documents */
+            documents?: components["schemas"]["DocumentResponse"][];
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Name */
+            name: string;
+            /**
+             * Network
+             * @constant
+             */
+            network: "KAIA_KAIROS";
+            /** Scans */
+            scans?: components["schemas"]["ScanRun"][];
+            status: components["schemas"]["AssetStatus"];
+            /** Token Unit */
+            token_unit: string;
+            /** Total Planned Supply */
+            total_planned_supply: number;
+            /** Underlying Description */
+            underlying_description: string;
+        };
+        /**
+         * AssetStatus
+         * @enum {string}
+         */
+        AssetStatus: "UNVERIFIED" | "REVIEW_REQUIRED" | "VERIFIED";
         /**
          * AssetSummary
          * @description Ledger row for the console home. The server aggregates so the list never ships findings.
@@ -61,6 +481,8 @@ export interface components {
              */
             critical_count: number;
             evidence_mode?: components["schemas"]["EvidenceMode"] | null;
+            /** Fixture Version */
+            fixture_version?: string | null;
             freshness?: components["schemas"]["DataFreshness"] | null;
             /**
              * High Count
@@ -71,11 +493,22 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             latest_scan?: components["schemas"]["LatestScanRef"] | null;
             /** Name */
             name: string;
+        };
+        /** Body_upload_document_v1_assets__asset_id__documents_post */
+        Body_upload_document_v1_assets__asset_id__documents_post: {
+            /** File */
+            file: string;
+            /**
+             * Is Synthetic
+             * @default true
+             */
+            is_synthetic: boolean;
         };
         /** CodeFinding */
         CodeFinding: {
@@ -87,8 +520,9 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             /** Rule Id */
             rule_id: string;
             /** Scan Id */
@@ -115,6 +549,57 @@ export interface components {
             /** Start Line */
             start_line: number;
         };
+        /** ContractCreateRequest */
+        ContractCreateRequest: {
+            /** Address */
+            address?: string | null;
+            /**
+             * Chain Id
+             * @default 1001
+             * @constant
+             */
+            chain_id: 1001;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Source Code */
+            source_code?: string | null;
+        };
+        /** ContractCreateResponse */
+        ContractCreateResponse: {
+            /** Address */
+            address?: string | null;
+            /** Asset Id */
+            asset_id: string;
+            /** Chain Id */
+            chain_id: number;
+            /** Contract Id */
+            contract_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Proxy Status */
+            proxy_status: string;
+            /** Source Hash */
+            source_hash: string;
+            source_kind: components["schemas"]["ContractSourceKind"];
+        };
+        /**
+         * ContractSourceKind
+         * @enum {string}
+         */
+        ContractSourceKind: "SOURCE" | "ADDRESS" | "SOURCE_AND_ADDRESS";
         /** ControlSpec */
         ControlSpec: {
             /** Asset Id */
@@ -134,12 +619,85 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             /** Unit */
             unit?: string | null;
             /** Value */
             value: string | number | boolean;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** CreateAssetRequest */
+        CreateAssetRequest: {
+            /**
+             * Asset Type
+             * @constant
+             */
+            asset_type: "SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE";
+            /** Currency */
+            currency: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Name */
+            name: string;
+            /**
+             * Network
+             * @constant
+             */
+            network: "KAIA_KAIROS";
+            /** Token Unit */
+            token_unit: string;
+            /** Total Planned Supply */
+            total_planned_supply: number;
+            /** Underlying Description */
+            underlying_description: string;
+        };
+        /** CreateAssetResponse */
+        CreateAssetResponse: {
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Document Id */
+            document_id?: string | null;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            status: components["schemas"]["AssetStatus"];
+        };
+        /** DashboardResponse */
+        DashboardResponse: {
+            /** Assets */
+            assets: components["schemas"]["AssetSummary"][];
+            /** Critical Assets */
+            critical_assets: number;
+            /** High Assets */
+            high_assets: number;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Recent Alerts */
+            recent_alerts: components["schemas"]["AlertSummary"][];
+            /** Total Assets */
+            total_assets: number;
         };
         /**
          * DataFreshness
@@ -147,11 +705,100 @@ export interface components {
          * @enum {string}
          */
         DataFreshness: "FRESH" | "AGING" | "STALE" | "INVALID";
+        /** DemoBootstrapResponse */
+        DemoBootstrapResponse: {
+            /** Asset Id */
+            asset_id: string;
+            /** Contract Id */
+            contract_id: string;
+            /** Document Id */
+            document_id: string;
+            /**
+             * Evidence Mode
+             * @default REPLAY
+             * @constant
+             */
+            evidence_mode: "REPLAY";
+            /** Fixture Version */
+            fixture_version: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Report Id */
+            report_id: string;
+            /** Scan Id */
+            scan_id: string;
+        };
         /**
          * DiffChange
          * @enum {string}
          */
         DiffChange: "RESOLVED" | "REMAINS" | "NEW";
+        /** DocumentContentResponse */
+        DocumentContentResponse: {
+            /** Content Base64 */
+            content_base64?: string | null;
+            /** Document Id */
+            document_id: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /**
+             * Media Type
+             * @enum {string}
+             */
+            media_type: "application/pdf" | "text/plain";
+            /** Text */
+            text?: string | null;
+        };
+        /** DocumentResponse */
+        DocumentResponse: {
+            /** Asset Id */
+            asset_id: string;
+            /** Controls */
+            controls?: components["schemas"]["ControlSpec"][];
+            /** Document Id */
+            document_id: string;
+            /** Error Code */
+            error_code?: string | null;
+            /** Failed Pages */
+            failed_pages?: number[];
+            /** File Hash */
+            file_hash: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Media Type */
+            media_type: string;
+            /** Page Count */
+            page_count?: number | null;
+            /** Processed At */
+            processed_at?: string | null;
+            /** Size Bytes */
+            size_bytes: number;
+            status: components["schemas"]["DocumentStatus"];
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
+            /** Version */
+            version: string;
+        };
+        /**
+         * DocumentStatus
+         * @enum {string}
+         */
+        DocumentStatus: "UPLOADED" | "PROCESSING" | "READY" | "PARTIAL" | "FAILED";
         /**
          * EvidenceKind
          * @enum {string}
@@ -182,16 +829,16 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
-            /** Lineage */
-            lineage: {
-                [key: string]: unknown;
-            };
+            is_synthetic: true;
+            lineage: components["schemas"]["ReportLineage"];
             /** Mismatches */
             mismatches: components["schemas"]["MismatchFinding"][];
             /** Onchain Evidence */
             onchain_evidence: components["schemas"]["OnchainEvidence"][];
+            /** Report Hash */
+            report_hash: string;
             /** Report Id */
             report_id: string;
             scan_run: components["schemas"]["ScanRun"];
@@ -200,13 +847,19 @@ export interface components {
         EvidenceSpan: {
             /** Document Id */
             document_id: string;
-            /** End */
+            /**
+             * End
+             * @description Exclusive Unicode character offset within extracted page text.
+             */
             end: number;
             /** Page */
             page: number;
             /** Quote */
             quote: string;
-            /** Start */
+            /**
+             * Start
+             * @description Zero-based Unicode character offset within extracted page text.
+             */
             start: number;
         };
         /** FailedStage */
@@ -224,18 +877,25 @@ export interface components {
          *     consumer cannot derive this by diffing two finding lists.
          */
         FindingDiff: {
+            /** Base Rule Version */
+            base_rule_version: string | null;
             /** Base Scan Id */
             base_scan_id: string;
             change: components["schemas"]["DiffChange"];
             /** Finding Id */
             finding_id: string;
+            /** Head Rule Version */
+            head_rule_version: string | null;
             /** Head Scan Id */
             head_scan_id: string;
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
+            /** Rule Id */
+            rule_id: string;
             severity: components["schemas"]["Severity"];
         };
         /**
@@ -243,6 +903,11 @@ export interface components {
          * @enum {string}
          */
         FindingStatus: "CONFIRMED" | "PROBABLE" | "NEEDS_REVIEW" | "UNKNOWN";
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** HealthResponse */
         HealthResponse: {
             /** P0 Ready */
@@ -288,8 +953,9 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             /** Mismatch Id */
             mismatch_id: string;
             severity: components["schemas"]["Severity"];
@@ -298,6 +964,8 @@ export interface components {
         OnchainEvidence: {
             /** Asset Id */
             asset_id: string;
+            /** Block Hash */
+            block_hash?: string | null;
             /** Block Number */
             block_number: number;
             /** Chain Id */
@@ -311,15 +979,225 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             /** Log Index */
             log_index: number;
             mode: components["schemas"]["EvidenceMode"];
             /** Previous Value */
             previous_value?: string | null;
+            /** Receipt Status */
+            receipt_status?: "SUCCESS" | null;
             /** Tx Hash */
             tx_hash: string;
+            /** Verified At */
+            verified_at?: string | null;
+        };
+        /** OperatorReadyResponse */
+        OperatorReadyResponse: {
+            /**
+             * Ready
+             * @constant
+             */
+            ready: true;
+        };
+        /** OperatorVerifyResponse */
+        OperatorVerifyResponse: {
+            /**
+             * Verified
+             * @constant
+             */
+            verified: true;
+        };
+        /** PolicyPatch */
+        PolicyPatch: {
+            /** Confirmed */
+            confirmed: boolean;
+            /** Constraint Id */
+            constraint_id: string;
+            evidence_span?: components["schemas"]["EvidenceSpan"] | null;
+            /** Expected Version */
+            expected_version: number;
+            /** Field */
+            field: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Page */
+            page?: number | null;
+            /** Quote */
+            quote?: string | null;
+            /** Unit */
+            unit?: string | null;
+            /** Value */
+            value: string | number | boolean;
+        };
+        /** PolicyPatchRequest */
+        PolicyPatchRequest: {
+            /** Document Id */
+            document_id: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Policies */
+            policies: components["schemas"]["PolicyPatch"][];
+        };
+        /** ReadyResponse */
+        ReadyResponse: {
+            /**
+             * Database
+             * @constant
+             */
+            database: "ready";
+            /**
+             * Status
+             * @constant
+             */
+            status: "ready";
+        };
+        /** ReportDownloadMetadata */
+        ReportDownloadMetadata: {
+            format: components["schemas"]["ReportFormat"];
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Media Type */
+            media_type: string;
+            /** Sha256 */
+            sha256: string;
+            /** Url */
+            url: string;
+        };
+        /**
+         * ReportFormat
+         * @enum {string}
+         */
+        ReportFormat: "html" | "json";
+        /** ReportLineage */
+        ReportLineage: {
+            /** Ai Model */
+            ai_model?: string | null;
+            /** Document Extractor */
+            document_extractor: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Input Hashes */
+            input_hashes: {
+                [key: string]: string;
+            };
+            /** Limitations */
+            limitations: string[];
+            /** Model Versions */
+            model_versions?: {
+                [key: string]: string;
+            };
+            /** Rule Versions */
+            rule_versions: {
+                [key: string]: string;
+            };
+            /** Tool Versions */
+            tool_versions: {
+                [key: string]: string;
+            };
+        };
+        /** ReportResponse */
+        ReportResponse: {
+            /** Downloads */
+            downloads?: components["schemas"]["ReportDownloadMetadata"][];
+            /** Error Code */
+            error_code?: string | null;
+            /** Generated At */
+            generated_at?: string | null;
+            /**
+             * Human Review Required
+             * @default true
+             * @constant
+             */
+            human_review_required: true;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Limitations */
+            limitations?: string[];
+            report?: components["schemas"]["EvidenceReport"] | null;
+            /** Report Id */
+            report_id: string;
+            /** Scan Id */
+            scan_id: string;
+            status: components["schemas"]["ReportStatus"];
+        };
+        /**
+         * ReportStatus
+         * @enum {string}
+         */
+        ReportStatus: "QUEUED" | "READY" | "FAILED";
+        /** ScanCreateRequest */
+        ScanCreateRequest: {
+            /** Base Scan Id */
+            base_scan_id?: string | null;
+            /** Contract Id */
+            contract_id: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+        };
+        /** ScanCreateResponse */
+        ScanCreateResponse: {
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Scan Id */
+            scan_id: string;
+            status: components["schemas"]["ScanStatus"];
+        };
+        /** ScanResultResponse */
+        ScanResultResponse: {
+            /** Code Findings */
+            code_findings?: components["schemas"]["CodeFinding"][];
+            /** Diff */
+            diff?: components["schemas"]["FindingDiff"][];
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Mismatches */
+            mismatches?: components["schemas"]["MismatchFinding"][];
+            /** Onchain Evidence */
+            onchain_evidence?: components["schemas"]["OnchainEvidence"][];
+            /** Report Id */
+            report_id?: string | null;
+            scan_run: components["schemas"]["ScanRun"];
         };
         /** ScanRun */
         ScanRun: {
@@ -336,8 +1214,9 @@ export interface components {
             /**
              * Is Synthetic
              * @default true
+             * @constant
              */
-            is_synthetic: boolean;
+            is_synthetic: true;
             /** Rule Versions */
             rule_versions: {
                 [key: string]: string;
@@ -361,6 +1240,19 @@ export interface components {
          * @enum {string}
          */
         Severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -370,7 +1262,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    health_health_get: {
+    health_route_health_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -386,6 +1278,377 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    operator_health_health_operator_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatorReadyResponse"];
+                };
+            };
+        };
+    };
+    ready_health_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadyResponse"];
+                };
+            };
+        };
+    };
+    list_alerts_v1_alerts_get: {
+        parameters: {
+            query?: {
+                asset_id?: string | null;
+                status?: components["schemas"]["AlertStatus"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_alert_v1_alerts__alert_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_assets_v1_assets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetail"][];
+                };
+            };
+        };
+    };
+    create_asset_v1_assets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateAssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_asset_v1_assets__asset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_contract_v1_assets__asset_id__contracts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_document_v1_assets__asset_id__documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_document_v1_assets__asset_id__documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_policies_v1_assets__asset_id__policies_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ControlSpec"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_scan_v1_assets__asset_id__scans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_v1_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
+                };
+            };
+        };
+    };
+    demo_bootstrap_v1_demo_bootstrap_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoBootstrapResponse"];
                 };
             };
         };
@@ -406,6 +1669,185 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvidenceReport"];
+                };
+            };
+        };
+    };
+    get_document_v1_documents__document_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_document_content_v1_documents__document_id__content_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentContentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_operator_session_v1_operator_session_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatorVerifyResponse"];
+                };
+            };
+        };
+    };
+    get_report_v1_reports__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_report_v1_reports__report_id__download_get: {
+        parameters: {
+            query?: {
+                format?: components["schemas"]["ReportFormat"];
+            };
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scan_v1_scans__scan_id__get: {
+        parameters: {
+            query?: {
+                base?: string | null;
+            };
+            header?: never;
+            path: {
+                scan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -15,6 +15,19 @@
       "title": "Asset Id",
       "type": "string"
     },
+    "block_hash": {
+      "anyOf": [
+        {
+          "pattern": "^0x[0-9a-fA-F]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Block Hash"
+    },
     "block_number": {
       "minimum": 0,
       "title": "Block Number",
@@ -53,6 +66,7 @@
       "title": "Fixture Version"
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"
@@ -77,9 +91,36 @@
       "default": null,
       "title": "Previous Value"
     },
+    "receipt_status": {
+      "anyOf": [
+        {
+          "const": "SUCCESS",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Status"
+    },
     "tx_hash": {
+      "pattern": "^0x[0-9a-fA-F]{64}$",
       "title": "Tx Hash",
       "type": "string"
+    },
+    "verified_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified At"
     }
   },
   "required": [

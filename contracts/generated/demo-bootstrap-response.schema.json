@@ -1,0 +1,51 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "contract_id": {
+      "title": "Contract Id",
+      "type": "string"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "evidence_mode": {
+      "const": "REPLAY",
+      "default": "REPLAY",
+      "title": "Evidence Mode",
+      "type": "string"
+    },
+    "fixture_version": {
+      "title": "Fixture Version",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "scan_id": {
+      "title": "Scan Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "asset_id",
+    "document_id",
+    "contract_id",
+    "scan_id",
+    "report_id",
+    "fixture_version"
+  ],
+  "title": "DemoBootstrapResponse",
+  "type": "object"
+}

@@ -7,14 +7,20 @@
   "additionalProperties": false,
   "required": [
     "finding_id",
+    "rule_id",
     "change",
     "base_scan_id",
     "head_scan_id",
     "severity",
-    "is_synthetic"
+    "base_rule_version",
+    "head_rule_version"
   ],
   "properties": {
     "finding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_id": {
       "type": "string",
       "minLength": 1
     },
@@ -41,6 +47,12 @@
         "LOW",
         "INFO"
       ]
+    },
+    "base_rule_version": {
+      "type": ["string", "null"]
+    },
+    "head_rule_version": {
+      "type": ["string", "null"]
     },
     "is_synthetic": {
       "const": true

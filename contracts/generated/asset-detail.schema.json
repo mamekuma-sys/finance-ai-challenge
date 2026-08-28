@@ -1,0 +1,546 @@
+{
+  "$defs": {
+    "AssetStatus": {
+      "enum": [
+        "UNVERIFIED",
+        "REVIEW_REQUIRED",
+        "VERIFIED"
+      ],
+      "title": "AssetStatus",
+      "type": "string"
+    },
+    "ContractCreateResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Address"
+        },
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "chain_id": {
+          "title": "Chain Id",
+          "type": "integer"
+        },
+        "contract_id": {
+          "title": "Contract Id",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "proxy_status": {
+          "title": "Proxy Status",
+          "type": "string"
+        },
+        "source_hash": {
+          "title": "Source Hash",
+          "type": "string"
+        },
+        "source_kind": {
+          "$ref": "#/$defs/ContractSourceKind"
+        }
+      },
+      "required": [
+        "contract_id",
+        "asset_id",
+        "source_kind",
+        "chain_id",
+        "source_hash",
+        "proxy_status",
+        "created_at"
+      ],
+      "title": "ContractCreateResponse",
+      "type": "object"
+    },
+    "ContractSourceKind": {
+      "enum": [
+        "SOURCE",
+        "ADDRESS",
+        "SOURCE_AND_ADDRESS"
+      ],
+      "title": "ContractSourceKind",
+      "type": "string"
+    },
+    "ControlSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "confirmed": {
+          "default": false,
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "evidence_span": {
+          "$ref": "#/$defs/EvidenceSpan"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        },
+        "version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asset_id",
+        "document_id",
+        "constraint_id",
+        "field",
+        "value",
+        "evidence_span"
+      ],
+      "title": "ControlSpec",
+      "type": "object"
+    },
+    "DocumentResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "controls": {
+          "items": {
+            "$ref": "#/$defs/ControlSpec"
+          },
+          "title": "Controls",
+          "type": "array"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "failed_pages": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Failed Pages",
+          "type": "array"
+        },
+        "file_hash": {
+          "title": "File Hash",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "page_count": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Count"
+        },
+        "processed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Processed At"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/DocumentStatus"
+        },
+        "uploaded_at": {
+          "format": "date-time",
+          "title": "Uploaded At",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "asset_id",
+        "status",
+        "file_hash",
+        "version",
+        "media_type",
+        "size_bytes",
+        "uploaded_at"
+      ],
+      "title": "DocumentResponse",
+      "type": "object"
+    },
+    "DocumentStatus": {
+      "enum": [
+        "UPLOADED",
+        "PROCESSING",
+        "READY",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "DocumentStatus",
+      "type": "string"
+    },
+    "EvidenceSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "end": {
+          "description": "Exclusive Unicode character offset within extracted page text.",
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "start": {
+          "description": "Zero-based Unicode character offset within extracted page text.",
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document_id",
+        "page",
+        "start",
+        "end",
+        "quote"
+      ],
+      "title": "EvidenceSpan",
+      "type": "object"
+    },
+    "FailedStage": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Id"
+        },
+        "stage": {
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "reason"
+      ],
+      "title": "FailedStage",
+      "type": "object"
+    },
+    "ScanRun": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PARTIAL"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "failed_stages": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "failed_stages": {
+          "items": {
+            "$ref": "#/$defs/FailedStage"
+          },
+          "title": "Failed Stages",
+          "type": "array"
+        },
+        "input_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Input Hashes",
+          "type": "object"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "rule_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Rule Versions",
+          "type": "object"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ScanStatus"
+        }
+      },
+      "required": [
+        "scan_id",
+        "asset_id",
+        "status",
+        "input_hashes",
+        "rule_versions",
+        "started_at"
+      ],
+      "title": "ScanRun",
+      "type": "object"
+    },
+    "ScanStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "ScanStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "asset_type": {
+      "const": "SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE",
+      "title": "Asset Type",
+      "type": "string"
+    },
+    "contracts": {
+      "items": {
+        "$ref": "#/$defs/ContractCreateResponse"
+      },
+      "title": "Contracts",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    },
+    "documents": {
+      "items": {
+        "$ref": "#/$defs/DocumentResponse"
+      },
+      "title": "Documents",
+      "type": "array"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "network": {
+      "const": "KAIA_KAIROS",
+      "title": "Network",
+      "type": "string"
+    },
+    "scans": {
+      "items": {
+        "$ref": "#/$defs/ScanRun"
+      },
+      "title": "Scans",
+      "type": "array"
+    },
+    "status": {
+      "$ref": "#/$defs/AssetStatus"
+    },
+    "token_unit": {
+      "title": "Token Unit",
+      "type": "string"
+    },
+    "total_planned_supply": {
+      "exclusiveMinimum": 0,
+      "title": "Total Planned Supply",
+      "type": "integer"
+    },
+    "underlying_description": {
+      "title": "Underlying Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "asset_id",
+    "name",
+    "asset_type",
+    "status",
+    "underlying_description",
+    "total_planned_supply",
+    "network",
+    "currency",
+    "token_unit",
+    "created_at"
+  ],
+  "title": "AssetDetail",
+  "type": "object"
+}

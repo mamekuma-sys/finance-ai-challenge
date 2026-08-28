@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "content_base64": { "type": ["string", "null"] },
+    "document_id": { "type": "string" },
+    "is_synthetic": { "const": true },
+    "media_type": { "enum": ["application/pdf", "text/plain"] },
+    "text": { "type": ["string", "null"] }
+  },
+  "required": ["document_id", "media_type", "is_synthetic"],
+  "title": "DocumentContentResponse",
+  "type": "object"
+}

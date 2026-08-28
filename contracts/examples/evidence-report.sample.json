@@ -1,15 +1,19 @@
 {
   "report_id": "report_demo_01",
+  "report_hash": "sha256:dd74483b7d88e7d94515d8b2527be388dff561bad99c3764caa3140d469b61c1",
   "scan_run": {
     "scan_id": "scan_demo_vulnerable_01",
     "asset_id": "asset_synthetic_hanriver_01",
     "status": "COMPLETED",
     "input_hashes": {
-      "document": "sha256:synthetic-document",
-      "source": "sha256:synthetic-vulnerable-source"
+      "document": "sha256:ffff40dd4e4582667f32f2f9d40b2f2c646b57184c5987a4d2e8de2cb64e05ab",
+      "contract_source": "sha256:d0e0d6a7ce03141af361c38a9429fcc08d88754f988e08bb13a600fbabced93f",
+      "source:chain/src/fixtures/VulnerableRwaToken.sol": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
+      "source:chain/src/fixtures/VulnerableOracle.sol": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0"
     },
     "rule_versions": {
-      "MINT_COLLATERAL_CAP_MISSING": "1.0.0"
+      "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
+      "ORACLE_VALIDATION_MISSING": "1.0.0"
     },
     "failed_stages": [],
     "started_at": "2026-08-25T03:00:00Z",
@@ -26,12 +30,103 @@
       "unit": "TOKEN",
       "evidence_span": {
         "document_id": "doc_synthetic_issuance_01",
-        "page": 4,
-        "start": 128,
-        "end": 181,
+        "page": 1,
+        "start": 244,
+        "end": 272,
         "quote": "총 발행량은 100,000 토큰을 초과할 수 없다."
       },
       "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_collateral_verified",
+      "field": "collateral_verified",
+      "value": true,
+      "unit": null,
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 328,
+        "end": 379,
+        "quote": "기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다."
+      },
+      "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_issuer_role",
+      "field": "issuer_role",
+      "value": "ISSUER_ROLE",
+      "unit": null,
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 294,
+        "end": 327,
+        "quote": "ISSUER_ROLE을 가진 주소만 토큰을 발행할 수 있다."
+      },
+      "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_oracle_max_age",
+      "field": "oracle_max_age",
+      "value": 60,
+      "unit": "MINUTE",
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 392,
+        "end": 413,
+        "quote": "가격은 60분 이내에 갱신되어야 한다."
+      },
+      "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_price_band_breach",
+      "field": "price_band_breach",
+      "value": 2,
+      "unit": "CONSECUTIVE",
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 538,
+        "end": 582,
+        "quote": "모델 기반 기준가 밴드 이탈이 연속 2회 확인되면 담당자 검토 경보를 생성한다."
+      },
+      "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_pauser_role",
+      "field": "pauser_role",
+      "value": "PAUSER_ROLE",
+      "unit": null,
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 478,
+        "end": 523,
+        "quote": "PAUSER_ROLE을 가진 주소만 발행과 이전을 일시정지하거나 재개할 수 있다."
+      },
+      "confirmed": true,
+      "version": 1,
       "is_synthetic": true
     }
   ],
@@ -43,7 +138,7 @@
       "severity": "CRITICAL",
       "status": "CONFIRMED",
       "title": "mint 실행경로에 담보 또는 발행한도 검사가 없습니다.",
-      "source_hash": "sha256:synthetic-vulnerable-source",
+      "source_hash": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
       "code_location": {
         "file": "chain/src/fixtures/VulnerableRwaToken.sol",
         "start_line": 12,
@@ -59,7 +154,33 @@
       "tool_versions": {
         "rwa_guard_contract": "1.0.0",
         "rule": "1.0.0",
-        "solc": "0.8.24+commit.e11b9ed9"
+        "solc": "0.8.24"
+      },
+      "is_synthetic": true
+    },
+    {
+      "scan_id": "scan_demo_vulnerable_01",
+      "finding_id": "finding_oracle_range_missing",
+      "rule_id": "ORACLE_VALIDATION_MISSING",
+      "severity": "HIGH",
+      "status": "CONFIRMED",
+      "title": "오라클 응답의 값 범위 검증이 없습니다.",
+      "source_hash": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0",
+      "code_location": {
+        "file": "chain/src/fixtures/VulnerableOracle.sol",
+        "start_line": 13,
+        "end_line": 14,
+        "excerpt": "        answer = answer_;\n        updatedAt = updatedAt_;"
+      },
+      "deterministic_evidence": [
+        "analysis=solc_ast_control_flow",
+        "entrypoint=VulnerableOracle.update",
+        "guard.range_guard=missing"
+      ],
+      "tool_versions": {
+        "rwa_guard_contract": "1.0.0",
+        "rule": "1.0.0",
+        "solc": "0.8.24"
       },
       "is_synthetic": true
     }
@@ -79,6 +200,46 @@
         {
           "kind": "CODE",
           "ref": "finding_mint_collateral_cap_missing"
+        },
+        {
+          "kind": "CHAIN",
+          "ref": "0x0000000000000000000000000000000000000000000000000000000000000001:0"
+        }
+      ],
+      "is_synthetic": true
+    },
+    {
+      "mismatch_id": "mismatch_collateral_01",
+      "constraint_id": "control_collateral_verified",
+      "finding_id": "finding_mint_collateral_cap_missing",
+      "implementation_status": "MISSING",
+      "severity": "CRITICAL",
+      "evidence_links": [
+        {
+          "kind": "DOCUMENT",
+          "ref": "control_collateral_verified"
+        },
+        {
+          "kind": "CODE",
+          "ref": "finding_mint_collateral_cap_missing"
+        }
+      ],
+      "is_synthetic": true
+    },
+    {
+      "mismatch_id": "mismatch_oracle_max_age_01",
+      "constraint_id": "control_oracle_max_age",
+      "finding_id": "finding_oracle_range_missing",
+      "implementation_status": "MISSING",
+      "severity": "HIGH",
+      "evidence_links": [
+        {
+          "kind": "DOCUMENT",
+          "ref": "control_oracle_max_age"
+        },
+        {
+          "kind": "CODE",
+          "ref": "finding_oracle_range_missing"
         }
       ],
       "is_synthetic": true
@@ -89,9 +250,12 @@
       "asset_id": "asset_synthetic_hanriver_01",
       "mode": "REPLAY",
       "chain_id": 1001,
-      "tx_hash": "0xsynthetic000000000000000000000000000000000000000000000000000001",
+      "tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000001",
       "log_index": 0,
       "block_number": 18402119,
+      "block_hash": null,
+      "receipt_status": null,
+      "verified_at": null,
       "event_name": "Minted",
       "previous_value": "100000",
       "changed_value": "120000",
@@ -100,10 +264,35 @@
     }
   ],
   "lineage": {
-    "document": "doc_synthetic_issuance_01#p4:128-181",
-    "code": "chain/src/fixtures/VulnerableRwaToken.sol:12",
-    "chain": "REPLAY:0.1.0:block-18402119"
+    "input_hashes": {
+      "document": "sha256:ffff40dd4e4582667f32f2f9d40b2f2c646b57184c5987a4d2e8de2cb64e05ab",
+      "contract_source": "sha256:d0e0d6a7ce03141af361c38a9429fcc08d88754f988e08bb13a600fbabced93f",
+      "source:chain/src/fixtures/VulnerableRwaToken.sol": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
+      "source:chain/src/fixtures/VulnerableOracle.sol": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0"
+    },
+    "document_extractor": "deterministic-synthetic-parser@1.0.0",
+    "ai_model": null,
+    "model_versions": {},
+    "rule_versions": {
+      "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
+      "ORACLE_VALIDATION_MISSING": "1.0.0"
+    },
+    "tool_versions": {
+      "report_pipeline": "1.0.0",
+      "fixture_builder": "1.0.0",
+      "finding:finding_mint_collateral_cap_missing:rwa_guard_contract": "1.0.0",
+      "finding:finding_mint_collateral_cap_missing:rule": "1.0.0",
+      "finding:finding_mint_collateral_cap_missing:solc": "0.8.24",
+      "finding:finding_oracle_range_missing:rwa_guard_contract": "1.0.0",
+      "finding:finding_oracle_range_missing:rule": "1.0.0",
+      "finding:finding_oracle_range_missing:solc": "0.8.24"
+    },
+    "generated_at": "2026-08-25T03:00:08Z",
+    "limitations": [
+      "합성 fixture 전용",
+      "온체인 이벤트는 REPLAY이며 실제 receipt가 아닙니다."
+    ]
   },
-  "generated_at": "2026-08-26T13:17:35.860202Z",
+  "generated_at": "2026-08-25T03:00:08Z",
   "is_synthetic": true
 }

@@ -1,0 +1,48 @@
+{
+  "$defs": {
+    "ScanStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "ScanStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "scan_id": {
+      "title": "Scan Id",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ScanStatus"
+    }
+  },
+  "required": [
+    "scan_id",
+    "asset_id",
+    "status",
+    "created_at"
+  ],
+  "title": "ScanCreateResponse",
+  "type": "object"
+}

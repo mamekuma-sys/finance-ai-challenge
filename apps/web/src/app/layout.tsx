@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import "pretendard/dist/web/variable/pretendardvariable.css";
 import "./globals.css";
+
+import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "RWA Guard | Assurance Ledger",
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

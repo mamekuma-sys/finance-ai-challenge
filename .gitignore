@@ -36,3 +36,5 @@ tmp/
 .supabase/
 uploads/
 reports/
+!apps/web/src/app/reports/
+!apps/web/src/app/reports/**

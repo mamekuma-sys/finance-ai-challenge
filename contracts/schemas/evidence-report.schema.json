@@ -6,17 +6,17 @@
   "additionalProperties": false,
   "required": [
     "report_id",
+    "report_hash",
     "scan_run",
     "controls",
     "code_findings",
     "mismatches",
     "onchain_evidence",
-    "lineage",
-    "generated_at",
-    "is_synthetic"
+    "lineage"
   ],
   "properties": {
     "report_id": { "type": "string" },
+    "report_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "scan_run": { "$ref": "./scan-run.schema.json" },
     "controls": { "type": "array", "items": { "$ref": "./control-spec.schema.json" } },
     "code_findings": { "type": "array", "items": { "$ref": "./code-finding.schema.json" } },
@@ -25,7 +25,43 @@
       "type": "array",
       "items": { "$ref": "./onchain-evidence.schema.json" }
     },
-    "lineage": { "type": "object" },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_hashes",
+        "document_extractor",
+        "rule_versions",
+        "tool_versions",
+        "generated_at",
+        "limitations"
+      ],
+      "properties": {
+        "input_hashes": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "document_extractor": { "type": "string" },
+        "ai_model": { "type": ["string", "null"] },
+        "model_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "rule_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "tool_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
     "generated_at": { "type": "string", "format": "date-time" },
     "is_synthetic": { "const": true }
   }

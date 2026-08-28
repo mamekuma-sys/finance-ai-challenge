@@ -1,0 +1,900 @@
+{
+  "$defs": {
+    "CodeFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "code_location": {
+          "$ref": "#/$defs/CodeLocation"
+        },
+        "deterministic_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Deterministic Evidence",
+          "type": "array"
+        },
+        "finding_id": {
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "source_hash": {
+          "title": "Source Hash",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/FindingStatus"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "tool_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tool Versions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "scan_id",
+        "finding_id",
+        "rule_id",
+        "severity",
+        "status",
+        "title",
+        "source_hash",
+        "code_location"
+      ],
+      "title": "CodeFinding",
+      "type": "object"
+    },
+    "CodeLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "start_line",
+        "end_line",
+        "excerpt"
+      ],
+      "title": "CodeLocation",
+      "type": "object"
+    },
+    "ControlSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "confirmed": {
+          "default": false,
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "evidence_span": {
+          "$ref": "#/$defs/EvidenceSpan"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        },
+        "version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asset_id",
+        "document_id",
+        "constraint_id",
+        "field",
+        "value",
+        "evidence_span"
+      ],
+      "title": "ControlSpec",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "DOCUMENT",
+        "CODE",
+        "CHAIN"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceLink": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "EvidenceLink",
+      "type": "object"
+    },
+    "EvidenceMode": {
+      "enum": [
+        "LIVE",
+        "REPLAY"
+      ],
+      "title": "EvidenceMode",
+      "type": "string"
+    },
+    "EvidenceReport": {
+      "additionalProperties": false,
+      "properties": {
+        "code_findings": {
+          "items": {
+            "$ref": "#/$defs/CodeFinding"
+          },
+          "title": "Code Findings",
+          "type": "array"
+        },
+        "controls": {
+          "items": {
+            "$ref": "#/$defs/ControlSpec"
+          },
+          "title": "Controls",
+          "type": "array"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "lineage": {
+          "$ref": "#/$defs/ReportLineage"
+        },
+        "mismatches": {
+          "items": {
+            "$ref": "#/$defs/MismatchFinding"
+          },
+          "title": "Mismatches",
+          "type": "array"
+        },
+        "onchain_evidence": {
+          "items": {
+            "$ref": "#/$defs/OnchainEvidence"
+          },
+          "title": "Onchain Evidence",
+          "type": "array"
+        },
+        "report_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Report Hash",
+          "type": "string"
+        },
+        "report_id": {
+          "title": "Report Id",
+          "type": "string"
+        },
+        "scan_run": {
+          "$ref": "#/$defs/ScanRun"
+        }
+      },
+      "required": [
+        "report_id",
+        "report_hash",
+        "scan_run",
+        "controls",
+        "code_findings",
+        "mismatches",
+        "onchain_evidence",
+        "lineage"
+      ],
+      "title": "EvidenceReport",
+      "type": "object"
+    },
+    "EvidenceSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "end": {
+          "description": "Exclusive Unicode character offset within extracted page text.",
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "start": {
+          "description": "Zero-based Unicode character offset within extracted page text.",
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document_id",
+        "page",
+        "start",
+        "end",
+        "quote"
+      ],
+      "title": "EvidenceSpan",
+      "type": "object"
+    },
+    "FailedStage": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rule Id"
+        },
+        "stage": {
+          "minLength": 1,
+          "title": "Stage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "reason"
+      ],
+      "title": "FailedStage",
+      "type": "object"
+    },
+    "FindingStatus": {
+      "enum": [
+        "CONFIRMED",
+        "PROBABLE",
+        "NEEDS_REVIEW",
+        "UNKNOWN"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
+    "ImplementationStatus": {
+      "enum": [
+        "IMPLEMENTED",
+        "PARTIAL",
+        "MISSING",
+        "UNKNOWN"
+      ],
+      "title": "ImplementationStatus",
+      "type": "string"
+    },
+    "MismatchFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "evidence_links": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "DOCUMENT"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "CODE"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            }
+          ],
+          "items": {
+            "$ref": "#/$defs/EvidenceLink"
+          },
+          "minItems": 2,
+          "title": "Evidence Links",
+          "type": "array"
+        },
+        "finding_id": {
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "implementation_status": {
+          "$ref": "#/$defs/ImplementationStatus"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "mismatch_id": {
+          "title": "Mismatch Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "mismatch_id",
+        "constraint_id",
+        "finding_id",
+        "implementation_status",
+        "severity",
+        "evidence_links"
+      ],
+      "title": "MismatchFinding",
+      "type": "object"
+    },
+    "OnchainEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "block_hash": {
+          "anyOf": [
+            {
+              "pattern": "^0x[0-9a-fA-F]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Block Hash"
+        },
+        "block_number": {
+          "minimum": 0,
+          "title": "Block Number",
+          "type": "integer"
+        },
+        "chain_id": {
+          "title": "Chain Id",
+          "type": "integer"
+        },
+        "changed_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Changed Value"
+        },
+        "event_name": {
+          "title": "Event Name",
+          "type": "string"
+        },
+        "fixture_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Version"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "log_index": {
+          "minimum": 0,
+          "title": "Log Index",
+          "type": "integer"
+        },
+        "mode": {
+          "$ref": "#/$defs/EvidenceMode"
+        },
+        "previous_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Value"
+        },
+        "receipt_status": {
+          "anyOf": [
+            {
+              "const": "SUCCESS",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Receipt Status"
+        },
+        "tx_hash": {
+          "pattern": "^0x[0-9a-fA-F]{64}$",
+          "title": "Tx Hash",
+          "type": "string"
+        },
+        "verified_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified At"
+        }
+      },
+      "required": [
+        "asset_id",
+        "mode",
+        "chain_id",
+        "tx_hash",
+        "log_index",
+        "block_number",
+        "event_name"
+      ],
+      "title": "OnchainEvidence",
+      "type": "object"
+    },
+    "ReportDownloadMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/ReportFormat"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "media_type",
+        "url",
+        "sha256"
+      ],
+      "title": "ReportDownloadMetadata",
+      "type": "object"
+    },
+    "ReportFormat": {
+      "enum": [
+        "html",
+        "json"
+      ],
+      "title": "ReportFormat",
+      "type": "string"
+    },
+    "ReportLineage": {
+      "additionalProperties": false,
+      "properties": {
+        "ai_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ai Model"
+        },
+        "document_extractor": {
+          "title": "Document Extractor",
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "input_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Input Hashes",
+          "type": "object"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "model_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Model Versions",
+          "type": "object"
+        },
+        "rule_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Rule Versions",
+          "type": "object"
+        },
+        "tool_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tool Versions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "input_hashes",
+        "document_extractor",
+        "rule_versions",
+        "tool_versions",
+        "generated_at",
+        "limitations"
+      ],
+      "title": "ReportLineage",
+      "type": "object"
+    },
+    "ReportStatus": {
+      "enum": [
+        "QUEUED",
+        "READY",
+        "FAILED"
+      ],
+      "title": "ReportStatus",
+      "type": "string"
+    },
+    "ScanRun": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PARTIAL"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "failed_stages": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "failed_stages": {
+          "items": {
+            "$ref": "#/$defs/FailedStage"
+          },
+          "title": "Failed Stages",
+          "type": "array"
+        },
+        "input_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Input Hashes",
+          "type": "object"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "rule_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Rule Versions",
+          "type": "object"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ScanStatus"
+        }
+      },
+      "required": [
+        "scan_id",
+        "asset_id",
+        "status",
+        "input_hashes",
+        "rule_versions",
+        "started_at"
+      ],
+      "title": "ScanRun",
+      "type": "object"
+    },
+    "ScanStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "ScanStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "downloads": {
+      "items": {
+        "$ref": "#/$defs/ReportDownloadMetadata"
+      },
+      "title": "Downloads",
+      "type": "array"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Code"
+    },
+    "generated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generated At"
+    },
+    "human_review_required": {
+      "const": true,
+      "default": true,
+      "title": "Human Review Required",
+      "type": "boolean"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "report": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EvidenceReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "scan_id": {
+      "title": "Scan Id",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ReportStatus"
+    }
+  },
+  "required": [
+    "report_id",
+    "scan_id",
+    "status"
+  ],
+  "title": "ReportResponse",
+  "type": "object"
+}

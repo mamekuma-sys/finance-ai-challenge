@@ -23,11 +23,19 @@ WORKDIR /app
 COPY --from=foundry /usr/local/bin/forge /usr/local/bin/forge
 COPY --from=foundry /home/foundry/.svm /root/.svm
 
-COPY pyproject.toml README.md ./
-COPY src ./src
+COPY services/backend/pyproject.toml services/backend/README.md ./
+COPY services/backend/src ./src
 
 RUN python -m pip install --upgrade pip \
     && python -m pip install .
+
+ENV RWA_GUARD_FIXTURE_ROOT=/opt/rwa-guard-fixtures
+COPY fixtures/p0-manifest.json /opt/rwa-guard-fixtures/fixtures/p0-manifest.json
+COPY data/synthetic/documents/issuance-terms-01.txt /opt/rwa-guard-fixtures/data/synthetic/documents/issuance-terms-01.txt
+COPY chain/src/fixtures/VulnerableRwaToken.sol /opt/rwa-guard-fixtures/chain/src/fixtures/VulnerableRwaToken.sol
+COPY chain/src/fixtures/VulnerableOracle.sol /opt/rwa-guard-fixtures/chain/src/fixtures/VulnerableOracle.sol
+
+RUN python -c "from rwa_guard.config import Settings; from rwa_guard.fixture_store import fixture_store_for_settings; fixture_store_for_settings(Settings(app_env='production'))"
 
 EXPOSE 8000
 
