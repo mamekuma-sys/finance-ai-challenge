@@ -39,6 +39,14 @@ def test_configured_fixture_root_requires_valid_hash_manifest() -> None:
     assert "총 발행량" in store.read_text(DOCUMENT_FILE)
 
 
+def test_text_fixture_hash_is_stable_across_platform_line_endings() -> None:
+    attributes = (REPOSITORY / ".gitattributes").read_text(encoding="utf-8")
+    document_bytes = (REPOSITORY / DOCUMENT_FILE).read_bytes()
+
+    assert "data/synthetic/documents/*.txt text eol=lf" in attributes
+    assert b"\r\n" not in document_bytes
+
+
 def test_configured_fixture_root_rejects_hash_mismatch(tmp_path: Path) -> None:
     for relative in [MANIFEST_PATH, *REQUIRED_FIXTURE_FILES]:
         destination = tmp_path / relative
