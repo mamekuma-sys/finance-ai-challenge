@@ -25,7 +25,7 @@ from rwa_guard.db.models import (
     ReportRecord,
     ScanRunRecord,
 )
-from rwa_guard.fixtures import build_demo_report
+from rwa_guard.fixtures import build_demo_report, merge_solidity_sources
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 
@@ -241,11 +241,11 @@ def test_demo_report_locations_and_hashes_match_repository_fixtures() -> None:
     assert report.scan_run.input_hashes["document"] == (
         f"sha256:{hashlib.sha256(document_bytes).hexdigest()}"
     )
-    contract_source = (
-        (REPOSITORY / "chain/src/fixtures/VulnerableRwaToken.sol").read_bytes()
-        + b"\n\n"
-        + (REPOSITORY / "chain/src/fixtures/VulnerableOracle.sol").read_bytes()
-    )
+    # 저장되는 소스는 merge_solidity_sources의 결과이며 hash도 같은 바이트에서 뽑는다.
+    contract_source = merge_solidity_sources(
+        (REPOSITORY / "chain/src/fixtures/VulnerableRwaToken.sol").read_text(encoding="utf-8"),
+        (REPOSITORY / "chain/src/fixtures/VulnerableOracle.sol").read_text(encoding="utf-8"),
+    ).encode("utf-8")
     assert report.scan_run.input_hashes["contract_source"] == (
         f"sha256:{hashlib.sha256(contract_source).hexdigest()}"
     )

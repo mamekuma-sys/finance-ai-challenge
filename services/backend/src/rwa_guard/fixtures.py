@@ -1,4 +1,5 @@
 import hashlib
+import re
 from datetime import UTC, datetime
 
 from rwa_guard.config import Settings
@@ -81,13 +82,43 @@ def _location(
     )
 
 
+_SPDX_LINE = re.compile(r"^[ \t]*//[ \t]*SPDX-License-Identifier:.*$", re.MULTILINE)
+
+
+def merge_solidity_sources(*sources: str) -> str:
+    """여러 .sol 파일을 하나의 컴파일 단위로 합친다.
+
+    파일마다 SPDX 헤더가 있으므로 그대로 이어붙이면 solc가 거부한다.
+
+        Error (3716): Multiple SPDX license identifiers found in source file.
+
+    첫 파일의 헤더만 남기고 이후 파일에서는 SPDX 줄만 제거한다.
+
+    version pragma는 **지우지 않는다.** 중복 pragma는 solc가 허용하며, 지우면 뒤
+    파일이 선언한 컴파일러 버전 제약이 조용히 사라져 호환되지 않는 소스가 통과한다.
+
+    데모 부트스트랩이 저장하는 소스와 그 소스의 hash를 같은 바이트에서 뽑기 위해
+    라우터가 아니라 여기에 둔다.
+    """
+
+    scrubbed = [source.strip() for source in sources[:1]]
+    scrubbed += [
+        body for source in sources[1:] if (body := _SPDX_LINE.sub("", source).strip())
+    ]
+    if not any(scrubbed):
+        return ""
+    return "\n\n".join(part for part in scrubbed if part) + "\n"
+
+
 def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
     active_store = store or fixture_store_for_settings(Settings(app_env="development"))
     document_bytes = _read(active_store, DOCUMENT_FILE)
     document_text = document_bytes.decode()
     token_bytes = _read(active_store, TOKEN_FILE)
     oracle_bytes = _read(active_store, ORACLE_FILE)
-    contract_source_bytes = token_bytes + b"\n\n" + oracle_bytes
+    contract_source_bytes = merge_solidity_sources(
+        token_bytes.decode(), oracle_bytes.decode()
+    ).encode()
     token_hash = _sha256(token_bytes)
     oracle_hash = _sha256(oracle_bytes)
 
