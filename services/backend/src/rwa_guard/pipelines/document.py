@@ -196,11 +196,16 @@ class DeterministicControlExtractor:
             match: re.Match[str] | None = None
             for page in pages:
                 for pattern in definition.patterns:
-                    candidate = pattern.search(page.text)
-                    if candidate is not None and not _looks_like_instruction(
-                        page.text, candidate.start(), candidate.end()
-                    ):
+                    # 지시문 라인에 걸린 첫 일치에서 멈추지 않고 같은 페이지의 다음 일치를
+                    # 계속 확인한다. 미끼 문장이 뒤따르는 진짜 조항을 가리면 안 된다.
+                    for candidate in pattern.finditer(page.text):
+                        if _looks_like_instruction(
+                            page.text, candidate.start(), candidate.end()
+                        ):
+                            continue
                         match_page, match = page, candidate
+                        break
+                    if match is not None:
                         break
                 if match is not None:
                     break

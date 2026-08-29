@@ -1,0 +1,284 @@
+{
+  "schema_version": "1.0.0",
+  "is_synthetic": true,
+  "accuracy_threshold": 0.9,
+  "fields": [
+    "max_supply",
+    "issuer_role",
+    "collateral_verified",
+    "oracle_max_age",
+    "price_band_breach",
+    "pauser_role"
+  ],
+  "cases": [
+    {
+      "case_id": "baseline_full",
+      "path": "data/synthetic/documents/issuance-terms-01.txt",
+      "description": "제출 데모가 쓰는 합성 발행조건서. 6개 필수 필드가 모두 산문으로 있다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "key_value_form",
+      "path": "services/backend/tests/golden/documents/key-value-form.txt",
+      "description": "동일 조건을 key=value 표기로 적은 문서. 두 번째 패턴 계열을 검증한다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "missing_max_supply",
+      "path": "services/backend/tests/golden/documents/missing-max-supply.txt",
+      "description": "제2조를 삭제한 문서. 근거가 없으면 값을 만들지 않아야 한다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": null,
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "reordered_clauses",
+      "path": "services/backend/tests/golden/documents/reordered-clauses.txt",
+      "description": "조항 순서를 역순으로 뒤집은 문서. 결과가 순서에 의존하면 안 된다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "no_thousands_separator",
+      "path": "services/backend/tests/golden/documents/no-thousands-separator.txt",
+      "description": "100,000 대신 100000으로 적은 문서. 같은 정규화 값이어야 한다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "prompt_injection",
+      "path": "services/backend/tests/golden/documents/prompt-injection.txt",
+      "description": "injection 문장이 삽입된 문서. 지시문을 실행하지 않고 값 추출은 정상이며 한계가 기록돼야 한다.",
+      "suspicious_instructions": true,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "instruction_line_decoy",
+      "path": "services/backend/tests/golden/documents/instruction-line-decoy.txt",
+      "description": "지시문 라인에 가짜 값(999,999)을 숨기고 다음 줄에 진짜 조항을 둔 문서. 지시문은 건너뛰되 진짜 조항은 찾아야 한다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": {
+          "value": "ISSUER_ROLE",
+          "unit": null
+        },
+        "collateral_verified": {
+          "value": true,
+          "unit": null
+        },
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": {
+          "value": 2,
+          "unit": "CONSECUTIVE"
+        },
+        "pauser_role": {
+          "value": "PAUSER_ROLE",
+          "unit": null
+        }
+      }
+    },
+    {
+      "case_id": "unrelated_document",
+      "path": "services/backend/tests/golden/documents/unrelated-document.txt",
+      "description": "통제조건이 없는 임대차 계약서. 한 건도 추출하면 안 된다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": null,
+        "issuer_role": null,
+        "collateral_verified": null,
+        "oracle_max_age": null,
+        "price_band_breach": null,
+        "pauser_role": null
+      }
+    },
+    {
+      "case_id": "empty_body",
+      "path": "services/backend/tests/golden/documents/empty-body.txt",
+      "description": "머리말만 있는 빈 문서.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": null,
+        "issuer_role": null,
+        "collateral_verified": null,
+        "oracle_max_age": null,
+        "price_band_breach": null,
+        "pauser_role": null
+      }
+    },
+    {
+      "case_id": "partial_two_fields",
+      "path": "services/backend/tests/golden/documents/partial-two-fields.txt",
+      "description": "두 조항만 확정된 초안. 부분 추출이 정상으로 보고돼야 한다.",
+      "suspicious_instructions": false,
+      "expected": {
+        "max_supply": {
+          "value": 100000,
+          "unit": "TOKEN"
+        },
+        "issuer_role": null,
+        "collateral_verified": null,
+        "oracle_max_age": {
+          "value": 60,
+          "unit": "MINUTE"
+        },
+        "price_band_breach": null,
+        "pauser_role": null
+      }
+    }
+  ]
+}
