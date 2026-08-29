@@ -18,6 +18,7 @@
           "type": "string"
         },
         "is_synthetic": {
+          "const": true,
           "default": true,
           "title": "Is Synthetic",
           "type": "boolean"
@@ -124,6 +125,7 @@
           "type": "string"
         },
         "is_synthetic": {
+          "const": true,
           "default": true,
           "title": "Is Synthetic",
           "type": "boolean"
@@ -156,6 +158,12 @@
             }
           ],
           "title": "Value"
+        },
+        "version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
         }
       },
       "required": [
@@ -213,6 +221,7 @@
           "type": "string"
         },
         "end": {
+          "description": "Exclusive Unicode character offset within extracted page text.",
           "exclusiveMinimum": 0,
           "title": "End",
           "type": "integer"
@@ -228,6 +237,7 @@
           "type": "string"
         },
         "start": {
+          "description": "Zero-based Unicode character offset within extracted page text.",
           "minimum": 0,
           "title": "Start",
           "type": "integer"
@@ -345,6 +355,7 @@
           "$ref": "#/$defs/ImplementationStatus"
         },
         "is_synthetic": {
+          "const": true,
           "default": true,
           "title": "Is Synthetic",
           "type": "boolean"
@@ -374,6 +385,19 @@
         "asset_id": {
           "title": "Asset Id",
           "type": "string"
+        },
+        "block_hash": {
+          "anyOf": [
+            {
+              "pattern": "^0x[0-9a-fA-F]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Block Hash"
         },
         "block_number": {
           "minimum": 0,
@@ -413,6 +437,7 @@
           "title": "Fixture Version"
         },
         "is_synthetic": {
+          "const": true,
           "default": true,
           "title": "Is Synthetic",
           "type": "boolean"
@@ -437,9 +462,36 @@
           "default": null,
           "title": "Previous Value"
         },
+        "receipt_status": {
+          "anyOf": [
+            {
+              "const": "SUCCESS",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Receipt Status"
+        },
         "tx_hash": {
+          "pattern": "^0x[0-9a-fA-F]{64}$",
           "title": "Tx Hash",
           "type": "string"
+        },
+        "verified_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified At"
         }
       },
       "required": [
@@ -452,6 +504,77 @@
         "event_name"
       ],
       "title": "OnchainEvidence",
+      "type": "object"
+    },
+    "ReportLineage": {
+      "additionalProperties": false,
+      "properties": {
+        "ai_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ai Model"
+        },
+        "document_extractor": {
+          "title": "Document Extractor",
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "input_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Input Hashes",
+          "type": "object"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "model_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Model Versions",
+          "type": "object"
+        },
+        "rule_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Rule Versions",
+          "type": "object"
+        },
+        "tool_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tool Versions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "input_hashes",
+        "document_extractor",
+        "rule_versions",
+        "tool_versions",
+        "generated_at",
+        "limitations"
+      ],
+      "title": "ReportLineage",
       "type": "object"
     },
     "ScanRun": {
@@ -510,6 +633,7 @@
           "type": "object"
         },
         "is_synthetic": {
+          "const": true,
           "default": true,
           "title": "Is Synthetic",
           "type": "boolean"
@@ -590,14 +714,13 @@
       "type": "string"
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"
     },
     "lineage": {
-      "additionalProperties": true,
-      "title": "Lineage",
-      "type": "object"
+      "$ref": "#/$defs/ReportLineage"
     },
     "mismatches": {
       "items": {
@@ -613,6 +736,11 @@
       "title": "Onchain Evidence",
       "type": "array"
     },
+    "report_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Report Hash",
+      "type": "string"
+    },
     "report_id": {
       "title": "Report Id",
       "type": "string"
@@ -623,6 +751,7 @@
   },
   "required": [
     "report_id",
+    "report_hash",
     "scan_run",
     "controls",
     "code_findings",

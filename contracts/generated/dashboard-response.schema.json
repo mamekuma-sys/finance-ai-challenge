@@ -1,0 +1,353 @@
+{
+  "$defs": {
+    "AlertStatus": {
+      "enum": [
+        "NEW",
+        "ACKNOWLEDGED",
+        "INVESTIGATING",
+        "RESOLVED",
+        "FALSE_POSITIVE"
+      ],
+      "title": "AlertStatus",
+      "type": "string"
+    },
+    "AlertSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "alert_id": {
+          "title": "Alert Id",
+          "type": "string"
+        },
+        "alert_type": {
+          "title": "Alert Type",
+          "type": "string"
+        },
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "asset_name": {
+          "title": "Asset Name",
+          "type": "string"
+        },
+        "cause": {
+          "additionalProperties": true,
+          "title": "Cause",
+          "type": "object"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "evidence_links": {
+          "items": {
+            "$ref": "#/$defs/EvidenceLink"
+          },
+          "title": "Evidence Links",
+          "type": "array"
+        },
+        "evidence_mode": {
+          "$ref": "#/$defs/EvidenceMode"
+        },
+        "fixture_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Version"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "memo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Memo"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "status": {
+          "$ref": "#/$defs/AlertStatus"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alert_id",
+        "asset_id",
+        "asset_name",
+        "alert_type",
+        "severity",
+        "status",
+        "cause",
+        "evidence_links",
+        "evidence_mode",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "AlertSummary",
+      "type": "object"
+    },
+    "AssetSummary": {
+      "additionalProperties": false,
+      "description": "Ledger row for the console home. The server aggregates so the list never ships findings.\n\nOptional fields are null before an asset has been scanned; the console renders its empty\nstate from that instead of showing a zero score.",
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "critical_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Critical Count",
+          "type": "integer"
+        },
+        "evidence_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fixture_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture Version"
+        },
+        "freshness": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataFreshness"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "high_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "High Count",
+          "type": "integer"
+        },
+        "highest_severity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Severity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "latest_scan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LatestScanRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id",
+        "name"
+      ],
+      "title": "AssetSummary",
+      "type": "object"
+    },
+    "DataFreshness": {
+      "description": "Derived from the current clock, so it never belongs on immutable evidence.",
+      "enum": [
+        "FRESH",
+        "AGING",
+        "STALE",
+        "INVALID"
+      ],
+      "title": "DataFreshness",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "DOCUMENT",
+        "CODE",
+        "CHAIN"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceLink": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "ref": {
+          "minLength": 1,
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "title": "EvidenceLink",
+      "type": "object"
+    },
+    "EvidenceMode": {
+      "enum": [
+        "LIVE",
+        "REPLAY"
+      ],
+      "title": "EvidenceMode",
+      "type": "string"
+    },
+    "LatestScanRef": {
+      "additionalProperties": false,
+      "properties": {
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ScanStatus"
+        }
+      },
+      "required": [
+        "scan_id",
+        "status"
+      ],
+      "title": "LatestScanRef",
+      "type": "object"
+    },
+    "ScanStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "COMPLETED",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "ScanStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/AssetSummary"
+      },
+      "title": "Assets",
+      "type": "array"
+    },
+    "critical_assets": {
+      "minimum": 0,
+      "title": "Critical Assets",
+      "type": "integer"
+    },
+    "high_assets": {
+      "minimum": 0,
+      "title": "High Assets",
+      "type": "integer"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "recent_alerts": {
+      "items": {
+        "$ref": "#/$defs/AlertSummary"
+      },
+      "title": "Recent Alerts",
+      "type": "array"
+    },
+    "total_assets": {
+      "minimum": 0,
+      "title": "Total Assets",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "total_assets",
+    "critical_assets",
+    "high_assets",
+    "assets",
+    "recent_alerts"
+  ],
+  "title": "DashboardResponse",
+  "type": "object"
+}

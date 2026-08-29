@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "asset_type": {
+      "const": "SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE",
+      "title": "Asset Type",
+      "type": "string"
+    },
+    "currency": {
+      "minLength": 1,
+      "title": "Currency",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "network": {
+      "const": "KAIA_KAIROS",
+      "title": "Network",
+      "type": "string"
+    },
+    "token_unit": {
+      "minLength": 1,
+      "title": "Token Unit",
+      "type": "string"
+    },
+    "total_planned_supply": {
+      "exclusiveMinimum": 0,
+      "title": "Total Planned Supply",
+      "type": "integer"
+    },
+    "underlying_description": {
+      "minLength": 1,
+      "title": "Underlying Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "asset_type",
+    "underlying_description",
+    "total_planned_supply",
+    "network",
+    "currency",
+    "token_unit"
+  ],
+  "title": "CreateAssetRequest",
+  "type": "object"
+}

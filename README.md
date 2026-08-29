@@ -36,27 +36,52 @@ docs/competition/         공모전 원문 요약 — 수정 금지
 
 ## 빠른 시작
 
-### Web
+Docker와 Docker Compose를 설치한 뒤 저장소 루트에서 실행한다.
 
-```bash
-cd apps/web
-npm install
-npm run dev
+```powershell
+Copy-Item .env.example .env
 ```
 
-### API와 worker
+`.env`의 `POSTGRES_PASSWORD`, `OPERATOR_TOKEN`, `OPERATOR_ACCESS_CODE`,
+`OPERATOR_SESSION_SECRET`을 각각 새 강한 값으로 채우고 `OPERATOR_ID`도 지정한다.
+토큰과 secret을 저장소에 커밋하지 않는다. `OPERATOR_ACCESS_CODE`는 20자 이상
+upper/lower/digit/symbol, `OPERATOR_SESSION_SECRET`은 32자 이상이어야 한다.
+Compose는 동일한 `OPERATOR_TOKEN`을 API의 `OPERATOR_TOKEN`과 Web BFF의
+`BACKEND_OPERATOR_TOKEN`으로 전달한다.
 
-```bash
-cd services/backend
-python -m venv .venv
-python -m pip install -e ".[dev]"
-fastapi dev src/rwa_guard/api/main.py
-python -m rwa_guard.worker
+Compose는 production 모드로 API·worker·Web을 내부 네트워크에 두고 nginx
+reverse proxy만 `http://localhost:3000`에 노출한다. Proxy는 외부 요청의
+`X-Real-IP`과 `X-Forwarded-For`를 신뢰하지 않고 연결의 `remote_addr`로
+덮어쓰며 원래 Host와 protocol을 Web에 전달한다. Web은 고정된
+`TRUSTED_CLIENT_IP_HEADER=x-real-ip`, `ALLOW_INSECURE_DEMO_OPERATOR=false`로
+실행된다. 기본 로컬 구성은 HTTP 개발만 가능하도록
+`ALLOW_INSECURE_LOCAL_SESSION=true`와
+`PUBLIC_WEB_ORIGIN=http://localhost:3000`을 함께 사용한다. 이 예외는 정확한
+loopback origin에서만 session cookie의 `Secure`를 제거하며 실배포에서는
+절대 사용하지 않는다. 실제 배포는 HTTPS origin과
+`ALLOW_INSECURE_LOCAL_SESSION=false`를 사용해 `Secure`를 강제해야 한다.
+Backend image는 P0에 필요한 합성 문서와 Solidity fixture, SHA-256 manifest만
+포함하고 API·worker가 동일한 `/opt/rwa-guard-fixtures`를 사용한다. 누락 또는
+hash 불일치는 readiness와 demo bootstrap에서 actionable 503으로 표시된다.
+
+```powershell
+docker compose --env-file .env -f infra/docker-compose.yml config
+docker compose --env-file .env -f infra/docker-compose.yml up --build
+```
+
+별도 PowerShell에서 proxy를 통한 API/worker heartbeat와 Web BFF 준비 상태를
+확인한다. API와 PostgreSQL 포트는 host에 직접 노출되지 않는다.
+
+```powershell
+Invoke-RestMethod http://localhost:3000/backend-api/health/ready
+Invoke-RestMethod http://localhost:3000/api/readiness
 ```
 
 ### 전체 검증
 
-PowerShell에서 `./scripts/verify.ps1`을 실행한다. 설치되지 않은 도구는 명확히 건너뛰며, 설치된 Web/Python/Foundry 검사를 수행한다.
+PowerShell에서 `./scripts/verify.ps1`을 실행한다. Backend 개발 의존성, Web
+`node_modules`, npm, Foundry/forge가 모두 필수이며 하나라도 없으면 즉시 실패한다.
+검증은 backend pytest/Ruff/mypy, Web verify, forge fmt/build/test를 모두 실행한다.
 
 ## 구현 기준 문서
 

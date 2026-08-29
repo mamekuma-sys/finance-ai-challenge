@@ -1,0 +1,241 @@
+{
+  "$defs": {
+    "ControlSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "confirmed": {
+          "default": false,
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "constraint_id": {
+          "title": "Constraint Id",
+          "type": "string"
+        },
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "evidence_span": {
+          "$ref": "#/$defs/EvidenceSpan"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "is_synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Is Synthetic",
+          "type": "boolean"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        },
+        "version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asset_id",
+        "document_id",
+        "constraint_id",
+        "field",
+        "value",
+        "evidence_span"
+      ],
+      "title": "ControlSpec",
+      "type": "object"
+    },
+    "DocumentStatus": {
+      "enum": [
+        "UPLOADED",
+        "PROCESSING",
+        "READY",
+        "PARTIAL",
+        "FAILED"
+      ],
+      "title": "DocumentStatus",
+      "type": "string"
+    },
+    "EvidenceSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "end": {
+          "description": "Exclusive Unicode character offset within extracted page text.",
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "start": {
+          "description": "Zero-based Unicode character offset within extracted page text.",
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "document_id",
+        "page",
+        "start",
+        "end",
+        "quote"
+      ],
+      "title": "EvidenceSpan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "controls": {
+      "items": {
+        "$ref": "#/$defs/ControlSpec"
+      },
+      "title": "Controls",
+      "type": "array"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "error_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Code"
+    },
+    "failed_pages": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Failed Pages",
+      "type": "array"
+    },
+    "file_hash": {
+      "title": "File Hash",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "media_type": {
+      "title": "Media Type",
+      "type": "string"
+    },
+    "page_count": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Page Count"
+    },
+    "processed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Processed At"
+    },
+    "size_bytes": {
+      "minimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    },
+    "status": {
+      "$ref": "#/$defs/DocumentStatus"
+    },
+    "uploaded_at": {
+      "format": "date-time",
+      "title": "Uploaded At",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "document_id",
+    "asset_id",
+    "status",
+    "file_hash",
+    "version",
+    "media_type",
+    "size_bytes",
+    "uploaded_at"
+  ],
+  "title": "DocumentResponse",
+  "type": "object"
+}

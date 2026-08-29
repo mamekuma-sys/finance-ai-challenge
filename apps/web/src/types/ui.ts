@@ -1,27 +1,33 @@
+/**
+ * 화면이 쓰는 타입의 단일 진입점.
+ *
+ * 계약 타입은 손으로 쓰지 않는다. Pydantic → OpenAPI → `generated/api.ts`로
+ * 생성된 것만 재수출한다. 갱신은 `npm run gen:api`.
+ *
+ * 화면 전용 view model만 이 파일에서 직접 정의한다.
+ */
 import type { components } from "./generated/api";
 
-export type EvidenceMode = components["schemas"]["EvidenceMode"];
-export type FindingStatus = components["schemas"]["FindingStatus"];
-export type Severity = components["schemas"]["Severity"];
+type Schemas = components["schemas"];
 
-export interface SpineNode {
-  kind: "SPEC" | "CODE" | "CHAIN" | "ALERT";
-  title: string;
-  locator: string;
-}
+// ── 생성된 계약 타입 재수출 ──
+export type EvidenceMode = Schemas["EvidenceMode"];
+export type FindingStatus = Schemas["FindingStatus"];
+export type Severity = Schemas["Severity"];
+export type ImplementationStatus = Schemas["ImplementationStatus"];
+export type ScanStatus = Schemas["ScanStatus"];
 
-export interface DemoFinding {
-  assetName: string;
-  assetId: string;
-  title: string;
-  severity: Severity;
-  status: FindingStatus;
-  risk: number;
-  mode: EvidenceMode;
-  ruleVersion: string;
-  documentQuote: string;
-  documentLocator: string;
-  codeExcerpt: string;
-  codeLocator: string;
-  spine: SpineNode[];
-}
+export type AssetSummary = Schemas["AssetSummary"];
+export type AlertSummary = Schemas["AlertSummary"];
+export type CodeFinding = Schemas["CodeFinding"];
+export type CodeLocation = Schemas["CodeLocation"];
+export type ControlSpec = Schemas["ControlSpec"];
+export type EvidenceLink = Schemas["EvidenceLink"];
+export type EvidenceReport = Schemas["EvidenceReport"];
+export type EvidenceSpan = Schemas["EvidenceSpan"];
+export type FailedStage = Schemas["FailedStage"];
+export type FindingDiff = Schemas["FindingDiff"];
+export type LatestScanRef = Schemas["LatestScanRef"];
+export type MismatchFinding = Schemas["MismatchFinding"];
+export type OnchainEvidence = Schemas["OnchainEvidence"];
+export type ScanRun = Schemas["ScanRun"];

@@ -1,0 +1,53 @@
+{
+  "$defs": {
+    "AssetStatus": {
+      "enum": [
+        "UNVERIFIED",
+        "REVIEW_REQUIRED",
+        "VERIFIED"
+      ],
+      "title": "AssetStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "document_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Document Id"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "#/$defs/AssetStatus"
+    }
+  },
+  "required": [
+    "asset_id",
+    "status",
+    "created_at"
+  ],
+  "title": "CreateAssetResponse",
+  "type": "object"
+}

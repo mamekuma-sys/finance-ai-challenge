@@ -1,5 +1,22 @@
 $ErrorActionPreference = "Stop"
 $repository = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+. (Join-Path $PSScriptRoot "verify-support.ps1")
+
+$powershell = (Get-Process -Id $PID).Path
+Invoke-NativeCommand -FilePath $powershell -Arguments @(
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    (Join-Path $PSScriptRoot "tests\verify.tests.ps1")
+) -Label "verification script regression tests"
+Invoke-NativeCommand -FilePath $powershell -Arguments @(
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    (Join-Path $PSScriptRoot "tests\compose-config.tests.ps1")
+) -Label "compose config contract tests"
 
 Write-Host "[contracts] parsing JSON files"
 Get-ChildItem -LiteralPath (Join-Path $repository "contracts") -Recurse -Filter *.json | ForEach-Object {
@@ -16,54 +33,56 @@ if (-not (Test-Path -LiteralPath $backendPython)) {
 }
 
 Write-Host "[backend] compiling Python sources"
-& $backendPython -m compileall -q (Join-Path $backend "src")
+Invoke-NativeCommand -FilePath $backendPython -Arguments @(
+    "-m", "compileall", "-q", (Join-Path $backend "src")
+) -Label "backend source compilation"
+Invoke-NativeCommand -FilePath $backendPython -Arguments @(
+    "-c", "import fastapi"
+) -Label "backend dependency probe"
 
-$fastApiAvailable = & $backendPython -c "import fastapi" 2>$null
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "[backend] running tests"
-    Push-Location $backend
-    try {
-        & $backendPython -m pytest
-        & $backendPython -m ruff check .
-        & $backendPython -m mypy
-    }
-    finally {
-        Pop-Location
-    }
+Write-Host "[backend] running tests"
+Push-Location $backend
+try {
+    Invoke-NativeCommand -FilePath $backendPython -Arguments @("-m", "pytest") `
+        -Label "backend pytest"
+    Invoke-NativeCommand -FilePath $backendPython -Arguments @("-m", "ruff", "check", ".") `
+        -Label "backend Ruff"
+    Invoke-NativeCommand -FilePath $backendPython -Arguments @("-m", "mypy") `
+        -Label "backend mypy"
 }
-else {
-    Write-Warning "Backend dependencies are not installed; pytest and ruff were skipped."
+finally {
+    Pop-Location
 }
 
 $web = Join-Path $repository "apps\web"
-if (Test-Path -LiteralPath (Join-Path $web "node_modules")) {
-    Write-Host "[web] running verify"
-    Push-Location $web
-    try {
-        npm run verify
-    }
-    finally {
-        Pop-Location
-    }
+if (-not (Test-Path -LiteralPath (Join-Path $web "node_modules"))) {
+    throw "Web dependencies are required; run npm install in apps/web."
 }
-else {
-    Write-Warning "Web dependencies are not installed; npm verify was skipped."
+$npmCommand = Get-Command npm -ErrorAction SilentlyContinue
+if ($null -eq $npmCommand) {
+    throw "npm is required for Web verification."
+}
+$npm = if ($npmCommand.Source) { $npmCommand.Source } else { $npmCommand.Path }
+Write-Host "[web] running verify"
+Push-Location $web
+try {
+    Invoke-NativeCommand -FilePath $npm -Arguments @("run", "verify") -Label "web verify"
+}
+finally {
+    Pop-Location
 }
 
-if (Get-Command forge -ErrorAction SilentlyContinue) {
-    Write-Host "[chain] running Foundry checks"
-    Push-Location (Join-Path $repository "chain")
-    try {
-        forge fmt --check
-        forge build
-        forge test
-    }
-    finally {
-        Pop-Location
-    }
+$forge = Resolve-ForgeExecutable
+Write-Host "[chain] running Foundry checks"
+Push-Location (Join-Path $repository "chain")
+try {
+    Invoke-NativeCommand -FilePath $forge -Arguments @("fmt", "--check") `
+        -Label "forge fmt --check"
+    Invoke-NativeCommand -FilePath $forge -Arguments @("build") -Label "forge build"
+    Invoke-NativeCommand -FilePath $forge -Arguments @("test") -Label "forge test"
 }
-else {
-    Write-Warning "Foundry is not installed; Solidity checks were skipped."
+finally {
+    Pop-Location
 }
 
 Write-Host "RWA Guard scaffold verification completed."

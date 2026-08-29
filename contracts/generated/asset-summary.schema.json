@@ -97,6 +97,18 @@
       ],
       "default": null
     },
+    "fixture_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fixture Version"
+    },
     "freshness": {
       "anyOf": [
         {
@@ -126,6 +138,7 @@
       "default": null
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"

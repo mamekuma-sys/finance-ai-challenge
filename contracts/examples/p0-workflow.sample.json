@@ -1,0 +1,192 @@
+{
+  "demo_bootstrap": {
+    "asset_id": "asset_synthetic_hanriver_01",
+    "document_id": "doc_synthetic_issuance_01",
+    "contract_id": "contract_demo_vulnerable_01",
+    "scan_id": "scan_demo_vulnerable_01",
+    "report_id": "report_demo_01",
+    "evidence_mode": "REPLAY",
+    "fixture_version": "0.1.0",
+    "is_synthetic": true
+  },
+  "create_asset": {
+    "name": "합성 한강 오피스 수익증권",
+    "asset_type": "SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE",
+    "underlying_description": "서울 소재 합성 상업용 부동산",
+    "total_planned_supply": 100000,
+    "network": "KAIA_KAIROS",
+    "currency": "KRW",
+    "token_unit": "TOKEN",
+    "is_synthetic": true
+  },
+  "create_contract": {
+    "source_code": "contract SyntheticRwaToken { uint256 public totalSupply; }",
+    "chain_id": 1001,
+    "is_synthetic": true
+  },
+  "patch_policies": {
+    "document_id": "doc_01",
+    "policies": [
+      {
+        "constraint_id": "control_max_supply",
+        "field": "max_supply",
+        "value": 100000,
+        "unit": "TOKEN",
+        "evidence_span": {
+          "document_id": "doc_01",
+          "page": 4,
+          "start": 128,
+          "end": 181,
+          "quote": "총 발행량은 100,000 토큰을 초과할 수 없다."
+        },
+        "confirmed": true,
+        "expected_version": 1,
+        "is_synthetic": true
+      }
+    ],
+    "is_synthetic": true
+  },
+  "manual_patch_policies": {
+    "document_id": "doc_01",
+    "policies": [
+      {
+        "constraint_id": "manual_oracle_max_age",
+        "field": "oracle_max_age",
+        "value": 60,
+        "unit": "MINUTE",
+        "page": 1,
+        "quote": "가격은 60분 이내에 갱신되어야 한다.",
+        "confirmed": true,
+        "expected_version": 0,
+        "is_synthetic": true
+      }
+    ],
+    "is_synthetic": true
+  },
+  "create_scan": {
+    "contract_id": "contract_01",
+    "is_synthetic": true
+  },
+  "patch_alert": {
+    "status": "INVESTIGATING",
+    "memo": "합성 Replay 사건을 확인 중입니다.",
+    "expected_updated_at": "2026-08-28T00:03:00Z",
+    "is_synthetic": true
+  },
+  "asset_created": {
+    "asset_id": "asset_01",
+    "status": "UNVERIFIED",
+    "document_id": null,
+    "created_at": "2026-08-28T00:00:00Z",
+    "is_synthetic": true
+  },
+  "document": {
+    "document_id": "doc_01",
+    "asset_id": "asset_01",
+    "status": "PARTIAL",
+    "file_hash": "sha256:synthetic-document",
+    "version": "1",
+    "media_type": "application/pdf",
+    "size_bytes": 2048,
+    "page_count": 3,
+    "failed_pages": [
+      2
+    ],
+    "controls": [],
+    "uploaded_at": "2026-08-28T00:00:01Z",
+    "error_code": "PAGE_EXTRACTION_FAILED",
+    "is_synthetic": true
+  },
+  "document_content": {
+    "document_id": "doc_01",
+    "media_type": "text/plain",
+    "text": "[SYNTHETIC DOCUMENT]",
+    "content_base64": null,
+    "is_synthetic": true
+  },
+  "contract_created": {
+    "contract_id": "contract_01",
+    "asset_id": "asset_01",
+    "source_kind": "SOURCE",
+    "chain_id": 1001,
+    "source_hash": "sha256:synthetic-source",
+    "proxy_status": "NOT_CHECKED",
+    "created_at": "2026-08-28T00:01:00Z",
+    "is_synthetic": true
+  },
+  "scan_created": {
+    "scan_id": "scan_01",
+    "asset_id": "asset_01",
+    "status": "QUEUED",
+    "created_at": "2026-08-28T00:02:00Z",
+    "is_synthetic": true
+  },
+  "finding_diff": {
+    "finding_id": "finding_mint_collateral_cap_missing",
+    "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+    "change": "RESOLVED",
+    "base_scan_id": "scan_vulnerable",
+    "head_scan_id": "scan_fixed",
+    "severity": "CRITICAL",
+    "base_rule_version": "1.0.0",
+    "head_rule_version": null,
+    "is_synthetic": true
+  },
+  "alert": {
+    "alert_id": "alert_01",
+    "asset_id": "asset_01",
+    "asset_name": "합성 한강 오피스 수익증권",
+    "alert_type": "CRITICAL_CONTROL_MISMATCH",
+    "severity": "CRITICAL",
+    "status": "NEW",
+    "memo": null,
+    "cause": {
+      "mismatch_id": "mismatch_max_supply_01"
+    },
+    "evidence_links": [
+      {
+        "kind": "DOCUMENT",
+        "ref": "control_max_supply"
+      },
+      {
+        "kind": "CODE",
+        "ref": "finding_mint_collateral_cap_missing"
+      }
+    ],
+    "evidence_mode": "REPLAY",
+    "fixture_version": "0.1.0",
+    "created_at": "2026-08-28T00:03:00Z",
+    "updated_at": "2026-08-28T00:03:00Z",
+    "is_synthetic": true
+  },
+  "dashboard": {
+    "total_assets": 1,
+    "critical_assets": 1,
+    "high_assets": 0,
+    "assets": [
+      {
+        "asset_id": "asset_01",
+        "name": "합성 한강 오피스 수익증권",
+        "highest_severity": "CRITICAL",
+        "critical_count": 1,
+        "high_count": 0,
+        "evidence_mode": "REPLAY",
+        "fixture_version": "0.1.0",
+        "is_synthetic": true
+      }
+    ],
+    "recent_alerts": [],
+    "is_synthetic": true
+  },
+  "report": {
+    "report_id": "report_01",
+    "scan_id": "scan_01",
+    "status": "QUEUED",
+    "downloads": [],
+    "limitations": [
+      "자동화된 사전 스크리닝이며 담당자 검토가 필요합니다."
+    ],
+    "human_review_required": true,
+    "is_synthetic": true
+  }
+}

@@ -1,5 +1,7 @@
+import hashlib
 from datetime import UTC, datetime
 
+from rwa_guard.config import Settings
 from rwa_guard.domain.contracts import (
     CodeFinding,
     CodeLocation,
@@ -17,93 +19,256 @@ from rwa_guard.domain.contracts import (
     ScanStatus,
     Severity,
 )
+from rwa_guard.fixture_store import FixtureStore, fixture_store_for_settings
+from rwa_guard.pipelines.report import build_evidence_report
+
+DOCUMENT_FILE = "data/synthetic/documents/issuance-terms-01.txt"
+TOKEN_FILE = "chain/src/fixtures/VulnerableRwaToken.sol"
+ORACLE_FILE = "chain/src/fixtures/VulnerableOracle.sol"
+ASSET_ID = "asset_synthetic_hanriver_01"
+DOCUMENT_ID = "doc_synthetic_issuance_01"
+SCAN_ID = "scan_demo_vulnerable_01"
+REPORT_ID = "report_demo_01"
+FIXTURE_VERSION = "0.1.0"
 
 
-def build_demo_report() -> EvidenceReport:
-    control = ControlSpec(
-        asset_id="asset_synthetic_hanriver_01",
-        document_id="doc_synthetic_issuance_01",
-        constraint_id="control_max_supply",
-        field="max_supply",
-        value=100_000,
-        unit="TOKEN",
+def _sha256(content: bytes) -> str:
+    return f"sha256:{hashlib.sha256(content).hexdigest()}"
+
+
+def _read(store: FixtureStore, relative: str) -> bytes:
+    return store.read_bytes(relative)
+
+
+def _control(
+    *,
+    constraint_id: str,
+    field: str,
+    value: str | int | float | bool,
+    unit: str | None,
+    quote: str,
+    confirmed: bool,
+    document_text: str,
+) -> ControlSpec:
+    start = document_text.index(quote)
+    return ControlSpec(
+        asset_id=ASSET_ID,
+        document_id=DOCUMENT_ID,
+        constraint_id=constraint_id,
+        field=field,
+        value=value,
+        unit=unit,
         evidence_span=EvidenceSpan(
-            document_id="doc_synthetic_issuance_01",
-            page=4,
-            start=128,
-            end=181,
-            quote="총 발행량은 100,000 토큰을 초과할 수 없다.",
+            document_id=DOCUMENT_ID,
+            page=1,
+            start=start,
+            end=start + len(quote),
+            quote=quote,
         ),
-        confirmed=True,
+        confirmed=confirmed,
     )
-    finding = CodeFinding(
-        scan_id="scan_demo_vulnerable_01",
+
+
+def _location(
+    store: FixtureStore, relative: str, start_line: int, end_line: int
+) -> CodeLocation:
+    lines = _read(store, relative).decode().splitlines()
+    return CodeLocation(
+        file=relative,
+        start_line=start_line,
+        end_line=end_line,
+        excerpt="\n".join(lines[start_line - 1 : end_line]),
+    )
+
+
+def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
+    active_store = store or fixture_store_for_settings(Settings(app_env="development"))
+    document_bytes = _read(active_store, DOCUMENT_FILE)
+    document_text = document_bytes.decode()
+    token_bytes = _read(active_store, TOKEN_FILE)
+    oracle_bytes = _read(active_store, ORACLE_FILE)
+    contract_source_bytes = token_bytes + b"\n\n" + oracle_bytes
+    token_hash = _sha256(token_bytes)
+    oracle_hash = _sha256(oracle_bytes)
+
+    controls = [
+        _control(
+            constraint_id="control_max_supply",
+            field="max_supply",
+            value=100_000,
+            unit="TOKEN",
+            quote="총 발행량은 100,000 토큰을 초과할 수 없다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_collateral_verified",
+            field="collateral_verified",
+            value=True,
+            unit=None,
+            quote="기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_issuer_role",
+            field="issuer_role",
+            value="ISSUER_ROLE",
+            unit=None,
+            quote="ISSUER_ROLE을 가진 주소만 토큰을 발행할 수 있다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_oracle_max_age",
+            field="oracle_max_age",
+            value=60,
+            unit="MINUTE",
+            quote="가격은 60분 이내에 갱신되어야 한다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_price_band_breach",
+            field="price_band_breach",
+            value=2,
+            unit="CONSECUTIVE",
+            quote="모델 기반 기준가 밴드 이탈이 연속 2회 확인되면 담당자 검토 경보를 생성한다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_pauser_role",
+            field="pauser_role",
+            value="PAUSER_ROLE",
+            unit=None,
+            quote="PAUSER_ROLE을 가진 주소만 발행과 이전을 일시정지하거나 재개할 수 있다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+    ]
+    mint_finding = CodeFinding(
+        scan_id=SCAN_ID,
         finding_id="finding_mint_collateral_cap_missing",
         rule_id="MINT_COLLATERAL_CAP_MISSING",
         severity=Severity.CRITICAL,
         status=FindingStatus.CONFIRMED,
         title="mint 실행경로에 담보 또는 발행한도 검사가 없습니다.",
-        source_hash="sha256:synthetic-vulnerable-source",
-        code_location=CodeLocation(
-            file="chain/src/fixtures/VulnerableRwaToken.sol",
-            start_line=12,
-            end_line=12,
-            excerpt="        totalSupply += amount;",
-        ),
+        source_hash=token_hash,
+        code_location=_location(active_store, TOKEN_FILE, 12, 12),
         deterministic_evidence=[
             "analysis=solc_ast_control_flow",
             "entrypoint=VulnerableRwaToken.mint",
             "guard.collateral_guard=missing",
             "guard.cap_guard=missing",
         ],
-        tool_versions={
-            "rwa_guard_contract": "1.0.0",
-            "rule": "1.0.0",
-            "solc": "0.8.24+commit.e11b9ed9",
-        },
+        tool_versions={"rwa_guard_contract": "1.0.0", "rule": "1.0.0", "solc": "0.8.24"},
     )
-    mismatch = MismatchFinding(
-        mismatch_id="mismatch_max_supply_01",
-        constraint_id=control.constraint_id,
-        finding_id=finding.finding_id,
-        implementation_status=ImplementationStatus.MISSING,
-        severity=Severity.CRITICAL,
-        evidence_links=[
-            EvidenceLink(kind=EvidenceKind.DOCUMENT, ref=control.constraint_id),
-            EvidenceLink(kind=EvidenceKind.CODE, ref=finding.finding_id),
+    oracle_finding = CodeFinding(
+        scan_id=SCAN_ID,
+        finding_id="finding_oracle_range_missing",
+        rule_id="ORACLE_VALIDATION_MISSING",
+        severity=Severity.HIGH,
+        status=FindingStatus.CONFIRMED,
+        title="오라클 응답의 값 범위 검증이 없습니다.",
+        source_hash=oracle_hash,
+        code_location=_location(active_store, ORACLE_FILE, 13, 14),
+        deterministic_evidence=[
+            "analysis=solc_ast_control_flow",
+            "entrypoint=VulnerableOracle.update",
+            "guard.range_guard=missing",
         ],
+        tool_versions={"rwa_guard_contract": "1.0.0", "rule": "1.0.0", "solc": "0.8.24"},
     )
+    tx_hash = "0x" + "1".zfill(64)
     event = OnchainEvidence(
-        asset_id=control.asset_id,
+        asset_id=ASSET_ID,
         mode=EvidenceMode.REPLAY,
         chain_id=1001,
-        tx_hash="0xsynthetic000000000000000000000000000000000000000000000000000001",
+        tx_hash=tx_hash,
         log_index=0,
         block_number=18_402_119,
         event_name="Minted",
         previous_value="100000",
         changed_value="120000",
-        fixture_version="0.1.0",
+        fixture_version=FIXTURE_VERSION,
     )
+
+    def mismatch(
+        mismatch_id: str,
+        control: ControlSpec,
+        finding: CodeFinding,
+        status: ImplementationStatus,
+        severity: Severity,
+        *,
+        chain: bool = False,
+    ) -> MismatchFinding:
+        links = [
+            EvidenceLink(kind=EvidenceKind.DOCUMENT, ref=control.constraint_id),
+            EvidenceLink(kind=EvidenceKind.CODE, ref=finding.finding_id),
+        ]
+        if chain:
+            links.append(EvidenceLink(kind=EvidenceKind.CHAIN, ref=f"{tx_hash}:0"))
+        return MismatchFinding(
+            mismatch_id=mismatch_id,
+            constraint_id=control.constraint_id,
+            finding_id=finding.finding_id,
+            implementation_status=status,
+            severity=severity,
+            evidence_links=links,
+        )
+
+    findings = [mint_finding, oracle_finding]
     scan = ScanRun(
-        scan_id=finding.scan_id,
-        asset_id=control.asset_id,
+        scan_id=SCAN_ID,
+        asset_id=ASSET_ID,
         status=ScanStatus.COMPLETED,
-        input_hashes={"document": "sha256:synthetic-document", "source": finding.source_hash},
-        rule_versions={"MINT_COLLATERAL_CAP_MISSING": "1.0.0"},
+        input_hashes={
+            "document": _sha256(document_bytes),
+            "contract_source": _sha256(contract_source_bytes),
+            f"source:{TOKEN_FILE}": token_hash,
+            f"source:{ORACLE_FILE}": oracle_hash,
+        },
+        rule_versions={
+            "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
+            "ORACLE_VALIDATION_MISSING": "1.0.0",
+        },
         started_at=datetime(2026, 8, 25, 3, 0, tzinfo=UTC),
         completed_at=datetime(2026, 8, 25, 3, 0, 8, tzinfo=UTC),
     )
-    return EvidenceReport(
-        report_id="report_demo_01",
+    return build_evidence_report(
+        report_id=REPORT_ID,
         scan_run=scan,
-        controls=[control],
-        code_findings=[finding],
-        mismatches=[mismatch],
+        controls=controls,
+        findings=findings,
+        mismatches=[
+            mismatch(
+                "mismatch_max_supply_01",
+                controls[0],
+                mint_finding,
+                ImplementationStatus.MISSING,
+                Severity.CRITICAL,
+                chain=True,
+            ),
+            mismatch(
+                "mismatch_collateral_01",
+                controls[1],
+                mint_finding,
+                ImplementationStatus.MISSING,
+                Severity.CRITICAL,
+            ),
+            mismatch(
+                "mismatch_oracle_max_age_01",
+                controls[3],
+                oracle_finding,
+                ImplementationStatus.MISSING,
+                Severity.HIGH,
+            ),
+        ],
         onchain_evidence=[event],
-        lineage={
-            "document": "doc_synthetic_issuance_01#p4:128-181",
-            "code": "chain/src/fixtures/VulnerableRwaToken.sol:12",
-            "chain": "REPLAY:0.1.0:block-18402119",
-        },
+        tool_versions={"fixture_builder": "1.0.0"},
+        model_versions={},
+        limitations=["합성 fixture 전용", "온체인 이벤트는 REPLAY이며 실제 receipt가 아닙니다."],
+        document_extractor="deterministic-synthetic-parser@1.0.0",
+        generated_at=scan.completed_at,
     )

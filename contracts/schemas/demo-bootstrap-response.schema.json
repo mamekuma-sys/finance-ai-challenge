@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": { "type": "string" },
+    "contract_id": { "type": "string" },
+    "document_id": { "type": "string" },
+    "evidence_mode": { "const": "REPLAY" },
+    "fixture_version": { "type": "string" },
+    "is_synthetic": { "const": true },
+    "report_id": { "type": "string" },
+    "scan_id": { "type": "string" }
+  },
+  "required": [
+    "asset_id",
+    "document_id",
+    "contract_id",
+    "scan_id",
+    "report_id",
+    "evidence_mode",
+    "fixture_version",
+    "is_synthetic"
+  ],
+  "title": "DemoBootstrapResponse",
+  "type": "object"
+}

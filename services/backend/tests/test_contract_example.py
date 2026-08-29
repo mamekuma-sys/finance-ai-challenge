@@ -1,14 +1,31 @@
+import hashlib
+import json
 from pathlib import Path
 
 from rwa_guard.domain.contracts import (
+    AlertPatchRequest,
+    AlertSummary,
+    ContractCreateRequest,
+    ContractCreateResponse,
+    CreateAssetRequest,
+    CreateAssetResponse,
+    DashboardResponse,
+    DocumentContentResponse,
+    DocumentResponse,
     EvidenceKind,
     EvidenceMode,
     EvidenceReport,
+    FindingDiff,
     FindingStatus,
+    PolicyPatchRequest,
+    ReportResponse,
+    ScanCreateRequest,
+    ScanCreateResponse,
 )
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 EXAMPLE = REPOSITORY / "contracts" / "examples" / "evidence-report.sample.json"
+P0_WORKFLOW_EXAMPLE = REPOSITORY / "contracts" / "examples" / "p0-workflow.sample.json"
 CONTRACT_SOURCE_ROOT = REPOSITORY
 
 
@@ -23,6 +40,19 @@ def test_shared_example_matches_runtime_contract() -> None:
     assert report.code_findings[0].status is FindingStatus.CONFIRMED
     assert report.code_findings[0].rule_id == "MINT_COLLATERAL_CAP_MISSING"
     assert report.onchain_evidence[0].mode is EvidenceMode.REPLAY
+
+
+def test_shared_example_report_hash_matches_snapshot() -> None:
+    payload = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+    report_hash = payload.pop("report_hash")
+    canonical = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+
+    assert report_hash == f"sha256:{hashlib.sha256(canonical).hexdigest()}"
 
 
 def test_mismatch_links_document_and_code() -> None:
@@ -50,3 +80,29 @@ def test_code_evidence_points_at_real_source_lines() -> None:
     actual = [line.strip() for line in lines[location.start_line - 1 : location.end_line]]
 
     assert claimed == actual, "excerpt가 해당 라인의 실제 코드와 다르다"
+
+
+def test_p0_workflow_requests_match_runtime_contracts() -> None:
+    payload = json.loads(P0_WORKFLOW_EXAMPLE.read_text(encoding="utf-8"))
+
+    assert CreateAssetRequest.model_validate(payload["create_asset"]).is_synthetic is True
+    assert ContractCreateRequest.model_validate(payload["create_contract"]).source_code
+    assert PolicyPatchRequest.model_validate(payload["patch_policies"]).policies[0].confirmed
+    manual = PolicyPatchRequest.model_validate(payload["manual_patch_policies"]).policies[0]
+    assert manual.evidence_span is None and manual.page == 1 and manual.quote
+    assert ScanCreateRequest.model_validate(payload["create_scan"]).contract_id == "contract_01"
+    assert (
+        AlertPatchRequest.model_validate(payload["patch_alert"]).status.value == "INVESTIGATING"
+    )
+    assert CreateAssetResponse.model_validate(payload["asset_created"]).asset_id == "asset_01"
+    assert DocumentResponse.model_validate(payload["document"]).document_id == "doc_01"
+    assert DocumentContentResponse.model_validate(payload["document_content"]).text
+    assert ContractCreateResponse.model_validate(payload["contract_created"]).source_hash
+    assert ScanCreateResponse.model_validate(payload["scan_created"]).scan_id == "scan_01"
+    assert (
+        FindingDiff.model_validate(payload["finding_diff"]).rule_id
+        == "MINT_COLLATERAL_CAP_MISSING"
+    )
+    assert AlertSummary.model_validate(payload["alert"]).evidence_mode is EvidenceMode.REPLAY
+    assert DashboardResponse.model_validate(payload["dashboard"]).total_assets == 1
+    assert ReportResponse.model_validate(payload["report"]).human_review_required is True

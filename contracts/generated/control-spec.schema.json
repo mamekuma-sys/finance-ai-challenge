@@ -8,6 +8,7 @@
           "type": "string"
         },
         "end": {
+          "description": "Exclusive Unicode character offset within extracted page text.",
           "exclusiveMinimum": 0,
           "title": "End",
           "type": "integer"
@@ -23,6 +24,7 @@
           "type": "string"
         },
         "start": {
+          "description": "Zero-based Unicode character offset within extracted page text.",
           "minimum": 0,
           "title": "Start",
           "type": "integer"
@@ -66,6 +68,7 @@
       "type": "string"
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"
@@ -98,6 +101,12 @@
         }
       ],
       "title": "Value"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
     }
   },
   "required": [

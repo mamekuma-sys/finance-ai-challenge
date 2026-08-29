@@ -1,0 +1,58 @@
+{
+  "$defs": {
+    "AlertStatus": {
+      "enum": [
+        "NEW",
+        "ACKNOWLEDGED",
+        "INVESTIGATING",
+        "RESOLVED",
+        "FALSE_POSITIVE"
+      ],
+      "title": "AlertStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "expected_updated_at": {
+      "format": "date-time",
+      "title": "Expected Updated At",
+      "type": "string"
+    },
+    "is_synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    },
+    "memo": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Memo"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AlertStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "expected_updated_at"
+  ],
+  "title": "AlertPatchRequest",
+  "type": "object"
+}

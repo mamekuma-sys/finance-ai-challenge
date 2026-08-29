@@ -24,6 +24,17 @@
   "additionalProperties": false,
   "description": "Server-computed rescan comparison. Rule versions may differ between the two runs, so the\nconsumer cannot derive this by diffing two finding lists.",
   "properties": {
+    "base_rule_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Base Rule Version"
+    },
     "base_scan_id": {
       "title": "Base Scan Id",
       "type": "string"
@@ -35,14 +46,30 @@
       "title": "Finding Id",
       "type": "string"
     },
+    "head_rule_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Head Rule Version"
+    },
     "head_scan_id": {
       "title": "Head Scan Id",
       "type": "string"
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
     },
     "severity": {
       "$ref": "#/$defs/Severity"
@@ -50,10 +77,13 @@
   },
   "required": [
     "finding_id",
+    "rule_id",
     "change",
     "base_scan_id",
     "head_scan_id",
-    "severity"
+    "severity",
+    "base_rule_version",
+    "head_rule_version"
   ],
   "title": "FindingDiff",
   "type": "object"

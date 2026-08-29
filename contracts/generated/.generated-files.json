@@ -1,0 +1,30 @@
+{
+  "files": [
+    "alert-patch-request.schema.json",
+    "alert-summary.schema.json",
+    "asset-detail.schema.json",
+    "asset-summary.schema.json",
+    "code-finding.schema.json",
+    "contract-create-request.schema.json",
+    "contract-create-response.schema.json",
+    "control-spec.schema.json",
+    "create-asset-request.schema.json",
+    "create-asset-response.schema.json",
+    "dashboard-response.schema.json",
+    "demo-bootstrap-response.schema.json",
+    "document-content-response.schema.json",
+    "document-response.schema.json",
+    "evidence-report.schema.json",
+    "finding-diff.schema.json",
+    "mismatch-finding.schema.json",
+    "onchain-evidence.schema.json",
+    "openapi.json",
+    "policy-patch-request.schema.json",
+    "report-download-metadata.schema.json",
+    "report-response.schema.json",
+    "scan-create-request.schema.json",
+    "scan-create-response.schema.json",
+    "scan-result-response.schema.json",
+    "scan-run.schema.json"
+  ]
+}

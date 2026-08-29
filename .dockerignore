@@ -1,0 +1,27 @@
+**
+!services/
+!services/backend/
+!services/backend/Dockerfile
+!services/backend/pyproject.toml
+!services/backend/README.md
+!services/backend/src/
+!services/backend/src/**
+!fixtures/
+!fixtures/p0-manifest.json
+!data/
+!data/synthetic/
+!data/synthetic/documents/
+!data/synthetic/documents/issuance-terms-01.txt
+!chain/
+!chain/src/
+!chain/src/fixtures/
+!chain/src/fixtures/VulnerableRwaToken.sol
+!chain/src/fixtures/VulnerableOracle.sol
+
+# Defense in depth: these remain excluded even if allowlists expand.
+.git/
+.env
+.env.*
+**/node_modules/
+**/.next/
+**/__pycache__/

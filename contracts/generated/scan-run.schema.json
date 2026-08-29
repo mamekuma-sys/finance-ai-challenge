@@ -100,6 +100,7 @@
       "type": "object"
     },
     "is_synthetic": {
+      "const": true,
       "default": true,
       "title": "Is Synthetic",
       "type": "boolean"
