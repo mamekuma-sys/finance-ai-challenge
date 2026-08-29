@@ -272,6 +272,16 @@
               }
             ]
           },
+          "exploit_risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExploitRisk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "fixture_version": {
             "anyOf": [
               {
@@ -1178,6 +1188,68 @@
         "title": "EvidenceSpan",
         "type": "object"
       },
+      "ExploitRisk": {
+        "additionalProperties": false,
+        "description": "FR-06 Exploit Risk. 0~100이며 높을수록 위험하다. Security Score와 혼용하지 않는다.\n\n점수 계산은 컨트랙트 보안 트랙(C)이 수행하고 이 모델은 결과와 산정 근거를 노출한다.\n등급은 점수에서 파생되며, 확정 Critical이 있으면 최소 80점이라는 FR-06 규칙을\nvalidator가 강제한다.",
+        "properties": {
+          "calculated_at": {
+            "format": "date-time",
+            "title": "Calculated At",
+            "type": "string"
+          },
+          "contributors": {
+            "items": {
+              "$ref": "#/components/schemas/RiskContributor"
+            },
+            "title": "Contributors",
+            "type": "array"
+          },
+          "floor_applied": {
+            "default": false,
+            "title": "Floor Applied",
+            "type": "boolean"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/RiskGrade"
+          },
+          "has_confirmed_critical": {
+            "default": false,
+            "title": "Has Confirmed Critical",
+            "type": "boolean"
+          },
+          "is_synthetic": {
+            "const": true,
+            "default": true,
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "rule_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Rule Versions",
+            "type": "object"
+          },
+          "scan_id": {
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scan_id",
+          "score",
+          "grade",
+          "calculated_at"
+        ],
+        "title": "ExploitRisk",
+        "type": "object"
+      },
       "FailedStage": {
         "additionalProperties": false,
         "properties": {
@@ -1946,6 +2018,62 @@
           "FAILED"
         ],
         "title": "ReportStatus",
+        "type": "string"
+      },
+      "RiskContributor": {
+        "additionalProperties": false,
+        "description": "점수에 기여한 개별 발견사항. FR-06은 상위 기여 항목을 점수 옆에 표시하라고 요구한다.",
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "contribution": {
+            "minimum": 0.0,
+            "title": "Contribution",
+            "type": "number"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "weight": {
+            "maximum": 40.0,
+            "minimum": 0.0,
+            "title": "Weight",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "finding_id",
+          "rule_id",
+          "severity",
+          "weight",
+          "confidence",
+          "contribution"
+        ],
+        "title": "RiskContributor",
+        "type": "object"
+      },
+      "RiskGrade": {
+        "description": "PRD FR-06의 등급 경계. 점수에서 결정론적으로 파생되며 별도 판단이 들어가지 않는다.",
+        "enum": [
+          "LOW",
+          "GUARDED",
+          "ELEVATED",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "RiskGrade",
         "type": "string"
       },
       "ScanCreateRequest": {

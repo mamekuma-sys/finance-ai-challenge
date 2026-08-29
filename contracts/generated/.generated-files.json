@@ -15,6 +15,7 @@
     "document-content-response.schema.json",
     "document-response.schema.json",
     "evidence-report.schema.json",
+    "exploit-risk.schema.json",
     "finding-diff.schema.json",
     "mismatch-finding.schema.json",
     "onchain-evidence.schema.json",
