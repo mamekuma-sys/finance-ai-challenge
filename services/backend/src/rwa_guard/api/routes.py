@@ -6,6 +6,7 @@ import html
 import json
 import logging
 import math
+import re
 import secrets
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -215,6 +216,30 @@ class OperatorVerifyResponse(BaseModel):
 OPERATOR_LOGIN_WINDOW = timedelta(minutes=15)
 OPERATOR_LOGIN_MAX_FAILURES = 5
 OPERATOR_VERIFY_MAX_BODY_BYTES = 1024
+
+
+_SPDX_LINE = re.compile(r"^\s*//\s*SPDX-License-Identifier:.*$", re.MULTILINE)
+_PRAGMA_LINE = re.compile(r"^\s*pragma\s+solidity[^;]*;\s*$", re.MULTILINE)
+
+
+def merge_solidity_sources(*sources: str) -> str:
+    """여러 .sol 파일을 하나의 컴파일 단위로 합친다.
+
+    파일마다 SPDX 헤더와 pragma가 있으므로 그대로 이어붙이면 solc가 거부한다.
+
+        Error (3716): Multiple SPDX license identifiers found in source file.
+
+    첫 파일의 헤더만 남기고 이후 파일에서는 제거한다. 헤더 외의 코드는 손대지 않는다.
+    """
+
+    if not sources:
+        return ""
+    merged = [sources[0].strip()]
+    for source in sources[1:]:
+        body = _PRAGMA_LINE.sub("", _SPDX_LINE.sub("", source)).strip()
+        if body:
+            merged.append(body)
+    return "\n\n".join(merged) + "\n"
 
 
 def _operator_now() -> datetime:
@@ -800,10 +825,9 @@ def demo_bootstrap(
     document_bytes = fixture_store.read_bytes(
         "data/synthetic/documents/issuance-terms-01.txt"
     )
-    source_code = (
-        fixture_store.read_text("chain/src/fixtures/VulnerableRwaToken.sol")
-        + "\n\n"
-        + fixture_store.read_text("chain/src/fixtures/VulnerableOracle.sol")
+    source_code = merge_solidity_sources(
+        fixture_store.read_text("chain/src/fixtures/VulnerableRwaToken.sol"),
+        fixture_store.read_text("chain/src/fixtures/VulnerableOracle.sol"),
     )
     started_at = report.scan_run.started_at
     completed_at = report.scan_run.completed_at or report.generated_at

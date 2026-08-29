@@ -38,3 +38,6 @@ uploads/
 reports/
 !apps/web/src/app/reports/
 !apps/web/src/app/reports/**
+
+# 로컬 개발용 SQLite
+*.db
