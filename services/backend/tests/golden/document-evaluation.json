@@ -1,0 +1,21 @@
+{
+  "dataset_version": "1.0.0",
+  "is_synthetic": true,
+  "extractor": "deterministic-synthetic-parser",
+  "accuracy_threshold": 0.9,
+  "measured": {
+    "total_field_outcomes": 60,
+    "correct": 60,
+    "accuracy": 1.0,
+    "misses": []
+  },
+  "resolved_gaps": [
+    {
+      "case_id": "instruction_line_decoy",
+      "field": "max_supply",
+      "found_by": "이 평가셋을 처음 실행했을 때 60건 중 1건이 어긋났다.",
+      "cause": "패턴별로 re.search가 첫 일치만 보고, 그것이 지시문 라인이면 같은 페이지의 다음 일치를 찾지 않고 포기했다.",
+      "fix": "pipelines/document.py에서 finditer로 바꿔 지시문 일치를 건너뛰고 계속 탐색한다."
+    }
+  ]
+}

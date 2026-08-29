@@ -1,0 +1,2 @@
+[SYNTHETIC EVALUATION DOCUMENT]
+is_synthetic=true

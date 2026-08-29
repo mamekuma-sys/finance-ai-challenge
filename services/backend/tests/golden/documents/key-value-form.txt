@@ -1,0 +1,11 @@
+[SYNTHETIC EVALUATION DOCUMENT]
+is_synthetic=true
+
+합성 발행조건서 — 구조화 표기본
+
+max_supply=100000
+issuer_role=ISSUER_ROLE
+collateral_verified=true
+oracle_max_age=60
+price_band_breach=2
+pauser_role=PAUSER_ROLE
