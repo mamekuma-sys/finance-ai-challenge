@@ -87,6 +87,16 @@ class ReportFormat(StrEnum):
     JSON = "json"
 
 
+class RiskGrade(StrEnum):
+    """PRD FR-06의 등급 경계. 점수에서 결정론적으로 파생되며 별도 판단이 들어가지 않는다."""
+
+    LOW = "LOW"
+    GUARDED = "GUARDED"
+    ELEVATED = "ELEVATED"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
 class DataFreshness(StrEnum):
     """Derived from the current clock, so it never belongs on immutable evidence."""
 
@@ -281,6 +291,86 @@ class ScanRun(BaseModel):
         return self
 
 
+SEVERITY_WEIGHTS: dict[Severity, int] = {
+    Severity.CRITICAL: 40,
+    Severity.HIGH: 25,
+    Severity.MEDIUM: 10,
+    Severity.LOW: 3,
+    Severity.INFO: 0,
+}
+CONFIRMED_CRITICAL_FLOOR = 80
+RISK_GRADE_BOUNDS: tuple[tuple[int, RiskGrade], ...] = (
+    (19, RiskGrade.LOW),
+    (39, RiskGrade.GUARDED),
+    (59, RiskGrade.ELEVATED),
+    (79, RiskGrade.HIGH),
+    (100, RiskGrade.CRITICAL),
+)
+
+
+def grade_for_score(score: int) -> RiskGrade:
+    """PRD FR-06의 등급 경계를 그대로 적용한다."""
+
+    if not 0 <= score <= 100:
+        raise ValueError("exploit risk score must be between 0 and 100")
+    for upper, grade in RISK_GRADE_BOUNDS:
+        if score <= upper:
+            return grade
+    raise AssertionError("unreachable")
+
+
+class RiskContributor(BaseModel):
+    """점수에 기여한 개별 발견사항. FR-06은 상위 기여 항목을 점수 옆에 표시하라고 요구한다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    finding_id: str
+    rule_id: str
+    severity: Severity
+    weight: int = Field(ge=0, le=40)
+    confidence: float = Field(ge=0.0, le=1.0)
+    contribution: float = Field(ge=0.0)
+
+
+class ExploitRisk(BaseModel):
+    """FR-06 Exploit Risk. 0~100이며 높을수록 위험하다. Security Score와 혼용하지 않는다.
+
+    점수 계산은 컨트랙트 보안 트랙(C)이 수행하고 이 모델은 결과와 산정 근거를 노출한다.
+    등급은 점수에서 파생되며, 확정 Critical이 있으면 최소 80점이라는 FR-06 규칙을
+    validator가 강제한다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    scan_id: str
+    score: int = Field(ge=0, le=100)
+    grade: RiskGrade
+    contributors: list[RiskContributor] = Field(default_factory=list)
+    has_confirmed_critical: bool = False
+    floor_applied: bool = False
+    rule_versions: dict[str, str] = Field(default_factory=dict)
+    calculated_at: datetime
+    is_synthetic: Literal[True] = True
+
+    @model_validator(mode="after")
+    def grade_follows_score(self) -> "ExploitRisk":
+        expected = grade_for_score(self.score)
+        if self.grade is not expected:
+            raise ValueError(f"grade {self.grade} does not match score {self.score} ({expected})")
+        return self
+
+    @model_validator(mode="after")
+    def confirmed_critical_never_averages_below_the_floor(self) -> "ExploitRisk":
+        """FR-06: 확정 Critical을 다른 낮은 위험으로 평균내어 80점 미만으로 낮추지 않는다."""
+
+        if self.has_confirmed_critical and self.score < CONFIRMED_CRITICAL_FLOOR:
+            raise ValueError(
+                f"a confirmed Critical finding requires a score of at least "
+                f"{CONFIRMED_CRITICAL_FLOOR}, got {self.score}"
+            )
+        return self
+
+
 class LatestScanRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -304,6 +394,7 @@ class AssetSummary(BaseModel):
     critical_count: int = Field(default=0, ge=0)
     high_count: int = Field(default=0, ge=0)
     latest_scan: LatestScanRef | None = None
+    exploit_risk: ExploitRisk | None = None
     evidence_mode: EvidenceMode | None = None
     fixture_version: str | None = None
     freshness: DataFreshness | None = None

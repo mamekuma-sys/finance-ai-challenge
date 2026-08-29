@@ -481,6 +481,7 @@ export interface components {
              */
             critical_count: number;
             evidence_mode?: components["schemas"]["EvidenceMode"] | null;
+            exploit_risk?: components["schemas"]["ExploitRisk"] | null;
             /** Fixture Version */
             fixture_version?: string | null;
             freshness?: components["schemas"]["DataFreshness"] | null;
@@ -862,6 +863,48 @@ export interface components {
              */
             start: number;
         };
+        /**
+         * ExploitRisk
+         * @description FR-06 Exploit Risk. 0~100이며 높을수록 위험하다. Security Score와 혼용하지 않는다.
+         *
+         *     점수 계산은 컨트랙트 보안 트랙(C)이 수행하고 이 모델은 결과와 산정 근거를 노출한다.
+         *     등급은 점수에서 파생되며, 확정 Critical이 있으면 최소 80점이라는 FR-06 규칙을
+         *     validator가 강제한다.
+         */
+        ExploitRisk: {
+            /**
+             * Calculated At
+             * Format: date-time
+             */
+            calculated_at: string;
+            /** Contributors */
+            contributors?: components["schemas"]["RiskContributor"][];
+            /**
+             * Floor Applied
+             * @default false
+             */
+            floor_applied: boolean;
+            grade: components["schemas"]["RiskGrade"];
+            /**
+             * Has Confirmed Critical
+             * @default false
+             */
+            has_confirmed_critical: boolean;
+            /**
+             * Is Synthetic
+             * @default true
+             * @constant
+             */
+            is_synthetic: true;
+            /** Rule Versions */
+            rule_versions?: {
+                [key: string]: string;
+            };
+            /** Scan Id */
+            scan_id: string;
+            /** Score */
+            score: number;
+        };
         /** FailedStage */
         FailedStage: {
             /** Reason */
@@ -1147,6 +1190,29 @@ export interface components {
          * @enum {string}
          */
         ReportStatus: "QUEUED" | "READY" | "FAILED";
+        /**
+         * RiskContributor
+         * @description 점수에 기여한 개별 발견사항. FR-06은 상위 기여 항목을 점수 옆에 표시하라고 요구한다.
+         */
+        RiskContributor: {
+            /** Confidence */
+            confidence: number;
+            /** Contribution */
+            contribution: number;
+            /** Finding Id */
+            finding_id: string;
+            /** Rule Id */
+            rule_id: string;
+            severity: components["schemas"]["Severity"];
+            /** Weight */
+            weight: number;
+        };
+        /**
+         * RiskGrade
+         * @description PRD FR-06의 등급 경계. 점수에서 결정론적으로 파생되며 별도 판단이 들어가지 않는다.
+         * @enum {string}
+         */
+        RiskGrade: "LOW" | "GUARDED" | "ELEVATED" | "HIGH" | "CRITICAL";
         /** ScanCreateRequest */
         ScanCreateRequest: {
             /** Base Scan Id */
