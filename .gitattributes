@@ -1,1 +1,3 @@
 data/synthetic/documents/*.txt text eol=lf
+chain/src/fixtures/*.sol text eol=lf
+services/backend/tests/golden/documents/*.txt text eol=lf

@@ -67,6 +67,12 @@ def _manifest(root: Path) -> dict[str, str]:
     return files
 
 
+def _fixture_digest(relative: str, payload: bytes) -> str:
+    if PurePosixPath(relative).suffix in {".txt", ".sol"}:
+        payload = payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
 def fixture_store_for_settings(settings: Settings) -> FixtureStore:
     configured_root = settings.rwa_guard_fixture_root
     if configured_root is None:
@@ -84,7 +90,7 @@ def fixture_store_for_settings(settings: Settings) -> FixtureStore:
     manifest = _manifest(root)
     for relative in REQUIRED_FIXTURE_FILES:
         expected = manifest[relative]
-        actual = f"sha256:{hashlib.sha256(store.read_bytes(relative)).hexdigest()}"
+        actual = _fixture_digest(relative, store.read_bytes(relative))
         if expected != actual:
             raise FixtureUnavailable(f"fixture hash mismatch: {relative}")
     return store
