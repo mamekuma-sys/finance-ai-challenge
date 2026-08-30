@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "files": {
     "data/synthetic/documents/issuance-terms-01.txt": "sha256:0b45057443d67198c38014b2757073e30bd98e655553b6447b74779db9a4db80",
     "chain/src/fixtures/VulnerableRwaToken.sol": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",

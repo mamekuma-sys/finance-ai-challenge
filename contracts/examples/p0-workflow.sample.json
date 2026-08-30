@@ -2,11 +2,11 @@
   "demo_bootstrap": {
     "asset_id": "asset_synthetic_hanriver_01",
     "document_id": "doc_synthetic_issuance_01",
-    "contract_id": "contract_demo_vulnerable_01",
-    "scan_id": "scan_demo_vulnerable_01",
-    "report_id": "report_demo_01",
+    "contract_id": "contract_demo_vulnerable_02",
+    "scan_id": "scan_demo_vulnerable_02",
+    "report_id": "report_demo_02",
     "evidence_mode": "REPLAY",
-    "fixture_version": "0.1.0",
+    "fixture_version": "0.2.0",
     "is_synthetic": true
   },
   "create_asset": {
@@ -154,7 +154,7 @@
       }
     ],
     "evidence_mode": "REPLAY",
-    "fixture_version": "0.1.0",
+    "fixture_version": "0.2.0",
     "created_at": "2026-08-28T00:03:00Z",
     "updated_at": "2026-08-28T00:03:00Z",
     "is_synthetic": true
@@ -171,7 +171,7 @@
         "critical_count": 1,
         "high_count": 0,
         "evidence_mode": "REPLAY",
-        "fixture_version": "0.1.0",
+        "fixture_version": "0.2.0",
         "is_synthetic": true
       }
     ],

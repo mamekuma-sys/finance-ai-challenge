@@ -57,19 +57,19 @@ describe("home persisted report selection", () => {
     const selected = await selectHomeEvidenceReport([extraneous, canonical], async (assetId, selection) => {
       calls.push({ assetId, selection });
       return assetId === canonical.asset_id
-        ? report(assetId, "report_demo_01", "HIGH", "2026-08-27T00:00:00Z")
+        ? report(assetId, "report_demo_02", "HIGH", "2026-08-27T00:00:00Z")
         : report(assetId, "report_runtime", "CRITICAL", "2026-08-28T00:00:00Z");
     });
 
     expect(calls).toEqual([{
       assetId: "asset_synthetic_hanriver_01",
       selection: {
-        reportId: "report_demo_01",
-        scanId: "scan_demo_vulnerable_01",
+        reportId: "report_demo_02",
+        scanId: "scan_demo_vulnerable_02",
       },
     }]);
     expect(selected?.asset.asset_id).toBe("asset_synthetic_hanriver_01");
-    expect(selected?.report.report_id).toBe("report_demo_01");
+    expect(selected?.report.report_id).toBe("report_demo_02");
   });
 
   it("does not use an arbitrary persisted report when the canonical asset is absent", async () => {
