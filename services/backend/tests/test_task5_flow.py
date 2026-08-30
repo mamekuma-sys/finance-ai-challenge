@@ -25,7 +25,11 @@ from rwa_guard.db.models import (
     ReportRecord,
     ScanRunRecord,
 )
-from rwa_guard.fixtures import build_demo_report, merge_solidity_sources
+from rwa_guard.fixtures import (
+    DERIVED_COMPILATION_UNIT_HASH,
+    build_demo_report,
+    merge_solidity_sources,
+)
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 
@@ -159,7 +163,7 @@ def test_demo_bootstrap_is_persisted_replay_and_idempotent(tmp_path: Path) -> No
     payload = first.json()
     assert payload["is_synthetic"] is True
     assert payload["evidence_mode"] == "REPLAY"
-    assert payload["fixture_version"] == "0.1.0"
+    assert payload["fixture_version"] == "0.2.0"
     assert set(payload) >= {
         "asset_id",
         "document_id",
@@ -245,8 +249,12 @@ def test_demo_report_locations_and_hashes_match_repository_fixtures() -> None:
     contract_source = merge_solidity_sources(
         (REPOSITORY / "chain/src/fixtures/VulnerableRwaToken.sol").read_text(encoding="utf-8"),
         (REPOSITORY / "chain/src/fixtures/VulnerableOracle.sol").read_text(encoding="utf-8"),
+        source_paths=(
+            "chain/src/fixtures/VulnerableRwaToken.sol",
+            "chain/src/fixtures/VulnerableOracle.sol",
+        ),
     ).encode("utf-8")
-    assert report.scan_run.input_hashes["contract_source"] == (
+    assert report.scan_run.input_hashes[DERIVED_COMPILATION_UNIT_HASH] == (
         f"sha256:{hashlib.sha256(contract_source).hexdigest()}"
     )
     for control in report.controls:

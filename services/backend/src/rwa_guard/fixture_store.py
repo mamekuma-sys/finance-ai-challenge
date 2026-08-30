@@ -25,6 +25,7 @@ class FixtureUnavailable(RuntimeError):
 @dataclass(frozen=True)
 class FixtureStore:
     root: Path
+    version: str
 
     def path(self, relative: str) -> Path:
         candidate = (self.root / PurePosixPath(relative)).resolve()
@@ -51,7 +52,7 @@ def _discover_development_root() -> Path:
     )
 
 
-def _manifest(root: Path) -> dict[str, str]:
+def _manifest(root: Path) -> tuple[str, dict[str, str]]:
     manifest_path = root / MANIFEST_PATH
     try:
         payload: Any = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -59,12 +60,15 @@ def _manifest(root: Path) -> dict[str, str]:
         raise FixtureUnavailable(
             f"fixture hash manifest is unavailable: {manifest_path}"
         ) from error
+    version = payload.get("version") if isinstance(payload, dict) else None
     files = payload.get("files") if isinstance(payload, dict) else None
+    if not isinstance(version, str) or not version:
+        raise FixtureUnavailable("fixture hash manifest has no valid version")
     if not isinstance(files, dict) or not REQUIRED_FIXTURE_FILES <= files.keys():
         raise FixtureUnavailable("fixture hash manifest is missing required P0 files")
     if not all(isinstance(path, str) and isinstance(digest, str) for path, digest in files.items()):
         raise FixtureUnavailable("fixture hash manifest contains invalid entries")
-    return files
+    return version, files
 
 
 def fixture_store_for_settings(settings: Settings) -> FixtureStore:
@@ -80,8 +84,8 @@ def fixture_store_for_settings(settings: Settings) -> FixtureStore:
         raise FixtureUnavailable(
             f"fixture root does not exist; set RWA_GUARD_FIXTURE_ROOT: {root}"
         )
-    store = FixtureStore(root)
-    manifest = _manifest(root)
+    version, manifest = _manifest(root)
+    store = FixtureStore(root, version)
     for relative in REQUIRED_FIXTURE_FILES:
         expected = manifest[relative]
         actual = f"sha256:{hashlib.sha256(store.read_bytes(relative)).hexdigest()}"

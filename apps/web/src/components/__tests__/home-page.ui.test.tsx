@@ -30,10 +30,10 @@ beforeEach(() => {
   });
   mocks.bootstrapDemo.mockResolvedValue({
     asset_id: SUBMISSION_DEMO.assetId,
-    contract_id: "contract_demo_vulnerable_01",
+    contract_id: "contract_demo_vulnerable_02",
     document_id: "doc_synthetic_issuance_01",
     evidence_mode: "REPLAY",
-    fixture_version: "0.1.0",
+    fixture_version: "0.2.0",
     is_synthetic: true,
     report_id: SUBMISSION_DEMO.reportId,
     scan_id: SUBMISSION_DEMO.scanId,

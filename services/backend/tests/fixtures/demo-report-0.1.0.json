@@ -1,13 +1,13 @@
 {
-  "report_id": "report_demo_02",
-  "report_hash": "sha256:2da6e0fdf41864f8442d05007e5a3c8bbe24e2c8090d06fc0eb7cf1ff8aec00a",
+  "report_id": "report_demo_01",
+  "report_hash": "sha256:933baaf7d6bbf92cfb46f67596b8421a4936667e6197e7c380d1b435d1253e5e",
   "scan_run": {
-    "scan_id": "scan_demo_vulnerable_02",
+    "scan_id": "scan_demo_vulnerable_01",
     "asset_id": "asset_synthetic_hanriver_01",
     "status": "COMPLETED",
     "input_hashes": {
       "document": "sha256:0b45057443d67198c38014b2757073e30bd98e655553b6447b74779db9a4db80",
-      "derived:demo_contract_compilation_unit": "sha256:a6ee510f554dcad8568c85af0d08c83c51f70357972be20d8ef175cb77d1dd7f",
+      "contract_source": "sha256:d0e0d6a7ce03141af361c38a9429fcc08d88754f988e08bb13a600fbabced93f",
       "source:chain/src/fixtures/VulnerableRwaToken.sol": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
       "source:chain/src/fixtures/VulnerableOracle.sol": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0"
     },
@@ -132,7 +132,7 @@
   ],
   "code_findings": [
     {
-      "scan_id": "scan_demo_vulnerable_02",
+      "scan_id": "scan_demo_vulnerable_01",
       "finding_id": "finding_mint_collateral_cap_missing",
       "rule_id": "MINT_COLLATERAL_CAP_MISSING",
       "severity": "CRITICAL",
@@ -159,7 +159,7 @@
       "is_synthetic": true
     },
     {
-      "scan_id": "scan_demo_vulnerable_02",
+      "scan_id": "scan_demo_vulnerable_01",
       "finding_id": "finding_oracle_range_missing",
       "rule_id": "ORACLE_VALIDATION_MISSING",
       "severity": "HIGH",
@@ -259,14 +259,14 @@
       "event_name": "Minted",
       "previous_value": "100000",
       "changed_value": "120000",
-      "fixture_version": "0.2.0",
+      "fixture_version": "0.1.0",
       "is_synthetic": true
     }
   ],
   "lineage": {
     "input_hashes": {
       "document": "sha256:0b45057443d67198c38014b2757073e30bd98e655553b6447b74779db9a4db80",
-      "derived:demo_contract_compilation_unit": "sha256:a6ee510f554dcad8568c85af0d08c83c51f70357972be20d8ef175cb77d1dd7f",
+      "contract_source": "sha256:d0e0d6a7ce03141af361c38a9429fcc08d88754f988e08bb13a600fbabced93f",
       "source:chain/src/fixtures/VulnerableRwaToken.sol": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
       "source:chain/src/fixtures/VulnerableOracle.sol": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0"
     },
@@ -279,7 +279,7 @@
     },
     "tool_versions": {
       "report_pipeline": "1.0.0",
-      "fixture_builder": "1.1.0",
+      "fixture_builder": "1.0.0",
       "finding:finding_mint_collateral_cap_missing:rwa_guard_contract": "1.0.0",
       "finding:finding_mint_collateral_cap_missing:rule": "1.0.0",
       "finding:finding_mint_collateral_cap_missing:solc": "0.8.24",
@@ -290,7 +290,6 @@
     "generated_at": "2026-08-25T03:00:08Z",
     "limitations": [
       "합성 fixture 전용",
-      "계약 source는 두 canonical fixture에서 파생한 컴파일 단위입니다.",
       "온체인 이벤트는 REPLAY이며 실제 receipt가 아닙니다."
     ]
   },

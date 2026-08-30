@@ -9,25 +9,42 @@ fixture는 FixtureStore를 거쳐 읽는다. 라우터가 실제로 읽는 바�
 """
 
 import hashlib
+import json
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from rwa_guard.api.main import create_app
 from rwa_guard.config import Settings
 from rwa_guard.db.base import Base
-from rwa_guard.db.models import ContractRecord
+from rwa_guard.db.models import (
+    AlertRecord,
+    AssetRecord,
+    ContractRecord,
+    IssuanceDocumentRecord,
+    PolicyConstraintRecord,
+    ReportRecord,
+    ScanRunRecord,
+)
 from rwa_guard.domain.contracts import FindingStatus
 from rwa_guard.fixture_store import fixture_store_for_settings
-from rwa_guard.fixtures import merge_solidity_sources
+from rwa_guard.fixtures import (
+    build_demo_contract_source,
+    merge_solidity_sources,
+)
 from rwa_guard.pipelines.contract import (
     CompiledSources,
     FoundryCompiler,
     analyze_compiled_sources,
 )
+from rwa_guard.worker import JobWorker
+from rwa_guard.worker.__main__ import build_handler_registry
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 TOKEN_FILE = "chain/src/fixtures/VulnerableRwaToken.sol"
@@ -37,6 +54,14 @@ EXPECTED_CONFIRMED = {
     "MINT_COLLATERAL_CAP_MISSING",
     "ORACLE_VALIDATION_MISSING",
 }
+LEGACY_REPORT = Path(__file__).parent / "fixtures/demo-report-0.1.0.json"
+LEGACY_SOURCE = Path(__file__).parent / "fixtures/demo-contract-source-0.1.0.sol"
+LEGACY_REPORT_HASH = (
+    "sha256:933baaf7d6bbf92cfb46f67596b8421a4936667e6197e7c380d1b435d1253e5e"
+)
+LEGACY_SOURCE_HASH = (
+    "sha256:d0e0d6a7ce03141af361c38a9429fcc08d88754f988e08bb13a600fbabced93f"
+)
 
 
 def _demo_source() -> str:
@@ -45,7 +70,7 @@ def _demo_source() -> str:
     store = fixture_store_for_settings(
         Settings(app_env="test", rwa_guard_fixture_root=REPOSITORY)
     )
-    return merge_solidity_sources(store.read_text(TOKEN_FILE), store.read_text(ORACLE_FILE))
+    return build_demo_contract_source(store)
 
 
 # --- 병합 규칙 -------------------------------------------------------------
@@ -185,3 +210,306 @@ def test_bootstrap_stores_a_source_whose_hash_matches_it(
         )
         assert record.source_code.count("SPDX-License-Identifier") == 1
         assert re.search(r"contract\s+VulnerableOracle", record.source_code)
+
+
+def _legacy_report_payload() -> tuple[dict[str, object], str, str]:
+    """Load the frozen origin/main 0.1.0 snapshot without current builders."""
+
+    payload = json.loads(LEGACY_REPORT.read_text(encoding="utf-8"))
+    legacy_source = LEGACY_SOURCE.read_text(encoding="utf-8")
+    legacy_source_hash = f"sha256:{hashlib.sha256(legacy_source.encode()).hexdigest()}"
+    snapshot = {key: value for key, value in payload.items() if key != "report_hash"}
+    canonical = json.dumps(
+        snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
+    calculated_report_hash = f"sha256:{hashlib.sha256(canonical).hexdigest()}"
+
+    assert payload["report_hash"] == LEGACY_REPORT_HASH
+    assert calculated_report_hash == LEGACY_REPORT_HASH
+    assert legacy_source_hash == LEGACY_SOURCE_HASH
+    assert payload["scan_run"]["input_hashes"]["contract_source"] == LEGACY_SOURCE_HASH
+    assert payload["lineage"]["input_hashes"]["contract_source"] == LEGACY_SOURCE_HASH
+    return payload, legacy_source, legacy_source_hash
+
+
+def test_legacy_ready_report_survives_bootstrap_then_persisted_source_rescans(
+    tmp_path: Path, session_factory: sessionmaker[Session]
+) -> None:
+    """옛 READY 스냅샷을 보존한 업그레이드에서도 실제 worker 분석이 완료돼야 한다."""
+
+    settings = Settings(
+        app_env="test",
+        database_url="sqlite+pysqlite:///:memory:",
+        storage_directory=tmp_path / "uploads",
+        rwa_guard_fixture_root=REPOSITORY,
+        allow_insecure_demo_operator=True,
+    )
+    client = TestClient(create_app(settings=settings, session_factory=session_factory))
+    legacy, legacy_source, legacy_source_hash = _legacy_report_payload()
+    legacy_report_hash = str(legacy["report_hash"])
+    legacy_payload_bytes = json.dumps(
+        legacy, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
+    fixture_store = fixture_store_for_settings(settings)
+    document_path = fixture_store.path("data/synthetic/documents/issuance-terms-01.txt")
+    document_bytes = document_path.read_bytes()
+    legacy_scan = legacy["scan_run"]
+    legacy_controls = legacy["controls"]
+    legacy_mismatches = legacy["mismatches"]
+    legacy_onchain = legacy["onchain_evidence"]
+    started_at = datetime(2026, 8, 25, 3, 0, tzinfo=UTC)
+    completed_at = datetime(2026, 8, 25, 3, 0, 8, tzinfo=UTC)
+    with session_factory.begin() as session:
+        session.add(
+            AssetRecord(
+                id="asset_synthetic_hanriver_01",
+                name="합성 한강 오피스 수익증권",
+                asset_type="SYNTHETIC_COMMERCIAL_REAL_ESTATE_REVENUE",
+                status="REVIEW_REQUIRED",
+                underlying_description="서울 소재 합성 상업용 부동산 수익증권 fixture",
+                total_planned_supply=100_000,
+                network="KAIA_KAIROS",
+                currency="KRW",
+                token_unit="TOKEN",
+                created_at=started_at,
+            )
+        )
+        session.flush()
+        session.add(
+            IssuanceDocumentRecord(
+                id="doc_synthetic_issuance_01",
+                asset_id="asset_synthetic_hanriver_01",
+                file_hash=legacy_scan["input_hashes"]["document"],
+                version="0.1.0",
+                storage_path=str(document_path),
+                status="READY",
+                media_type="text/plain",
+                size_bytes=len(document_bytes),
+                page_count=1,
+                failed_pages=[],
+                extraction_metadata={
+                    "fixture_version": "0.1.0",
+                    "source": "data/synthetic",
+                },
+                uploaded_at=started_at,
+                processed_at=completed_at,
+            )
+        )
+        session.add(
+            ContractRecord(
+                id="contract_demo_vulnerable_01",
+                asset_id="asset_synthetic_hanriver_01",
+                chain_id=1001,
+                source_kind="SOURCE",
+                source_code=legacy_source,
+                source_hash=legacy_source_hash,
+                proxy_status="NOT_CHECKED",
+                created_at=started_at,
+            )
+        )
+        session.flush()
+        for control in legacy_controls:
+            session.add(
+                PolicyConstraintRecord(
+                    id=control["constraint_id"],
+                    asset_id=control["asset_id"],
+                    document_id=control["document_id"],
+                    field_name=control["field"],
+                    normalized_value={
+                        "value": control["value"],
+                        "unit": control["unit"],
+                    },
+                    evidence_span=control["evidence_span"],
+                    confirmed=control["confirmed"],
+                    version=control["version"],
+                    created_at=started_at,
+                    updated_at=started_at,
+                )
+            )
+        session.add(
+            ScanRunRecord(
+                id="scan_demo_vulnerable_01",
+                asset_id="asset_synthetic_hanriver_01",
+                contract_id="contract_demo_vulnerable_01",
+                status="COMPLETED",
+                input_hashes=legacy_scan["input_hashes"],
+                rule_versions=legacy_scan["rule_versions"],
+                failed_stages=[],
+                result_payload={
+                    "code_findings": legacy["code_findings"],
+                    "mismatches": legacy_mismatches,
+                    "onchain_evidence": legacy_onchain,
+                    "diff": [],
+                },
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+        )
+        session.flush()
+        session.add(
+            ReportRecord(
+                id="report_demo_01",
+                asset_id="asset_synthetic_hanriver_01",
+                scan_id="scan_demo_vulnerable_01",
+                status="READY",
+                evidence=legacy,
+                report_hash=legacy_report_hash,
+                downloads={},
+                limitations=legacy["lineage"]["limitations"],
+                generated_at=completed_at,
+                created_at=started_at,
+            )
+        )
+        lead = legacy_mismatches[0]
+        session.add(
+            AlertRecord(
+                id="alert_demo_critical_01",
+                asset_id="asset_synthetic_hanriver_01",
+                alert_type="CRITICAL_CONTROL_MISMATCH",
+                severity="CRITICAL",
+                status="NEW",
+                cause={"mismatch_id": lead["mismatch_id"]},
+                evidence_links=lead["evidence_links"],
+                dedupe_key="demo:0.1.0:mismatch_max_supply_01",
+                evidence_mode="REPLAY",
+                fixture_version="0.1.0",
+                created_at=completed_at,
+                updated_at=completed_at,
+            )
+        )
+
+    bootstrap = client.post("/v1/demo/bootstrap")
+    assert bootstrap.status_code == 200, bootstrap.text
+    seeded = bootstrap.json()
+    assert seeded["fixture_version"] == "0.2.0"
+    assert seeded["document_id"] == "doc_synthetic_issuance_01"
+    assert seeded["contract_id"] != "contract_demo_vulnerable_01"
+    assert seeded["scan_id"] != "scan_demo_vulnerable_01"
+    assert seeded["report_id"] != "report_demo_01"
+    assert seeded["evidence_mode"] == "REPLAY"
+
+    with session_factory() as session:
+        old_report = session.get(ReportRecord, "report_demo_01")
+        assert old_report is not None
+        assert old_report.status == "READY"
+        assert old_report.report_hash == legacy_report_hash
+        assert old_report.evidence == legacy
+        assert (
+            json.dumps(
+                old_report.evidence,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+            == legacy_payload_bytes
+        )
+        old_asset = session.get(AssetRecord, "asset_synthetic_hanriver_01")
+        old_document = session.get(
+            IssuanceDocumentRecord, "doc_synthetic_issuance_01"
+        )
+        old_contract = session.get(ContractRecord, "contract_demo_vulnerable_01")
+        old_scan = session.get(ScanRunRecord, "scan_demo_vulnerable_01")
+        old_alert = session.get(AlertRecord, "alert_demo_critical_01")
+        assert old_asset is not None
+        assert old_asset.underlying_description == (
+            "서울 소재 합성 상업용 부동산 수익증권 fixture"
+        )
+        assert old_document is not None
+        assert old_document.version == "0.1.0"
+        assert old_document.extraction_metadata["fixture_version"] == "0.1.0"
+        assert old_contract is not None
+        assert old_contract.source_code == legacy_source
+        assert old_contract.source_hash == LEGACY_SOURCE_HASH
+        assert old_scan is not None
+        assert old_scan.input_hashes == legacy_scan["input_hashes"]
+        assert old_alert is not None
+        assert old_alert.fixture_version == "0.1.0"
+        assert old_alert.dedupe_key == "demo:0.1.0:mismatch_max_supply_01"
+        old_control_ids = {
+            control["constraint_id"] for control in legacy_controls
+        }
+        old_policies = list(
+            session.scalars(
+                select(PolicyConstraintRecord).where(
+                    PolicyConstraintRecord.id.in_(old_control_ids)
+                )
+            )
+        )
+        assert len(old_policies) == 6
+        assert all(
+            policy.document_id == "doc_synthetic_issuance_01"
+            for policy in old_policies
+        )
+        assert all(
+            policy.updated_at.replace(tzinfo=UTC) == started_at
+            for policy in old_policies
+        )
+        v2_report = session.get(ReportRecord, seeded["report_id"])
+        assert v2_report is not None and v2_report.evidence is not None
+        assert {
+            control["document_id"] for control in v2_report.evidence["controls"]
+        } == {"doc_synthetic_issuance_01"}
+        assert {
+            control["constraint_id"] for control in v2_report.evidence["controls"]
+        } == old_control_ids
+        assert (
+            v2_report.evidence["lineage"]["input_hashes"]["document"]
+            == old_document.file_hash
+        )
+        assert session.scalar(select(func.count()).select_from(AssetRecord)) == 1
+        assert (
+            session.scalar(select(func.count()).select_from(IssuanceDocumentRecord))
+            == 1
+        )
+        assert session.scalar(select(func.count()).select_from(ContractRecord)) == 2
+        assert session.scalar(select(func.count()).select_from(ScanRunRecord)) == 2
+        assert session.scalar(select(func.count()).select_from(ReportRecord)) == 2
+        assert session.scalar(select(func.count()).select_from(AlertRecord)) == 2
+        assert (
+            session.scalar(select(func.count()).select_from(PolicyConstraintRecord))
+            == 6
+        )
+        contract = session.get(ContractRecord, seeded["contract_id"])
+        assert contract is not None and contract.source_code is not None
+        persisted_source = contract.source_code
+        assert "derived compilation unit; not a canonical source file" in persisted_source
+
+    document_content = client.get(
+        f"/v1/documents/{seeded['document_id']}/content"
+    )
+    assert document_content.status_code == 200
+    assert "document_id=doc_synthetic_issuance_01" in document_content.json()["text"]
+
+    scan_response = client.post(
+        f"/v1/assets/{seeded['asset_id']}/scans",
+        json={
+            "contract_id": seeded["contract_id"],
+            "base_scan_id": None,
+            "is_synthetic": True,
+        },
+    )
+    assert scan_response.status_code == 202, scan_response.text
+    assert JobWorker(
+        session_factory,
+        build_handler_registry(settings),
+        "demo-source-regression",
+    ).run_once()
+
+    result = client.get(f"/v1/scans/{scan_response.json()['scan_id']}").json()
+    worker_report = client.get(f"/v1/reports/{result['report_id']}").json()
+    assert result["scan_run"]["status"] == "COMPLETED"
+    assert worker_report["status"] == "READY"
+    assert {
+        (finding["rule_id"], finding["status"])
+        for finding in result["code_findings"]
+    } == {(rule, "CONFIRMED") for rule in EXPECTED_CONFIRMED}
+    source_lines = persisted_source.splitlines()
+    lineage_hashes = worker_report["report"]["lineage"]["input_hashes"].values()
+    for finding in result["code_findings"]:
+        location = finding["code_location"]
+        assert location["file"] == "submitted.sol"
+        assert location["excerpt"] == "\n".join(
+            source_lines[location["start_line"] - 1 : location["end_line"]]
+        )
+        assert finding["source_hash"] in lineage_hashes
+    assert worker_report["report"]["onchain_evidence"] == []

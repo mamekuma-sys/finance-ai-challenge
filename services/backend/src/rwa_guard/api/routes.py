@@ -103,7 +103,12 @@ from rwa_guard.fixture_store import (
     FixtureUnavailable,
     fixture_store_for_settings,
 )
-from rwa_guard.fixtures import build_demo_report, merge_solidity_sources
+from rwa_guard.fixtures import (
+    CONTRACT_ID,
+    DERIVED_COMPILATION_UNIT_HASH,
+    build_demo_contract_source,
+    build_demo_report,
+)
 from rwa_guard.pipelines.contract import compare_rescan
 from rwa_guard.pipelines.document import (
     DocumentExtractionError,
@@ -762,6 +767,43 @@ def demo_evidence_report(
     return build_demo_report(_fixture_store_or_503(settings))
 
 
+def _matches_canonical_demo_document(
+    existing: IssuanceDocumentRecord, expected: IssuanceDocumentRecord
+) -> bool:
+    if (
+        existing.asset_id != expected.asset_id
+        or existing.file_hash != expected.file_hash
+        or existing.version != expected.version
+        or existing.status != expected.status
+        or existing.media_type != expected.media_type
+        or existing.size_bytes != expected.size_bytes
+        or existing.page_count != expected.page_count
+        or existing.failed_pages != expected.failed_pages
+        or existing.extraction_metadata != expected.extraction_metadata
+        or existing.storage_path is None
+    ):
+        return False
+    try:
+        persisted = Path(existing.storage_path).read_bytes()
+    except OSError:
+        return False
+    return f"sha256:{hashlib.sha256(persisted).hexdigest()}" == expected.file_hash
+
+
+def _matches_canonical_demo_policy(
+    existing: PolicyConstraintRecord, expected: PolicyConstraintRecord
+) -> bool:
+    return (
+        existing.asset_id == expected.asset_id
+        and existing.document_id == expected.document_id
+        and existing.field_name == expected.field_name
+        and existing.normalized_value == expected.normalized_value
+        and existing.evidence_span == expected.evidence_span
+        and existing.confirmed == expected.confirmed
+        and existing.version == expected.version
+    )
+
+
 @router.post(
     "/v1/demo/bootstrap",
     response_model=DemoBootstrapResponse,
@@ -778,14 +820,10 @@ def demo_bootstrap(
 
     fixture_store = _fixture_store_or_503(settings)
     report = build_demo_report(fixture_store)
-    fixture_version = (
-        report.onchain_evidence[0].fixture_version
-        if report.onchain_evidence
-        else "0.1.0"
-    ) or "0.1.0"
+    fixture_version = fixture_store.version
     asset_id = report.scan_run.asset_id
     document_id = report.controls[0].document_id
-    contract_id = "contract_demo_vulnerable_01"
+    contract_id = CONTRACT_ID
 
     result = DemoBootstrapResponse(
         asset_id=asset_id,
@@ -800,10 +838,7 @@ def demo_bootstrap(
     document_bytes = fixture_store.read_bytes(
         "data/synthetic/documents/issuance-terms-01.txt"
     )
-    source_code = merge_solidity_sources(
-        fixture_store.read_text("chain/src/fixtures/VulnerableRwaToken.sol"),
-        fixture_store.read_text("chain/src/fixtures/VulnerableOracle.sol"),
-    )
+    source_code = build_demo_contract_source(fixture_store)
     started_at = report.scan_run.started_at
     completed_at = report.scan_run.completed_at or report.generated_at
 
@@ -823,14 +858,14 @@ def demo_bootstrap(
         id=document_id,
         asset_id=asset_id,
         file_hash=report.scan_run.input_hashes["document"],
-        version=fixture_version,
+        version="0.1.0",
         storage_path=str(document_path),
         status=DocumentStatus.READY.value,
         media_type="text/plain",
         size_bytes=len(document_bytes),
         page_count=max(control.evidence_span.page for control in report.controls),
         failed_pages=[],
-        extraction_metadata={"fixture_version": fixture_version, "source": "data/synthetic"},
+        extraction_metadata={"fixture_version": "0.1.0", "source": "data/synthetic"},
         uploaded_at=started_at,
         processed_at=completed_at,
     )
@@ -840,7 +875,7 @@ def demo_bootstrap(
         chain_id=1001,
         source_kind=ContractSourceKind.SOURCE.value,
         source_code=source_code,
-        source_hash=report.scan_run.input_hashes["contract_source"],
+        source_hash=report.scan_run.input_hashes[DERIVED_COMPILATION_UNIT_HASH],
         proxy_status="NOT_CHECKED",
         created_at=started_at,
     )
@@ -876,7 +911,7 @@ def demo_bootstrap(
     )
     lead = report.mismatches[0]
     alert = AlertRecord(
-        id="alert_demo_critical_01",
+        id="alert_demo_critical_02",
         asset_id=asset_id,
         alert_type="CRITICAL_CONTROL_MISMATCH",
         severity=Severity.CRITICAL.value,
@@ -889,6 +924,19 @@ def demo_bootstrap(
         created_at=completed_at,
         updated_at=completed_at,
     )
+    policies = [
+        PolicyConstraintRecord(
+            id=control.constraint_id,
+            asset_id=asset_id,
+            document_id=document_id,
+            field_name=control.field,
+            normalized_value={"value": control.value, "unit": control.unit},
+            evidence_span=control.evidence_span.model_dump(mode="json"),
+            confirmed=control.confirmed,
+            version=1,
+        )
+        for control in report.controls
+    ]
     created = False
     for attempt in range(2):
         dialect_name = session.get_bind().dialect.name
@@ -898,8 +946,9 @@ def demo_bootstrap(
                 {"lock_name": "rwa_guard_demo_bootstrap_v1"},
             )
         existed = AssetRepository(session).get(asset_id) is not None
+        existing_document = session.get(IssuanceDocumentRecord, document_id)
         owned_records = [
-            session.get(IssuanceDocumentRecord, document_id),
+            existing_document,
             session.get(ContractRecord, contract_id),
             session.get(ScanRunRecord, scan.id),
             session.get(ReportRecord, stored_report.id),
@@ -914,14 +963,31 @@ def demo_bootstrap(
                 "DEMO_FIXTURE_ID_CONFLICT",
                 "a fixed demo identifier belongs to another asset",
             )
-        for control in report.controls:
-            existing_policy = session.get(PolicyConstraintRecord, control.constraint_id)
+        if existing_document is not None and not _matches_canonical_demo_document(
+            existing_document, document
+        ):
+            raise APIError(
+                409,
+                "DEMO_DOCUMENT_CANONICAL_CONFLICT",
+                "existing demo document differs from the canonical fixture",
+            )
+        existing_policies: dict[str, PolicyConstraintRecord] = {}
+        for policy in policies:
+            existing_policy = session.get(PolicyConstraintRecord, policy.id)
             if existing_policy is not None and existing_policy.asset_id != asset_id:
                 raise APIError(
                     409,
                     "DEMO_FIXTURE_ID_CONFLICT",
                     "a fixed demo control identifier belongs to another asset",
                 )
+            if existing_policy is not None:
+                if not _matches_canonical_demo_policy(existing_policy, policy):
+                    raise APIError(
+                        409,
+                        "DEMO_POLICY_CANONICAL_CONFLICT",
+                        "existing demo control differs from the canonical fixture",
+                    )
+                existing_policies[policy.id] = existing_policy
         try:
             if existed:
                 session.merge(asset)
@@ -929,8 +995,9 @@ def demo_bootstrap(
                 session.add(asset)
             session.flush()
 
-            for record in (document, contract):
-                session.merge(record)
+            if existing_document is None:
+                session.add(document)
+            session.merge(contract)
             session.flush()
 
             session.merge(scan)
@@ -959,18 +1026,9 @@ def demo_bootstrap(
             session.flush()
 
             session.merge(alert)
-            for control in report.controls:
-                session.merge(
-                    PolicyConstraintRecord(
-                        id=control.constraint_id,
-                        asset_id=asset_id,
-                        document_id=document_id,
-                        field_name=control.field,
-                        normalized_value={"value": control.value, "unit": control.unit},
-                        evidence_span=control.evidence_span.model_dump(mode="json"),
-                        confirmed=control.confirmed,
-                    )
-                )
+            for policy in policies:
+                if policy.id not in existing_policies:
+                    session.add(policy)
             session.flush()
             session.commit()
             created = not existed
