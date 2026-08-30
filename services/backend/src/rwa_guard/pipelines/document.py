@@ -294,7 +294,9 @@ def extract_controls(
                 ai_succeeded = True
                 existing_fields = {item.field for item in controls}
                 contributed_ai = [
-                    item for item in ai_candidates if item.field not in existing_fields
+                    item.model_copy(update={"confirmed": False})
+                    for item in ai_candidates
+                    if item.field not in existing_fields
                 ]
                 controls.extend(contributed_ai)
                 ai_model = anthropic_extractor.model

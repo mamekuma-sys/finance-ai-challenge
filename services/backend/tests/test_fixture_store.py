@@ -54,6 +54,22 @@ def test_text_fixture_hash_is_stable_across_platform_line_endings() -> None:
     assert all(b"\r\n" not in path.read_bytes() for path in solidity_files)
 
 
+def test_manifest_hash_treats_lf_and_crlf_as_same_text_fixture(tmp_path: Path) -> None:
+    for relative in [MANIFEST_PATH, *REQUIRED_FIXTURE_FILES]:
+        destination = tmp_path / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        copy2(REPOSITORY / relative, destination)
+        if destination.suffix in {".txt", ".sol"}:
+            normalized = destination.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            destination.write_bytes(normalized.replace(b"\n", b"\r\n"))
+
+    store = fixture_store_for_settings(
+        Settings(app_env="production", rwa_guard_fixture_root=tmp_path)
+    )
+
+    assert "총 발행량" in store.read_text(DOCUMENT_FILE)
+
+
 def test_configured_fixture_root_rejects_hash_mismatch(tmp_path: Path) -> None:
     for relative in [MANIFEST_PATH, *REQUIRED_FIXTURE_FILES]:
         destination = tmp_path / relative

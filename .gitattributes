@@ -2,3 +2,4 @@ data/synthetic/documents/*.txt text eol=lf
 chain/src/fixtures/*.sol text eol=lf
 apps/web/src/types/generated/* text eol=lf
 services/backend/tests/fixtures/* text eol=lf
+services/backend/tests/golden/documents/*.txt text eol=lf

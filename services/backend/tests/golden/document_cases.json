@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "is_synthetic": true,
-  "accuracy_threshold": 0.9,
+  "measurement_scope": "synthetic_txt_deterministic_p0_six_fields",
+  "exact_match_threshold": 0.9,
   "fields": [
     "max_supply",
     "issuer_role",
@@ -10,10 +11,14 @@
     "price_band_breach",
     "pauser_role"
   ],
+  "unmeasured_fields": [
+    "effective_date"
+  ],
   "cases": [
     {
       "case_id": "baseline_full",
       "path": "data/synthetic/documents/issuance-terms-01.txt",
+      "sha256_lf": "sha256:0b45057443d67198c38014b2757073e30bd98e655553b6447b74779db9a4db80",
       "description": "제출 데모가 쓰는 합성 발행조건서. 6개 필수 필드가 모두 산문으로 있다.",
       "suspicious_instructions": false,
       "expected": {
@@ -46,6 +51,7 @@
     {
       "case_id": "key_value_form",
       "path": "services/backend/tests/golden/documents/key-value-form.txt",
+      "sha256_lf": "sha256:d59e0ffcb64e08f284c44d83eb927384b971e0347131fbeaeff97cc072e2d708",
       "description": "동일 조건을 key=value 표기로 적은 문서. 두 번째 패턴 계열을 검증한다.",
       "suspicious_instructions": false,
       "expected": {
@@ -78,6 +84,7 @@
     {
       "case_id": "missing_max_supply",
       "path": "services/backend/tests/golden/documents/missing-max-supply.txt",
+      "sha256_lf": "sha256:fee6bb2e2a7791b0fa8fcefe34c76f8c4acd9c2190d3d8a6d0e87deeed5e87ef",
       "description": "제2조를 삭제한 문서. 근거가 없으면 값을 만들지 않아야 한다.",
       "suspicious_instructions": false,
       "expected": {
@@ -107,6 +114,7 @@
     {
       "case_id": "reordered_clauses",
       "path": "services/backend/tests/golden/documents/reordered-clauses.txt",
+      "sha256_lf": "sha256:f2d9fcd2394f45441256fafe0794b4bc9d081a0e31f525a750d6d5d00f955115",
       "description": "조항 순서를 역순으로 뒤집은 문서. 결과가 순서에 의존하면 안 된다.",
       "suspicious_instructions": false,
       "expected": {
@@ -139,6 +147,7 @@
     {
       "case_id": "no_thousands_separator",
       "path": "services/backend/tests/golden/documents/no-thousands-separator.txt",
+      "sha256_lf": "sha256:34d0ef8709e6667a7dd8726fe6b04240f5ac1e95bdc9be8d9258e9a383c82981",
       "description": "100,000 대신 100000으로 적은 문서. 같은 정규화 값이어야 한다.",
       "suspicious_instructions": false,
       "expected": {
@@ -171,6 +180,7 @@
     {
       "case_id": "prompt_injection",
       "path": "services/backend/tests/golden/documents/prompt-injection.txt",
+      "sha256_lf": "sha256:40fd48f58048edf30a116ebfca64cca4787014c21b0ba28b3e53c771d5912ce7",
       "description": "injection 문장이 삽입된 문서. 지시문을 실행하지 않고 값 추출은 정상이며 한계가 기록돼야 한다.",
       "suspicious_instructions": true,
       "expected": {
@@ -203,6 +213,7 @@
     {
       "case_id": "instruction_line_decoy",
       "path": "services/backend/tests/golden/documents/instruction-line-decoy.txt",
+      "sha256_lf": "sha256:2fcad1d28f6e66d4b16d84b79f42e66ec97c4f938b8481a91bba962c3a7ef85b",
       "description": "지시문 라인에 가짜 값(999,999)을 숨기고 다음 줄에 진짜 조항을 둔 문서. 지시문은 건너뛰되 진짜 조항은 찾아야 한다.",
       "suspicious_instructions": false,
       "expected": {
@@ -235,6 +246,7 @@
     {
       "case_id": "unrelated_document",
       "path": "services/backend/tests/golden/documents/unrelated-document.txt",
+      "sha256_lf": "sha256:70988f56af32829222df910358826be43de66ed16df83e535f99efc822af413d",
       "description": "통제조건이 없는 임대차 계약서. 한 건도 추출하면 안 된다.",
       "suspicious_instructions": false,
       "expected": {
@@ -249,6 +261,7 @@
     {
       "case_id": "empty_body",
       "path": "services/backend/tests/golden/documents/empty-body.txt",
+      "sha256_lf": "sha256:25b021c73e84ce0bc959b0fd58c05ab1a54b4673ca7ef13d8a519d2249b9341a",
       "description": "머리말만 있는 빈 문서.",
       "suspicious_instructions": false,
       "expected": {
@@ -263,6 +276,7 @@
     {
       "case_id": "partial_two_fields",
       "path": "services/backend/tests/golden/documents/partial-two-fields.txt",
+      "sha256_lf": "sha256:79c51e7dd64651bf1c68f1bf2c6d3d6f5d2161dbaa7fb88dea2f3738bac7a552",
       "description": "두 조항만 확정된 초안. 부분 추출이 정상으로 보고돼야 한다.",
       "suspicious_instructions": false,
       "expected": {

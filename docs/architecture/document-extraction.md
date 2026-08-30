@@ -5,6 +5,7 @@ handoff 항목 4의 최소 산출물 중 "6개 추출 필드"와 "실패 원칙"
 
 이 문서는 `services/backend/src/rwa_guard/pipelines/document.py`의 **현재 동작을 서술**한 것이며,
 새 규칙을 제안하지 않는다. 코드와 이 문서가 어긋나면 둘을 같은 변경에서 갱신한다.
+아래 측정은 체크인된 합성 TXT 10개를 결정론적 추출 모드로 실행한 결과에만 한정한다.
 
 ---
 
@@ -30,7 +31,8 @@ handoff 항목 4의 최소 산출물 중 "6개 추출 필드"와 "실패 원칙"
 담고, `page.text[start:end]`가 `quote`와 **글자 단위로 같아야** 한다.
 
 이 대조는 결정론적이며 AI 신뢰도와 무관하다. 평가셋의
-`test_every_quote_exists_verbatim_in_the_source_page`가 케이스마다 이를 강제한다. 기준은 100%다.
+`test_every_quote_exists_verbatim_in_the_source_page`가 이 코퍼스에서 반환된 모든 span에 이를
+강제한다. 이는 AI/PDF/실데이터의 인용 정확도나 대회 성능을 뜻하지 않는다.
 
 **근거가 없으면 값을 만들지 않는다.** 조항을 찾지 못한 필드는 결과에서 빠지고
 `limitations`에 남는다. 빈 값이나 추정값을 채우지 않는다.
@@ -85,6 +87,20 @@ AI 실패 하나로 전체를 실패로 만들지 않는다. P0가 AI 없이도 
 | `limitations` | 위 실패 사유 문자열 목록 |
 
 AI가 기여하지 않았는데 `ai_model`을 남기지 않는다. 화면과 리포트가 "AI가 판정했다"고 오해하면 안 된다.
+AI 추출기가 잘못해 `confirmed=true` 후보를 반환해도 파이프라인은 AI 기여분을
+`confirmed=false`로 덮어쓴다. 현재 `ControlSpec`에는 별도 `NEEDS_REVIEW` 필드가 없으므로,
+문서 통제조건 계약에서 AI 단독 후보의 검토 필요 상태는 `confirmed=false`로 표현한다.
+`CodeFinding.status=NEEDS_REVIEW`와는 다른 계약이다.
+
+### 3.5 Pydantic/OpenAPI 계약 대조
+
+평가 러너는 각 추출 결과를 `ControlSpec`으로 다시 검증하고, 직렬화된 키 집합과 필수 키가
+`contracts/generated/openapi.json`의 `ControlSpec`과 같은지 확인한다. 기대값 fixture는
+`value`와 `unit`을 정답으로 제공할 뿐, 런타임 payload를 복제하지 않는다.
+
+현재 동결된 P0 추출기와 `ControlSpec` 소비 경로는 6개 필드만 사용한다. PRD FR-02에 남아 있는
+`effective_date`는 전용 구현과 평가 케이스가 없으므로 이 평가의 분모에서 제외한다. 따라서 아래
+수치를 FR-02 전체 필드 충족으로 인용할 수 없다.
 
 ---
 
@@ -94,18 +110,25 @@ AI가 기여하지 않았는데 `ai_model`을 남기지 않는다. 화면과 리
 |---|---|
 | 케이스 | 10개 (`document_cases.json`) |
 | 판정 | 케이스 × P0 필드 6개 = 60건 |
-| 측정 정확도 | `document-evaluation.json`에 기록하며 테스트가 실제 실행과 대조한다 |
-| 임계값 | 0.9 (PRD §10.4) |
-| quote 실재성 | 100% |
+| 실행 결과 | 합성 TXT 결정론적 6필드 exact match 60/60 |
+| 회귀 게이트 | scoped exact match 0.9 |
+| quote 검사 | 이 실행에서 반환된 모든 span의 원문 위치 일치 |
 
-**현재 평가셋은 결정론적 추출기만 측정한다.** `AnthropicControlExtractor`는 실제 API 호출이
-필요해 포함하지 않았다. AI 경로 평가는 키·비용·재현성 문제가 걸려 있어 팀 합의 후 별도로 정한다.
+`document-evaluation.json`의 `exact_match_rate=1.0`은 **체크인된 합성 TXT 10개,
+결정론적 추출기, P0 6개 필드**에만 해당한다. Anthropic/기타 AI, PDF, 실데이터·대회 비공개
+데이터, `effective_date`는 측정하지 않았다. 따라서 이 값을 AI/PDF/실데이터 정확도 또는
+대회 성능으로 표현하지 않는다.
+PRD §10.4도 0.9를 목표로 두지만, 제외 항목이 있으므로 이 회귀 게이트 통과만으로
+PRD의 전체 문서 추출 목표를 달성했다고 주장하지 않는다.
+
+각 문서의 `sha256_lf`는 CRLF와 CR을 LF로 정규화한 UTF-8 바이트를 해시한다.
+`.gitattributes`도 평가 TXT를 LF로 고정하므로 Windows와 Linux checkout에서 같은 입력을 검증한다.
 
 ---
 
 ## 5. 하지 않는 것
 
-- LLM 단독 결과를 확정으로 승격하지 않는다. AI 기여분은 항상 사람 확정을 거친다
+- LLM 단독 결과를 확정으로 승격하지 않는다. AI 기여분은 항상 `confirmed=false`로 남긴다
 - 근거가 없는 필드에 값을 채우지 않는다
 - 업로드 문서의 지시문을 시스템 명령으로 실행하지 않는다
 - AI 실패를 정상으로 위장하지 않는다. `limitations`에 남긴다

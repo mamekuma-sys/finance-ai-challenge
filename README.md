@@ -83,6 +83,20 @@ PowerShell에서 `./scripts/verify.ps1`을 실행한다. Backend 개발 의존�
 `node_modules`, npm, Foundry/forge가 모두 필수이며 하나라도 없으면 즉시 실패한다.
 검증은 backend pytest/Ruff/mypy, Web verify, forge fmt/build/test를 모두 실행한다.
 
+### 문서 추출 평가
+
+체크인된 합성 TXT 10개의 결정론적 P0 6필드 경로는 다음 명령으로 재현한다.
+
+```powershell
+Set-Location services/backend
+$env:PYTHONPATH = (Resolve-Path src).Path
+python -m pytest tests/test_document_golden.py
+```
+
+기록된 `exact_match_rate=1.0`은 이 합성 TXT 결정론적 실행 범위에만 해당한다.
+Anthropic/기타 AI, PDF, 실데이터·대회 비공개 데이터, `effective_date`는 측정하지 않았으며,
+이 값을 해당 경로의 정확도나 대회 성능으로 해석할 수 없다.
+
 ## 구현 기준 문서
 
 1. [`docs/product/prd.md`](docs/product/prd.md) — 기능·우선순위·수용 기준의 단일 진실

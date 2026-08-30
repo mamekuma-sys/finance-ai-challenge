@@ -2,11 +2,18 @@
   "dataset_version": "1.0.0",
   "is_synthetic": true,
   "extractor": "deterministic-synthetic-parser",
-  "accuracy_threshold": 0.9,
+  "measurement_scope": "synthetic_txt_deterministic_p0_six_fields",
+  "excludes": [
+    "anthropic_or_other_ai",
+    "pdf",
+    "real_or_competition_data",
+    "effective_date"
+  ],
+  "exact_match_threshold": 0.9,
   "measured": {
     "total_field_outcomes": 60,
     "correct": 60,
-    "accuracy": 1.0,
+    "exact_match_rate": 1.0,
     "misses": []
   },
   "resolved_gaps": [
