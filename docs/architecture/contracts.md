@@ -1,5 +1,7 @@
 # Evidence contract 흐름
 
+시각 다이어그램: [`rwa-guard-system-diagram.html`](./rwa-guard-system-diagram.html)
+
 ```text
 발행 문서
   └─ ControlSpec(document page/span, confirmed)

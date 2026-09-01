@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="RWA Guard의 P0 스캔, P1 온체인 감시, 배포 구성요소 사이의 데이터 흐름과 시스템 아키텍처"
+    />
+    <title>RWA Guard — System Architecture &amp; Data Flow</title>
+    <style>
+      :root {
+        --paper: #e8ece9;
+        --surface: #f7f8f6;
+        --white: #ffffff;
+        --ink: #172126;
+        --muted: #66716f;
+        --rule: #b8c2bd;
+        --blue: #2d5bff;
+        --blue-soft: #e9edff;
+        --green: #27725b;
+        --green-soft: #e5f0ec;
+        --orange: #aa6817;
+        --orange-soft: #f7eddd;
+        --red: #c43d32;
+        --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+        --sans: Pretendard, "IBM Plex Sans KR", "Noto Sans KR", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 320px;
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background:
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 31px,
+            rgba(23, 33, 38, 0.04) 31px,
+            rgba(23, 33, 38, 0.04) 32px
+          ),
+          var(--paper);
+      }
+
+      .page {
+        width: min(1540px, calc(100% - 32px));
+        margin: 16px auto;
+        border: 1px solid var(--ink);
+        background: var(--surface);
+        box-shadow: 8px 8px 0 rgba(23, 33, 38, 0.12);
+      }
+
+      .masthead {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 24px;
+        align-items: end;
+        padding: 22px 24px;
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .eyebrow,
+      .meta,
+      .section-id,
+      .lane-id,
+      .node-kind,
+      .zone-location,
+      .footnote {
+        font-family: var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(30px, 4.2vw, 58px);
+        line-height: 0.98;
+        letter-spacing: -0.05em;
+      }
+
+      .lead {
+        max-width: 830px;
+        margin: 13px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .meta {
+        display: grid;
+        gap: 7px;
+        justify-items: end;
+        color: var(--muted);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .meta strong {
+        color: var(--ink);
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin: 0;
+        padding: 13px 24px;
+        border-bottom: 1px solid var(--rule);
+        background: var(--white);
+        color: var(--muted);
+        font-size: 11px;
+        list-style: none;
+      }
+
+      .legend li {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .legend-line {
+        width: 22px;
+        border-top: 3px solid var(--ink);
+      }
+
+      .legend-line.p0 { border-color: var(--blue); }
+      .legend-line.p1 { border-color: var(--green); }
+      .legend-line.replay { border-color: var(--orange); border-top-style: dashed; }
+      .legend-line.return { border-width: 1px; border-top-style: dashed; }
+
+      .diagram-section {
+        padding: 26px 24px 30px;
+      }
+
+      .diagram-section + .diagram-section {
+        border-top: 1px solid var(--ink);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) minmax(280px, 0.75fr);
+        gap: 18px;
+        align-items: baseline;
+        margin-bottom: 22px;
+      }
+
+      .section-id {
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(22px, 2.7vw, 34px);
+        letter-spacing: -0.035em;
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+        text-align: right;
+      }
+
+      .flow-lane {
+        display: grid;
+        grid-template-columns: 90px 18px 100px 18px 100px 18px 100px 18px minmax(220px, 1.55fr) 18px 112px 18px 112px;
+        align-items: stretch;
+        min-width: 970px;
+        padding: 12px;
+        border-left: 5px solid var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .flow-lane.p1 {
+        grid-template-columns: 118px 20px 140px 20px 128px 20px minmax(160px, 1.2fr) 20px 140px 20px 125px;
+        min-width: 970px;
+        margin-top: 16px;
+        border-left-color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .lane-scroll {
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .lane-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-width: 970px;
+        padding: 10px 14px;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+        background: var(--white);
+      }
+
+      .lane-title.p0-title {
+        min-width: 970px;
+      }
+
+      .lane-title strong {
+        font-size: 13px;
+      }
+
+      .lane-title span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .lane-id {
+        margin-right: 9px;
+        color: var(--blue);
+        font-size: 10px;
+      }
+
+      .p1-title .lane-id {
+        color: var(--green);
+      }
+
+      .flow-node {
+        position: relative;
+        min-width: 0;
+        padding: 11px 9px;
+        border: 1px solid var(--rule);
+        background: var(--white);
+      }
+
+      .flow-node::before {
+        position: absolute;
+        top: -1px;
+        bottom: -1px;
+        left: -1px;
+        width: 4px;
+        background: var(--ink);
+        content: "";
+      }
+
+      .flow-node.contract::before { background: var(--blue); }
+      .flow-node.chain::before { background: var(--green); }
+      .flow-node.replay::before { background: var(--orange); }
+      .flow-node.output::before { background: var(--red); }
+
+      .node-kind {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .flow-node strong {
+        display: block;
+        overflow-wrap: anywhere;
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
+      .flow-node p,
+      .flow-node ul {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .flow-node ul {
+        padding-left: 15px;
+      }
+
+      .flow-node li + li {
+        margin-top: 3px;
+      }
+
+      .flow-arrow {
+        position: relative;
+        align-self: center;
+        height: 2px;
+        margin: 0 3px;
+        color: var(--blue);
+        background: currentColor;
+      }
+
+      .p1 .flow-arrow {
+        color: var(--green);
+      }
+
+      .flow-arrow::after {
+        position: absolute;
+        top: -4px;
+        right: -1px;
+        width: 8px;
+        height: 8px;
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        transform: rotate(45deg);
+        content: "";
+      }
+
+      .flow-arrow small {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 8px;
+        text-transform: uppercase;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      .worker-pipeline {
+        display: grid;
+        grid-template-columns: 1fr 24px 1fr;
+        gap: 8px 0;
+        min-width: 0;
+      }
+
+      .worker-stage {
+        padding: 9px;
+        border-top: 3px solid var(--ink);
+        background: var(--surface);
+      }
+
+      .worker-stage.contract-stage {
+        border-color: var(--blue);
+      }
+
+      .worker-stage strong {
+        font-size: 11px;
+      }
+
+      .worker-stage span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 9px;
+      }
+
+      .mini-arrow {
+        position: relative;
+        align-self: center;
+        height: 1px;
+        margin: 0 5px;
+        background: var(--ink);
+      }
+
+      .mini-arrow::after {
+        position: absolute;
+        top: -3px;
+        right: 0;
+        width: 6px;
+        height: 6px;
+        border-top: 1px solid var(--ink);
+        border-right: 1px solid var(--ink);
+        transform: rotate(45deg);
+        content: "";
+      }
+
+      .mode-split {
+        display: grid;
+        gap: 5px;
+        margin-top: 8px;
+      }
+
+      .mode-row {
+        padding: 6px 7px;
+        border-left: 3px solid var(--green);
+        background: var(--surface);
+        font-size: 10px;
+      }
+
+      .mode-row.replay-row {
+        border-left-color: var(--orange);
+      }
+
+      .mode-row b {
+        font-family: var(--mono);
+        font-size: 9px;
+      }
+
+      .isolation-note {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 13px;
+        align-items: center;
+        margin-top: 14px;
+        padding: 11px 14px;
+        border: 1px dashed var(--orange);
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .isolation-note strong {
+        color: var(--orange);
+        font-family: var(--mono);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .runtime-map {
+        display: grid;
+        grid-template-columns: 90px 22px minmax(140px, 0.9fr) 22px minmax(300px, 1.75fr) 22px minmax(170px, 1fr) 22px minmax(150px, 0.9fr);
+        align-items: stretch;
+        min-width: 970px;
+      }
+
+      .runtime-arrow {
+        position: relative;
+        align-self: center;
+        height: 2px;
+        margin: 0 4px;
+        background: var(--ink);
+      }
+
+      .runtime-arrow::after {
+        position: absolute;
+        top: -4px;
+        right: 0;
+        width: 8px;
+        height: 8px;
+        border-top: 2px solid var(--ink);
+        border-right: 2px solid var(--ink);
+        transform: rotate(45deg);
+        content: "";
+      }
+
+      .runtime-arrow.two-way::before {
+        position: absolute;
+        top: -4px;
+        left: 0;
+        width: 8px;
+        height: 8px;
+        border-bottom: 2px solid var(--ink);
+        border-left: 2px solid var(--ink);
+        transform: rotate(45deg);
+        content: "";
+      }
+
+      .runtime-arrow span {
+        position: absolute;
+        bottom: 9px;
+        left: 50%;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 8px;
+        text-align: center;
+        text-transform: uppercase;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      .actor {
+        display: grid;
+        place-items: center;
+        min-height: 350px;
+        border-top: 4px solid var(--ink);
+        border-bottom: 1px solid var(--rule);
+        background: var(--white);
+        text-align: center;
+      }
+
+      .actor-symbol {
+        display: grid;
+        place-items: center;
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 12px;
+        border: 1px solid var(--ink);
+        border-radius: 50%;
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .actor strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .actor span:last-child {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .runtime-zone {
+        min-width: 0;
+        min-height: 350px;
+        padding: 15px;
+        border-top: 4px solid var(--ink);
+        border-bottom: 1px solid var(--rule);
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .runtime-zone.docker { border-top-color: var(--blue); }
+      .runtime-zone.data { border-top-color: var(--green); }
+      .runtime-zone.external { border-top-color: var(--orange); }
+
+      .zone-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+        margin-bottom: 14px;
+      }
+
+      .zone-heading h3 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .zone-location {
+        color: var(--muted);
+        font-size: 8px;
+        text-align: right;
+      }
+
+      .runtime-node {
+        padding: 11px;
+        border-left: 4px solid var(--ink);
+        background: var(--white);
+      }
+
+      .runtime-node + .runtime-node {
+        margin-top: 9px;
+      }
+
+      .runtime-node.p0 { border-left-color: var(--blue); }
+      .runtime-node.p1 { border-left-color: var(--green); }
+      .runtime-node.external-node { border-left-color: var(--orange); }
+
+      .runtime-node strong {
+        display: block;
+        font-size: 12px;
+      }
+
+      .runtime-node p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .docker-grid {
+        display: grid;
+        grid-template-columns: 0.78fr 1.22fr;
+        gap: 9px;
+      }
+
+      .docker-grid .runtime-node + .runtime-node {
+        margin-top: 0;
+      }
+
+      .stacked-nodes {
+        display: grid;
+        gap: 9px;
+      }
+
+      .stacked-nodes .runtime-node + .runtime-node {
+        margin-top: 0;
+      }
+
+      .internal-route {
+        grid-column: 1 / 3;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 7px 9px;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 8px;
+        text-transform: uppercase;
+      }
+
+      .internal-route::before {
+        flex: 1;
+        border-top: 1px solid var(--blue);
+        content: "";
+      }
+
+      .internal-route::after {
+        flex: 1;
+        border-top: 1px solid var(--green);
+        content: "";
+      }
+
+      .trust-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        margin-top: 20px;
+        border: 1px solid var(--rule);
+        background: var(--rule);
+        gap: 1px;
+      }
+
+      .trust-item {
+        padding: 13px;
+        background: var(--surface);
+      }
+
+      .trust-item b {
+        display: block;
+        margin-bottom: 5px;
+        font-family: var(--mono);
+        font-size: 9px;
+      }
+
+      .trust-item span {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .contracts-strip {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        border-top: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        background: var(--white);
+      }
+
+      .contract-item {
+        position: relative;
+        min-width: 0;
+        padding: 14px 18px;
+      }
+
+      .contract-item + .contract-item {
+        border-left: 1px solid var(--rule);
+      }
+
+      .contract-item:not(:last-child)::after {
+        position: absolute;
+        top: 50%;
+        right: -6px;
+        z-index: 1;
+        width: 10px;
+        height: 10px;
+        border-top: 1px solid var(--ink);
+        border-right: 1px solid var(--ink);
+        background: var(--white);
+        transform: translateY(-50%) rotate(45deg);
+        content: "";
+      }
+
+      .contract-item strong {
+        display: block;
+        overflow-wrap: anywhere;
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+
+      .contract-item span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.4;
+      }
+
+      .contract-item.optional strong {
+        color: var(--green);
+      }
+
+      .footer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        padding: 14px 24px;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.5;
+      }
+
+      .footer strong {
+        color: var(--ink);
+      }
+
+      .footnote {
+        letter-spacing: 0.035em;
+        text-transform: none;
+      }
+
+      @media (max-width: 900px) {
+        .masthead {
+          grid-template-columns: 1fr;
+        }
+
+        .meta {
+          grid-template-columns: repeat(3, auto);
+          justify-content: start;
+          justify-items: start;
+        }
+
+        .section-heading {
+          grid-template-columns: auto 1fr;
+        }
+
+        .section-heading p {
+          grid-column: 2;
+          text-align: left;
+        }
+
+        .trust-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .contracts-strip {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .contract-item:nth-child(4) {
+          border-left: 0;
+        }
+
+        .contract-item:nth-child(n + 4) {
+          border-top: 1px solid var(--rule);
+        }
+
+        .contract-item:nth-child(3)::after {
+          display: none;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .page {
+          width: 100%;
+          margin: 0;
+          border-right: 0;
+          border-left: 0;
+          box-shadow: none;
+        }
+
+        .masthead,
+        .diagram-section,
+        .footer {
+          padding-right: 15px;
+          padding-left: 15px;
+        }
+
+        .legend {
+          padding-right: 15px;
+          padding-left: 15px;
+        }
+
+        .meta {
+          grid-template-columns: 1fr;
+        }
+
+        .section-heading {
+          grid-template-columns: 1fr;
+        }
+
+        .section-heading p {
+          grid-column: 1;
+        }
+
+        .trust-strip,
+        .contracts-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .contract-item + .contract-item {
+          border-top: 1px solid var(--rule);
+          border-left: 0;
+        }
+
+        .contract-item:not(:last-child)::after {
+          top: auto;
+          right: auto;
+          bottom: -6px;
+          left: 20px;
+          transform: rotate(135deg);
+        }
+
+        .footer {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        @page {
+          size: A3 landscape;
+          margin: 10mm;
+        }
+
+        body {
+          background: #fff;
+        }
+
+        .page {
+          width: 100%;
+          margin: 0;
+          border: 0;
+          box-shadow: none;
+        }
+
+        .lane-scroll {
+          overflow: visible;
+        }
+
+        .diagram-section {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">RWA Guard / Target architecture</p>
+          <h1>System Architecture<br />&amp; Data Flow</h1>
+          <p class="lead">
+            합성 발행 문서와 Solidity 소스가 P0 분석 작업으로 처리되는 경로,
+            Replay 이벤트가 P0 증거로 들어오는 현재 경로와 P1 승격 시 Kairos
+            이벤트가 들어올 목표 경로, 그리고 Web·API·worker·데이터 저장소 사이의
+            런타임 경계를 함께 표시합니다. 제출판은 REPLAY로 고정되어 있습니다.
+          </p>
+        </div>
+        <div class="meta" aria-label="다이어그램 메타데이터">
+          <span>PRODUCT <strong>RWA GUARD</strong></span>
+          <span>NETWORK <strong>KAIA KAIROS</strong></span>
+          <span>SCOPE <strong>P0 READY + P1 DESIGN ONLY</strong></span>
+        </div>
+      </header>
+
+      <ul class="legend" aria-label="데이터 흐름 범례">
+        <li><span class="legend-line p0" aria-hidden="true"></span>P0 발행 전 검증</li>
+        <li><span class="legend-line p1" aria-hidden="true"></span>P1 유통 중 감시 설계</li>
+        <li><span class="legend-line replay" aria-hidden="true"></span>Replay 입력</li>
+        <li><span class="legend-line return" aria-hidden="true"></span>조회·상태 반환</li>
+      </ul>
+
+      <section class="diagram-section" aria-labelledby="data-flow-title">
+        <div class="section-heading">
+          <span class="section-id">01</span>
+          <h2 id="data-flow-title">End-to-end data flow</h2>
+          <p>P0 실제 처리 순서와 미승격 P1 목표 흐름</p>
+        </div>
+
+        <div class="lane-scroll">
+          <div class="lane-title p0-title">
+            <strong><span class="lane-id">P0</span>발행 전 문서–코드 검증</strong>
+            <span>fixture만으로 재현 가능 · P1 장애와 독립</span>
+          </div>
+          <div class="flow-lane" aria-label="P0 발행 전 검증 데이터 흐름">
+            <article class="flow-node">
+              <span class="node-kind">Input</span>
+              <strong>합성 입력</strong>
+              <ul>
+                <li>발행 문서 PDF/TXT</li>
+                <li>Solidity source</li>
+              </ul>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>upload</small></span>
+            <article class="flow-node">
+              <span class="node-kind">Vercel</span>
+              <strong>Next.js Web</strong>
+              <p>자산 등록 · 문서 확인<br />소스 입력 · scan 요청</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>REST</small></span>
+            <article class="flow-node">
+              <span class="node-kind">Docker</span>
+              <strong>FastAPI</strong>
+              <p>입력 검증 · hash 생성<br />scan/job 생성</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>enqueue</small></span>
+            <article class="flow-node">
+              <span class="node-kind">PostgreSQL</span>
+              <strong>jobs</strong>
+              <p>QUEUED → RUNNING<br />재시도 · 부분 실패</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>claim</small></span>
+            <article class="flow-node contract">
+              <span class="node-kind">Analysis worker</span>
+              <strong>결정적 분석 파이프라인</strong>
+              <div class="worker-pipeline">
+                <div class="worker-stage contract-stage">
+                  <strong>Document pipeline</strong>
+                  <span>ControlSpec</span>
+                </div>
+                <span class="mini-arrow" aria-hidden="true"></span>
+                <div class="worker-stage">
+                  <strong>Policy comparison</strong>
+                  <span>MismatchFinding</span>
+                </div>
+                <div class="worker-stage contract-stage">
+                  <strong>Contract pipeline</strong>
+                  <span>CodeFinding</span>
+                </div>
+                <span class="mini-arrow" aria-hidden="true"></span>
+                <div class="worker-stage">
+                  <strong>Report assembler</strong>
+                  <span>EvidenceReport</span>
+                </div>
+              </div>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>persist</small></span>
+            <article class="flow-node contract">
+              <span class="node-kind">Supabase</span>
+              <strong>Evidence store</strong>
+              <p>scan_runs · constraints<br />findings · mismatches<br />Storage: 문서·리포트</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>query</small></span>
+            <article class="flow-node output">
+              <span class="node-kind">Web output</span>
+              <strong>검토·증적</strong>
+              <p>Evidence Spine · diff<br />HTML / JSON report</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="lane-scroll">
+          <div class="lane-title p1-title">
+            <strong><span class="lane-id">P1</span>유통 중 온체인·가격 감시</strong>
+            <span>설계 전용 · 승격 전 제출판 비노출 · 현재 REPLAY만 사용</span>
+          </div>
+          <div class="flow-lane p1" aria-label="P1 온체인 감시 데이터 흐름">
+            <article class="flow-node chain">
+              <span class="node-kind">Source</span>
+              <strong>체인·가격 입력</strong>
+              <div class="mode-split">
+                <div class="mode-row"><b>LIVE</b> Kairos RPC/log</div>
+                <div class="mode-row replay-row"><b>REPLAY</b> fixture version</div>
+              </div>
+              <p>+ valuation snapshot</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>poll/load</small></span>
+            <article class="flow-node chain">
+              <span class="node-kind">P1 design / not deployed</span>
+              <strong>Chain + valuation worker</strong>
+              <p>block cursor · log dedupe<br />receipt · band 계산</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>normalize</small></span>
+            <article class="flow-node contract">
+              <span class="node-kind">Canonical data</span>
+              <strong>OnchainEvidence</strong>
+              <p>chain · tx · log · block<br />LIVE | REPLAY</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>evaluate</small></span>
+            <article class="flow-node chain">
+              <span class="node-kind">P1 design / no migration</span>
+              <strong>Alert + RiskSnapshot</strong>
+              <p>가격 밴드 이탈 · 지속 횟수<br />데이터 최신성 · dedupe key</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>insert</small></span>
+            <article class="flow-node chain">
+              <span class="node-kind">Supabase</span>
+              <strong>events / alerts / snapshots</strong>
+              <p>PostgreSQL 저장<br />INSERT만 Realtime 발행</p>
+            </article>
+            <span class="flow-arrow" aria-hidden="true"><small>push/query</small></span>
+            <article class="flow-node output">
+              <span class="node-kind">Next.js Web</span>
+              <strong>관제 화면</strong>
+              <p>가격 차트 · 경보 피드<br />Evidence Spine pulse</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="isolation-note">
+          <strong>P1 isolation boundary</strong>
+          <span>현재 승격 게이트는 미통과입니다. 구현 시에도 RPC, valuation, Realtime 장애가 P0 scan job과 HTML/JSON 리포트 생성에 전파되지 않아야 합니다.</span>
+        </div>
+      </section>
+
+      <section class="diagram-section" aria-labelledby="runtime-title">
+        <div class="section-heading">
+          <span class="section-id">02</span>
+          <h2 id="runtime-title">Runtime &amp; deployment topology</h2>
+          <p>P0 실제 실행 위치와 P1 목표 배치</p>
+        </div>
+
+        <div class="lane-scroll">
+          <div class="runtime-map" aria-label="RWA Guard 런타임 및 배포 구성">
+            <div class="actor">
+              <div>
+                <span class="actor-symbol" aria-hidden="true">01</span>
+                <strong>보안·준법 담당자</strong>
+                <span>브라우저 / read-only demo</span>
+              </div>
+            </div>
+
+            <span class="runtime-arrow two-way" aria-hidden="true"><span>HTTPS</span></span>
+
+            <section class="runtime-zone">
+              <div class="zone-heading">
+                <h3>Web</h3>
+                <span class="zone-location">Vercel</span>
+              </div>
+              <article class="runtime-node p0">
+                <strong>Next.js App Router</strong>
+                <p>Server Components + BFF<br />Assurance Ledger · report</p>
+              </article>
+              <article class="runtime-node p1">
+                <strong>Client islands</strong>
+                <p>ECharts · TanStack Query<br />Realtime alert subscription</p>
+              </article>
+            </section>
+
+            <span class="runtime-arrow two-way" aria-hidden="true"><span>REST / JSON</span></span>
+
+            <section class="runtime-zone docker">
+              <div class="zone-heading">
+                <h3>API + workers</h3>
+                <span class="zone-location">Always-on Docker</span>
+              </div>
+              <div class="docker-grid">
+                <div class="stacked-nodes">
+                  <article class="runtime-node p0">
+                    <strong>FastAPI</strong>
+                    <p>assets · scans · reports<br />health/live · health/ready</p>
+                  </article>
+                  <article class="runtime-node p1">
+                    <strong>Chain worker · P1 design</strong>
+                    <p>현재 미배포<br />cursor migration 없음</p>
+                  </article>
+                </div>
+                <article class="runtime-node p0">
+                  <strong>Analysis worker</strong>
+                  <p>
+                    PostgreSQL job claim<br />PyMuPDF document parsing<br />solc · Slither · AST · custom rules<br />Foundry tests · report assembly
+                  </p>
+                </article>
+                <div class="internal-route">same image · separate commands</div>
+              </div>
+            </section>
+
+            <span class="runtime-arrow two-way" aria-hidden="true"><span>SQL / object</span></span>
+
+            <section class="runtime-zone data">
+              <div class="zone-heading">
+                <h3>Data platform</h3>
+                <span class="zone-location">Supabase</span>
+              </div>
+              <article class="runtime-node p0">
+                <strong>PostgreSQL</strong>
+                <p>P0 jobs · scan/evidence tables<br />P1 cursor migration 없음</p>
+              </article>
+              <article class="runtime-node p0">
+                <strong>Storage</strong>
+                <p>발행 문서 · JSON/HTML 리포트</p>
+              </article>
+              <article class="runtime-node p1">
+                <strong>Limited Realtime · P1 design</strong>
+                <p>risk_snapshots migration 없음</p>
+              </article>
+            </section>
+
+            <span class="runtime-arrow two-way" aria-hidden="true"><span>API / RPC</span></span>
+
+            <section class="runtime-zone external">
+              <div class="zone-heading">
+                <h3>External</h3>
+                <span class="zone-location">Controlled dependencies</span>
+              </div>
+              <article class="runtime-node external-node">
+                <strong>Structured analysis API</strong>
+                <p>문서 구조화 · 의미 매핑 후보 · 설명</p>
+              </article>
+              <article class="runtime-node p1">
+                <strong>Kaia Kairos RPC · P1 design</strong>
+                <p>제출판 연결 없음 · receipt 없음</p>
+              </article>
+              <article class="runtime-node external-node">
+                <strong>Replay + valuation data</strong>
+                <p>versioned synthetic snapshots</p>
+              </article>
+            </section>
+          </div>
+        </div>
+
+        <div class="trust-strip" aria-label="시스템 신뢰 경계">
+          <div class="trust-item">
+            <b>AI BOUNDARY</b>
+            <span>AI 단독 결과는 NEEDS_REVIEW이며 CONFIRMED가 될 수 없습니다.</span>
+          </div>
+          <div class="trust-item">
+            <b>CHAIN BOUNDARY</b>
+            <span>실제 RPC와 receipt가 확인된 이벤트만 LIVE로 표시합니다.</span>
+          </div>
+          <div class="trust-item">
+            <b>SECRET BOUNDARY</b>
+            <span>현재 signer key는 구성하지 않습니다. P1 승격 시에도 Docker backend에만 둡니다.</span>
+          </div>
+          <div class="trust-item">
+            <b>FAILURE BOUNDARY</b>
+            <span>P1 의존성 장애는 P0 readiness와 scan path에 전파하지 않습니다.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="diagram-section" aria-labelledby="contracts-title">
+        <div class="section-heading">
+          <span class="section-id">03</span>
+          <h2 id="contracts-title">Canonical contract lineage</h2>
+          <p>Pydantic 원본 → JSON Schema/OpenAPI → Web 소비 타입</p>
+        </div>
+
+        <div class="contracts-strip" aria-label="공통 데이터 계약 계보">
+          <div class="contract-item">
+            <strong>ScanRun</strong>
+            <span>input hash · rule version · job status</span>
+          </div>
+          <div class="contract-item">
+            <strong>ControlSpec</strong>
+            <span>document page/span · confirmed</span>
+          </div>
+          <div class="contract-item">
+            <strong>CodeFinding</strong>
+            <span>rule · file/line · deterministic evidence</span>
+          </div>
+          <div class="contract-item">
+            <strong>MismatchFinding</strong>
+            <span>implemented · partial · missing · unknown</span>
+          </div>
+          <div class="contract-item optional">
+            <strong>OnchainEvidence</strong>
+            <span>tx/log/block · LIVE|REPLAY</span>
+          </div>
+          <div class="contract-item">
+            <strong>EvidenceReport</strong>
+            <span>immutable snapshot · complete lineage</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span class="footnote">
+          Source of truth: <strong>docs/product/prd.md</strong> ·
+          <strong>docs/architecture/stack-and-visual-direction.md</strong> ·
+          <strong>contracts/README.md</strong>
+        </span>
+        <span class="footnote">All fixtures are synthetic · P1 design only · 2026-09-01</span>
+      </footer>
+    </main>
+  </body>
+</html>
