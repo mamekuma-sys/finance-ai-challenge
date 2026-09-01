@@ -499,6 +499,9 @@ def test_legacy_ready_report_survives_bootstrap_then_persisted_source_rescans(
     worker_report = client.get(f"/v1/reports/{result['report_id']}").json()
     assert result["scan_run"]["status"] == "COMPLETED"
     assert worker_report["status"] == "READY"
+    assert result["exploit_risk"] == worker_report["report"]["exploit_risk"]
+    assert result["exploit_risk"]["score"] == 100
+    assert len(result["exploit_risk"]["contributors"]) == 3
     assert {
         (finding["rule_id"], finding["status"])
         for finding in result["code_findings"]

@@ -11,18 +11,14 @@ import pymupdf as fitz
 from anthropic import Anthropic
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from rwa_guard.domain.contracts import ControlSpec, EvidenceSpan
-
-P0_FIELDS = frozenset(
-    {
-        "max_supply",
-        "issuer_role",
-        "collateral_verified",
-        "oracle_max_age",
-        "price_band_breach",
-        "pauser_role",
-    }
+from rwa_guard.domain.contracts import (
+    P0_CONTROL_FIELDS,
+    ControlField,
+    ControlSpec,
+    EvidenceSpan,
 )
+
+P0_FIELDS = P0_CONTROL_FIELDS
 DOCUMENT_PIPELINE_VERSION = "1.0.0"
 _SUSPICIOUS_INSTRUCTION_PATTERNS = (
     re.compile(r"(?i)\bignore\s+(?:all\s+)?previous\s+instructions?\b"),
@@ -227,7 +223,7 @@ class DeterministicControlExtractor:
                     constraint_id=stable_constraint_id(
                         asset_id, document_id, definition.field
                     ),
-                    field=definition.field,
+                    field=ControlField(definition.field),
                     value=value,
                     unit=definition.unit,
                     evidence_span=EvidenceSpan(
@@ -338,7 +334,7 @@ def extract_controls(
 class _AICandidate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    field: str
+    field: ControlField
     value: str | int | float | bool
     unit: str | None = None
     page: int

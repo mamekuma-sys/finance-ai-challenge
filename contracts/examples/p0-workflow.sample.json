@@ -170,6 +170,50 @@
         "highest_severity": "CRITICAL",
         "critical_count": 1,
         "high_count": 0,
+        "exploit_risk": {
+          "scan_id": "scan_demo_vulnerable_02",
+          "score": 100,
+          "grade": "CRITICAL",
+          "contributors": [
+            {
+              "finding_id": "finding_mint_access_control_missing",
+              "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+              "severity": "CRITICAL",
+              "status": "CONFIRMED",
+              "weight": 40,
+              "confidence": 1.0,
+              "contribution": 40.0
+            },
+            {
+              "finding_id": "finding_mint_collateral_cap_missing",
+              "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+              "severity": "CRITICAL",
+              "status": "CONFIRMED",
+              "weight": 40,
+              "confidence": 1.0,
+              "contribution": 40.0
+            },
+            {
+              "finding_id": "finding_oracle_range_missing",
+              "rule_id": "ORACLE_VALIDATION_MISSING",
+              "severity": "HIGH",
+              "status": "CONFIRMED",
+              "weight": 25,
+              "confidence": 1.0,
+              "contribution": 25.0
+            }
+          ],
+          "has_confirmed_critical": true,
+          "floor_applied": false,
+          "rule_versions": {
+            "EXPLOIT_RISK_SCORE": "1.0.0",
+            "MINT_ACCESS_CONTROL_MISSING": "1.0.0",
+            "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
+            "ORACLE_VALIDATION_MISSING": "1.0.0"
+          },
+          "calculated_at": "2026-08-25T03:00:08Z",
+          "is_synthetic": true
+        },
         "evidence_mode": "REPLAY",
         "fixture_version": "0.2.0",
         "is_synthetic": true

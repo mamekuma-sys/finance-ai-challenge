@@ -37,8 +37,13 @@ def test_shared_example_matches_runtime_contract() -> None:
     report = _load()
 
     assert report.is_synthetic is True
-    assert report.code_findings[0].status is FindingStatus.CONFIRMED
-    assert report.code_findings[0].rule_id == "MINT_COLLATERAL_CAP_MISSING"
+    assert all(item.status is FindingStatus.CONFIRMED for item in report.code_findings)
+    assert {item.rule_id for item in report.code_findings} == {
+        "MINT_ACCESS_CONTROL_MISSING",
+        "MINT_COLLATERAL_CAP_MISSING",
+        "ORACLE_VALIDATION_MISSING",
+    }
+    assert report.exploit_risk is not None and report.exploit_risk.score == 100
     assert report.onchain_evidence[0].mode is EvidenceMode.REPLAY
 
 
@@ -68,18 +73,21 @@ def test_code_evidence_points_at_real_source_lines() -> None:
     이 테스트가 없어서 example·fixtures·web 세 곳이 존재하지 않는 23~25행을 가리키고 있었다.
     """
 
-    location = _load().code_findings[0].code_location
-    source = CONTRACT_SOURCE_ROOT / location.file
+    for finding in _load().code_findings:
+        location = finding.code_location
+        source = CONTRACT_SOURCE_ROOT / location.file
 
-    assert source.exists(), f"code_location.file이 실제 소스를 가리키지 않는다: {location.file}"
+        assert source.exists(), (
+            f"code_location.file이 실제 소스를 가리키지 않는다: {location.file}"
+        )
 
-    lines = source.read_text(encoding="utf-8").splitlines()
-    assert location.end_line <= len(lines), "end_line이 파일 길이를 넘는다"
+        lines = source.read_text(encoding="utf-8").splitlines()
+        assert location.end_line <= len(lines), "end_line이 파일 길이를 넘는다"
 
-    claimed = [line.strip() for line in location.excerpt.splitlines() if line.strip()]
-    actual = [line.strip() for line in lines[location.start_line - 1 : location.end_line]]
+        claimed = [line.strip() for line in location.excerpt.splitlines() if line.strip()]
+        actual = [line.strip() for line in lines[location.start_line - 1 : location.end_line]]
 
-    assert claimed == actual, "excerpt가 해당 라인의 실제 코드와 다르다"
+        assert claimed == actual, "excerpt가 해당 라인의 실제 코드와 다르다"
 
 
 def test_p0_workflow_requests_match_runtime_contracts() -> None:
@@ -104,5 +112,8 @@ def test_p0_workflow_requests_match_runtime_contracts() -> None:
         == "MINT_COLLATERAL_CAP_MISSING"
     )
     assert AlertSummary.model_validate(payload["alert"]).evidence_mode is EvidenceMode.REPLAY
-    assert DashboardResponse.model_validate(payload["dashboard"]).total_assets == 1
+    dashboard = DashboardResponse.model_validate(payload["dashboard"])
+    assert dashboard.total_assets == 1
+    assert dashboard.assets[0].exploit_risk is not None
+    assert dashboard.assets[0].exploit_risk.score == 100
     assert ReportResponse.model_validate(payload["report"]).human_review_required is True

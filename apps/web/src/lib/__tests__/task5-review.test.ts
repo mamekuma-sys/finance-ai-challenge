@@ -13,7 +13,6 @@ import {
   reportState,
   scanVerdict,
 } from "@/lib/scan-view";
-import { scoreOf } from "@/lib/exploit-risk";
 import type { CodeFinding, ControlSpec, MismatchFinding } from "@/types/ui";
 
 const control = {
@@ -62,33 +61,6 @@ describe("asset implementation state", () => {
     } satisfies MismatchFinding;
     expect(implementationByConstraint([mismatch]).get("control_1")).toBe("MISSING");
     expect(implementationByConstraint([]).get("control_1")).toBeUndefined();
-  });
-});
-
-describe("risk score evidence boundary", () => {
-  it("excludes NEEDS_REVIEW and UNKNOWN findings", () => {
-    const base = {
-      scan_id: "scan_1",
-      source_hash: `sha256:${"a".repeat(64)}`,
-      code_location: { file: "Fixture.sol", start_line: 1, end_line: 1, excerpt: "x" },
-      deterministic_evidence: [],
-      tool_versions: {},
-      is_synthetic: true as const,
-    };
-    const confirmed = {
-      ...base,
-      finding_id: "confirmed",
-      rule_id: "CONFIRMED_RULE",
-      severity: "CRITICAL",
-      status: "CONFIRMED",
-      title: "confirmed",
-    } satisfies CodeFinding;
-    const review = {
-      ...confirmed,
-      finding_id: "review",
-      status: "NEEDS_REVIEW",
-    } satisfies CodeFinding;
-    expect(scoreOf([confirmed, review])).toBe(scoreOf([confirmed]));
   });
 });
 

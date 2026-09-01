@@ -1,5 +1,5 @@
-import { gradeOf, scoreOf, topContributors } from "@/lib/exploit-risk";
-import type { CodeFinding } from "@/types/ui";
+import { riskGradeLabel, topContributors } from "@/lib/exploit-risk";
+import type { ExploitRisk } from "@/types/ui";
 
 /**
  * Exploit Risk 눈금자.
@@ -8,21 +8,29 @@ import type { CodeFinding } from "@/types/ui";
  * 아래에 상위 원인을 둔다. 숫자를 장식하지 않고 계산 가능한 판정으로 보이게
  * 한다.
  *
- * 계약에 risk score 필드가 아직 없어 화면이 PRD FR-06 산식으로 계산한다.
- * 지어낸 숫자가 아니며, 서버 확정 전임을 함께 표시한다.
+ * 점수와 기여도는 서버가 계산한 immutable 계약을 그대로 표시한다.
  */
 const TICKS = [0, 20, 40, 60, 80, 100];
 
 export function RiskRuler({
-  findings,
+  risk,
   compact = false,
 }: {
-  findings: readonly CodeFinding[];
+  risk: ExploitRisk | null | undefined;
   compact?: boolean;
 }) {
-  const score = scoreOf(findings);
-  const grade = gradeOf(score);
-  const contributors = topContributors(findings);
+  if (!risk) {
+    return (
+      <section aria-label="Exploit Risk">
+        <p className="key" style={{ margin: 0 }}>EXPLOIT RISK</p>
+        <p className="risk-score"><span className="risk-number">—</span><span className="risk-grade">미산출</span></p>
+        <p className="risk-note">서버 점수가 없는 구형 또는 미완료 검사 · 담당자 검토 필요</p>
+      </section>
+    );
+  }
+  const score = risk.score;
+  const grade = riskGradeLabel(risk.grade);
+  const contributors = topContributors(risk);
 
   return (
     <section aria-label="Exploit Risk">
@@ -84,7 +92,7 @@ export function RiskRuler({
                     fontWeight: 700,
                   }}
                 >
-                  {finding.severity}
+                  +{finding.contribution.toFixed(2)} · {finding.confidence.toFixed(2)}
                 </span>
               </div>
             </li>
@@ -92,7 +100,9 @@ export function RiskRuler({
         </ul>
       ) : null}
 
-      <p className="risk-note">FR-06 산식 기준 · 서버 확정 전</p>
+      <p className="risk-note">
+        서버 결정론적 계산 · {risk.rule_versions?.EXPLOIT_RISK_SCORE ?? "룰 버전 미제공"}
+      </p>
     </section>
   );
 }

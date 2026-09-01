@@ -17,6 +17,7 @@ from rwa_guard.db.repositories import (
 )
 from rwa_guard.domain.contracts import (
     CodeFinding,
+    ControlField,
     ControlSpec,
     EvidenceSpan,
     FailedStage,
@@ -228,6 +229,9 @@ def build_contract_scan_handler(
                 ],
                 "onchain_evidence": [],
                 "diff": [item.model_dump(mode="json") for item in diff],
+                "exploit_risk": evidence.exploit_risk.model_dump(mode="json")
+                if evidence.exploit_risk is not None
+                else None,
                 "report_id": report.id,
             }
             report.status = "READY"
@@ -297,7 +301,7 @@ def _asset_controls(session: Session, asset_id: str) -> list[ControlSpec]:
                 asset_id=record.asset_id,
                 document_id=record.document_id,
                 constraint_id=record.id,
-                field=record.field_name,
+                field=ControlField(record.field_name),
                 value=value,
                 unit=unit,
                 evidence_span=EvidenceSpan.model_validate(record.evidence_span),

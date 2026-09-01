@@ -35,6 +35,7 @@ def test_openapi_covers_shared_consumer_models_and_contract_version() -> None:
         "DemoBootstrapResponse",
         "EvidenceLink",
         "EvidenceReport",
+        "ExploitRisk",
         "FindingDiff",
         "MismatchFinding",
         "PolicyPatchRequest",
@@ -46,6 +47,32 @@ def test_openapi_covers_shared_consumer_models_and_contract_version() -> None:
         "ScanRun",
     } <= components.keys()
     assert schema["info"]["version"] == CONTRACT_VERSION.read_text(encoding="utf-8").strip()
+
+
+def test_control_field_contract_is_exactly_the_fr02_six_fields() -> None:
+    expected = [
+        "max_supply",
+        "issuer_role",
+        "collateral_verified",
+        "oracle_max_age",
+        "price_band_breach",
+        "pauser_role",
+    ]
+    source = json.loads((SOURCE_SCHEMAS / "control-spec.schema.json").read_text())
+    generated = json.loads((GENERATED_SCHEMAS / "control-spec.schema.json").read_text())
+    openapi = build_openapi()["components"]["schemas"]
+
+    assert source["properties"]["field"]["enum"] == expected
+    assert generated["$defs"]["ControlField"]["enum"] == expected
+    assert openapi["ControlField"]["enum"] == expected
+
+
+def test_exploit_risk_is_exposed_on_scan_dashboard_and_report_contracts() -> None:
+    openapi = build_openapi()["components"]["schemas"]
+
+    assert "exploit_risk" in openapi["ScanResultResponse"]["properties"]
+    assert "exploit_risk" in openapi["AssetSummary"]["properties"]
+    assert "exploit_risk" in openapi["EvidenceReport"]["properties"]
 
 
 def test_finding_diff_contract_fields_match_source_generated_and_openapi() -> None:

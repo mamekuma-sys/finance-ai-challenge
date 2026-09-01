@@ -6,8 +6,7 @@
   "excludes": [
     "anthropic_or_other_ai",
     "pdf",
-    "real_or_competition_data",
-    "effective_date"
+    "real_or_competition_data"
   ],
   "exact_match_threshold": 0.9,
   "measured": {

@@ -275,16 +275,43 @@ def test_demo_report_locations_and_hashes_match_repository_fixtures() -> None:
         assert finding.source_hash in report.scan_run.input_hashes.values()
 
 
-def test_demo_report_is_byte_deterministic_and_does_not_claim_unproven_implementation() -> None:
+def test_demo_report_is_byte_deterministic_and_only_links_proven_implementation() -> None:
     first = build_demo_report()
     second = build_demo_report()
 
     assert first.model_dump(mode="json") == second.model_dump(mode="json")
     assert first.report_hash == second.report_hash
     mismatch_ids = {item.constraint_id for item in first.mismatches}
-    assert "control_issuer_role" not in mismatch_ids
+    assert "control_issuer_role" in mismatch_ids
     assert "control_pauser_role" not in mismatch_ids
+    assert "control_price_band_breach" not in mismatch_ids
+    assert len(first.code_findings) == 3
+    assert first.exploit_risk is not None
+    assert first.exploit_risk.score == 100
     assert all(item.implementation_status.value != "IMPLEMENTED" for item in first.mismatches)
+
+
+def test_demo_exploit_risk_is_identical_across_api_report_dashboard_and_html(
+    tmp_path: Path,
+) -> None:
+    client, _ = _client(tmp_path)
+    seeded = client.post("/v1/demo/bootstrap").json()
+
+    scan = client.get(f"/v1/scans/{seeded['scan_id']}").json()
+    report = client.get(f"/v1/reports/{seeded['report_id']}").json()["report"]
+    dashboard = client.get("/v1/dashboard").json()
+    html_report = client.get(
+        f"/v1/reports/{seeded['report_id']}/download?format=html"
+    )
+
+    assert scan["exploit_risk"] == report["exploit_risk"]
+    assert dashboard["assets"][0]["exploit_risk"] == report["exploit_risk"]
+    assert report["exploit_risk"]["score"] == 100
+    assert report["exploit_risk"]["grade"] == "CRITICAL"
+    assert len(report["exploit_risk"]["contributors"]) == 3
+    assert html_report.status_code == 200
+    assert "Exploit Risk" in html_report.text
+    assert "EXPLOIT_RISK_SCORE" in html_report.text
 
 
 def test_bootstrap_repairs_partial_seed_and_preserves_other_assets(tmp_path: Path) -> None:

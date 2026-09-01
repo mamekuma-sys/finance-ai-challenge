@@ -212,7 +212,7 @@ export default async function ScanPage({
         <>
           <PartialScanNotice scan={report.scan_run} />
           <section className="audit-verdict-strip" aria-label="검사 판정 요약">
-            <RiskRuler findings={confirmedFindings} compact />
+            <RiskRuler risk={report.exploit_risk} compact />
             <p>
               통제조건 {report.controls.length}개 · 불일치 <strong>{coverage.mismatched}</strong>
               <span className="muted"> · 미구현 {coverage.missing} · 부분 구현 {coverage.partial}</span>

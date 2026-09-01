@@ -114,7 +114,9 @@ describe("Task 4 asset hierarchy", () => {
 
 describe("Task 4 report contract", () => {
   it("orders verdict, findings, selected evidence, replay, then lineage and keeps scan deep links", async () => {
-    const finding = sample.code_findings[0];
+    const finding = sample.code_findings.find(
+      (item) => item.finding_id === sample.mismatches[0].finding_id,
+    )!;
     const view = render(await ReportPage({
       params: Promise.resolve({ id: sample.report_id }),
       searchParams: Promise.resolve({ finding: finding.finding_id }),
@@ -124,6 +126,7 @@ describe("Task 4 report contract", () => {
 
     expect(sections).toEqual([
       "판정 요약",
+      "Exploit Risk",
       "발견사항",
       "선택 문서 및 코드 근거",
       "REPLAY 증거",

@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -97,6 +98,20 @@ class RiskGrade(StrEnum):
     CRITICAL = "CRITICAL"
 
 
+class ControlField(StrEnum):
+    """FR-02에서 동결한 P0 통제조건 6개."""
+
+    MAX_SUPPLY = "max_supply"
+    ISSUER_ROLE = "issuer_role"
+    COLLATERAL_VERIFIED = "collateral_verified"
+    ORACLE_MAX_AGE = "oracle_max_age"
+    PRICE_BAND_BREACH = "price_band_breach"
+    PAUSER_ROLE = "pauser_role"
+
+
+P0_CONTROL_FIELDS = frozenset(field.value for field in ControlField)
+
+
 class DataFreshness(StrEnum):
     """Derived from the current clock, so it never belongs on immutable evidence."""
 
@@ -140,7 +155,7 @@ class ControlSpec(BaseModel):
     asset_id: str
     document_id: str
     constraint_id: str
-    field: str
+    field: ControlField
     value: str | int | float | bool
     unit: str | None = None
     evidence_span: EvidenceSpan
@@ -298,7 +313,15 @@ SEVERITY_WEIGHTS: dict[Severity, int] = {
     Severity.LOW: 3,
     Severity.INFO: 0,
 }
+FINDING_STATUS_CONFIDENCE: dict[FindingStatus, float] = {
+    FindingStatus.CONFIRMED: 1.0,
+    FindingStatus.PROBABLE: 0.75,
+    FindingStatus.NEEDS_REVIEW: 0.0,
+    FindingStatus.UNKNOWN: 0.0,
+}
 CONFIRMED_CRITICAL_FLOOR = 80
+EXPLOIT_RISK_RULE_ID = "EXPLOIT_RISK_SCORE"
+EXPLOIT_RISK_RULE_VERSION = "1.0.0"
 RISK_GRADE_BOUNDS: tuple[tuple[int, RiskGrade], ...] = (
     (19, RiskGrade.LOW),
     (39, RiskGrade.GUARDED),
@@ -327,6 +350,7 @@ class RiskContributor(BaseModel):
     finding_id: str
     rule_id: str
     severity: Severity
+    status: FindingStatus
     weight: int = Field(ge=0, le=40)
     confidence: float = Field(ge=0.0, le=1.0)
     contribution: float = Field(ge=0.0)
@@ -368,6 +392,50 @@ class ExploitRisk(BaseModel):
                 f"a confirmed Critical finding requires a score of at least "
                 f"{CONFIRMED_CRITICAL_FLOOR}, got {self.score}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def calculation_matches_contributors(self) -> "ExploitRisk":
+        for contributor in self.contributors:
+            expected_weight = SEVERITY_WEIGHTS[contributor.severity]
+            if contributor.weight != expected_weight:
+                raise ValueError("contributor weight does not match severity")
+            expected_confidence = FINDING_STATUS_CONFIDENCE[contributor.status]
+            if contributor.confidence != expected_confidence:
+                raise ValueError("contributor confidence does not match finding status")
+            expected_contribution = contributor.weight * contributor.confidence
+            if abs(contributor.contribution - expected_contribution) > 1e-9:
+                raise ValueError("contributor contribution does not match weight × confidence")
+
+        expected_critical = any(
+            contributor.severity is Severity.CRITICAL
+            and contributor.status is FindingStatus.CONFIRMED
+            for contributor in self.contributors
+        )
+        if self.has_confirmed_critical is not expected_critical:
+            raise ValueError("has_confirmed_critical does not match contributors")
+
+        raw = sum(
+            (Decimal(str(item.contribution)) for item in self.contributors),
+            start=Decimal(0),
+        )
+        rounded = int(raw.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+        expected_floor = expected_critical and rounded < CONFIRMED_CRITICAL_FLOOR
+        expected_score = min(
+            100,
+            max(rounded, CONFIRMED_CRITICAL_FLOOR if expected_critical else rounded),
+        )
+        if self.floor_applied is not expected_floor:
+            raise ValueError("floor_applied does not match the FR-06 calculation")
+        if self.score != expected_score:
+            raise ValueError("score does not match contributor calculation")
+        if self.rule_versions.get(EXPLOIT_RISK_RULE_ID) != EXPLOIT_RISK_RULE_VERSION:
+            raise ValueError("exploit risk calculation rule version is missing or invalid")
+        if any(
+            not self.rule_versions.get(contributor.rule_id, "").strip()
+            for contributor in self.contributors
+        ):
+            raise ValueError("contributor rule version is missing")
         return self
 
 
@@ -451,6 +519,7 @@ class EvidenceReport(BaseModel):
     code_findings: tuple[CodeFinding, ...]
     mismatches: tuple[MismatchFinding, ...]
     onchain_evidence: tuple[OnchainEvidence, ...]
+    exploit_risk: ExploitRisk | None = None
     lineage: ReportLineage
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     is_synthetic: Literal[True] = True
@@ -477,7 +546,7 @@ class EvidenceReport(BaseModel):
             raise ValueError("report hash does not match immutable snapshot")
 
     def snapshot_payload(self) -> dict[str, Any]:
-        return {
+        payload = {
             "report_id": self.report_id,
             "scan_run": self.scan_run.model_dump(mode="json"),
             "controls": [item.model_dump(mode="json") for item in self.controls],
@@ -492,6 +561,11 @@ class EvidenceReport(BaseModel):
             "generated_at": self.generated_at.isoformat().replace("+00:00", "Z"),
             "is_synthetic": self.is_synthetic,
         }
+        # 0.1.0 READY snapshots predate FR-06. Omitting a missing score keeps their
+        # immutable hash verifiable; every newly built report supplies this field.
+        if self.exploit_risk is not None:
+            payload["exploit_risk"] = self.exploit_risk.model_dump(mode="json")
+        return payload
 
 
 class SyntheticContract(BaseModel):
@@ -550,7 +624,7 @@ class DocumentContentResponse(SyntheticContract):
 
 class PolicyPatch(SyntheticContract):
     constraint_id: str
-    field: str
+    field: ControlField
     value: str | int | float | bool
     unit: str | None = None
     evidence_span: EvidenceSpan | None = None
@@ -612,6 +686,7 @@ class ScanResultResponse(SyntheticContract):
     mismatches: list[MismatchFinding] = Field(default_factory=list)
     onchain_evidence: list[OnchainEvidence] = Field(default_factory=list)
     diff: list[FindingDiff] = Field(default_factory=list)
+    exploit_risk: ExploitRisk | None = None
     report_id: str | None = None
 
 

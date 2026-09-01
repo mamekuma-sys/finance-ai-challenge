@@ -255,12 +255,11 @@
 **추출 필드**
 
 - `max_supply`
-- `authorized_minter`
-- `collateral_requirement`
-- `oracle_update_interval`
-- `price_deviation_policy`
-- `pause_authority`
-- `effective_date`
+- `issuer_role`
+- `collateral_verified`
+- `oracle_max_age`
+- `price_band_breach`
+- `pauser_role`
 
 **각 필드의 필수 메타데이터**
 

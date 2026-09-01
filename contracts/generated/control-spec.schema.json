@@ -1,5 +1,18 @@
 {
   "$defs": {
+    "ControlField": {
+      "description": "FR-02에서 동결한 P0 통제조건 6개.",
+      "enum": [
+        "max_supply",
+        "issuer_role",
+        "collateral_verified",
+        "oracle_max_age",
+        "price_band_breach",
+        "pauser_role"
+      ],
+      "title": "ControlField",
+      "type": "string"
+    },
     "EvidenceSpan": {
       "additionalProperties": false,
       "properties": {
@@ -64,8 +77,7 @@
       "$ref": "#/$defs/EvidenceSpan"
     },
     "field": {
-      "title": "Field",
-      "type": "string"
+      "$ref": "#/$defs/ControlField"
     },
     "is_synthetic": {
       "const": true,

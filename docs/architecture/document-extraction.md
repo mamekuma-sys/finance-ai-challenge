@@ -98,9 +98,9 @@ AI 추출기가 잘못해 `confirmed=true` 후보를 반환해도 파이프라�
 `contracts/generated/openapi.json`의 `ControlSpec`과 같은지 확인한다. 기대값 fixture는
 `value`와 `unit`을 정답으로 제공할 뿐, 런타임 payload를 복제하지 않는다.
 
-현재 동결된 P0 추출기와 `ControlSpec` 소비 경로는 6개 필드만 사용한다. PRD FR-02에 남아 있는
-`effective_date`는 전용 구현과 평가 케이스가 없으므로 이 평가의 분모에서 제외한다. 따라서 아래
-수치를 FR-02 전체 필드 충족으로 인용할 수 없다.
+현재 동결된 P0 추출기, PRD FR-02, `ControlSpec` 소비 경로는 위 6개 필드만 사용한다.
+아래 수치는 이 6개 필드의 합성 TXT 결정론적 경로에 한정되므로 AI·PDF·실데이터 경로의
+완료나 정확도로 인용할 수 없다.
 
 ---
 
@@ -116,7 +116,7 @@ AI 추출기가 잘못해 `confirmed=true` 후보를 반환해도 파이프라�
 
 `document-evaluation.json`의 `exact_match_rate=1.0`은 **체크인된 합성 TXT 10개,
 결정론적 추출기, P0 6개 필드**에만 해당한다. Anthropic/기타 AI, PDF, 실데이터·대회 비공개
-데이터, `effective_date`는 측정하지 않았다. 따라서 이 값을 AI/PDF/실데이터 정확도 또는
+데이터는 측정하지 않았다. 따라서 이 값을 AI/PDF/실데이터 정확도 또는
 대회 성능으로 표현하지 않는다.
 PRD §10.4도 0.9를 목표로 두지만, 제외 항목이 있으므로 이 회귀 게이트 통과만으로
 PRD의 전체 문서 추출 목표를 달성했다고 주장하지 않는다.

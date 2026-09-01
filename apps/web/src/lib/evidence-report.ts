@@ -69,6 +69,18 @@ export async function selectHomeEvidenceReport(
       scanId: SUBMISSION_DEMO.scanId,
       reportId: SUBMISSION_DEMO.reportId,
     });
+    if (
+      asset.exploit_risk &&
+      report.exploit_risk &&
+      JSON.stringify(asset.exploit_risk) !== JSON.stringify(report.exploit_risk)
+    ) {
+      throw new AppError(
+        "integrity",
+        409,
+        { field: "exploit_risk" },
+        { resource: "exploit_risk" },
+      );
+    }
     return { asset, report };
   } catch (error) {
     if (

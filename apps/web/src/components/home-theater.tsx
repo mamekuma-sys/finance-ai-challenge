@@ -7,7 +7,6 @@ import { HomeActions } from "@/components/home-actions";
 import { RiskRuler } from "@/components/risk-ruler";
 import { VerdictBanner } from "@/components/verdict-banner";
 import {
-  confirmedRiskFindings,
   evidenceModeOf,
   leadMismatch,
   linkOf,
@@ -30,7 +29,6 @@ export function HomeTheater({
   const linked = mismatch ? linkOf(report, mismatch) : undefined;
   const mode = evidenceModeOf(report);
   const replay = report.onchain_evidence.find((item) => item.mode === "REPLAY");
-  const confirmedFindings = confirmedRiskFindings(report);
 
   return (
     <article className="home-theater" aria-label={`${assetName} Evidence Theater`}>
@@ -59,7 +57,7 @@ export function HomeTheater({
           />
           <div className="theater-metrics">
             <div className="theater-metric">
-              <RiskRuler findings={confirmedFindings} compact />
+              <RiskRuler risk={report.exploit_risk} compact />
             </div>
             <div className="theater-metric">
               <CoverageCard report={report} />

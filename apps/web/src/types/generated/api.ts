@@ -601,6 +601,12 @@ export interface components {
          * @enum {string}
          */
         ContractSourceKind: "SOURCE" | "ADDRESS" | "SOURCE_AND_ADDRESS";
+        /**
+         * ControlField
+         * @description FR-02에서 동결한 P0 통제조건 6개.
+         * @enum {string}
+         */
+        ControlField: "max_supply" | "issuer_role" | "collateral_verified" | "oracle_max_age" | "price_band_breach" | "pauser_role";
         /** ControlSpec */
         ControlSpec: {
             /** Asset Id */
@@ -615,8 +621,7 @@ export interface components {
             /** Document Id */
             document_id: string;
             evidence_span: components["schemas"]["EvidenceSpan"];
-            /** Field */
-            field: string;
+            field: components["schemas"]["ControlField"];
             /**
              * Is Synthetic
              * @default true
@@ -822,6 +827,7 @@ export interface components {
             code_findings: components["schemas"]["CodeFinding"][];
             /** Controls */
             controls: components["schemas"]["ControlSpec"][];
+            exploit_risk?: components["schemas"]["ExploitRisk"] | null;
             /**
              * Generated At
              * Format: date-time
@@ -1062,8 +1068,7 @@ export interface components {
             evidence_span?: components["schemas"]["EvidenceSpan"] | null;
             /** Expected Version */
             expected_version: number;
-            /** Field */
-            field: string;
+            field: components["schemas"]["ControlField"];
             /**
              * Is Synthetic
              * @default true
@@ -1204,6 +1209,7 @@ export interface components {
             /** Rule Id */
             rule_id: string;
             severity: components["schemas"]["Severity"];
+            status: components["schemas"]["FindingStatus"];
             /** Weight */
             weight: number;
         };
@@ -1251,6 +1257,7 @@ export interface components {
             code_findings?: components["schemas"]["CodeFinding"][];
             /** Diff */
             diff?: components["schemas"]["FindingDiff"][];
+            exploit_risk?: components["schemas"]["ExploitRisk"] | null;
             /**
              * Is Synthetic
              * @default true

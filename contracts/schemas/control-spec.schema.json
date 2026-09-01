@@ -10,15 +10,22 @@
     "constraint_id",
     "field",
     "value",
-    "evidence_span",
-    "confirmed",
-    "is_synthetic"
+    "evidence_span"
   ],
   "properties": {
     "asset_id": { "type": "string", "minLength": 1 },
     "document_id": { "type": "string", "minLength": 1 },
     "constraint_id": { "type": "string", "minLength": 1 },
-    "field": { "type": "string", "minLength": 1 },
+    "field": {
+      "enum": [
+        "max_supply",
+        "issuer_role",
+        "collateral_verified",
+        "oracle_max_age",
+        "price_band_breach",
+        "pauser_role"
+      ]
+    },
     "value": { "type": ["string", "number", "integer", "boolean"] },
     "unit": { "type": ["string", "null"] },
     "evidence_span": {
@@ -34,6 +41,7 @@
       }
     },
     "confirmed": { "type": "boolean" },
+    "version": { "type": "integer", "minimum": 1, "default": 1 },
     "is_synthetic": { "const": true }
   }
 }

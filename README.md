@@ -94,8 +94,8 @@ python -m pytest tests/test_document_golden.py
 ```
 
 기록된 `exact_match_rate=1.0`은 이 합성 TXT 결정론적 실행 범위에만 해당한다.
-Anthropic/기타 AI, PDF, 실데이터·대회 비공개 데이터, `effective_date`는 측정하지 않았으며,
-이 값을 해당 경로의 정확도나 대회 성능으로 해석할 수 없다.
+Anthropic/기타 AI, PDF, 실데이터·대회 비공개 데이터는 측정하지 않았으며,
+이 값을 해당 경로 밖의 정확도나 대회 성능으로 해석할 수 없다.
 
 ## 구현 기준 문서
 

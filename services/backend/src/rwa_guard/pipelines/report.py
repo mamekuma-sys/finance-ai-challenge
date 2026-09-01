@@ -17,6 +17,7 @@ from rwa_guard.domain.contracts import (
     ScanRun,
     Severity,
 )
+from rwa_guard.pipelines.risk import calculate_exploit_risk
 
 REPORT_PIPELINE_VERSION = "1.0.0"
 
@@ -44,6 +45,21 @@ def validate_report_integrity(report: EvidenceReport) -> None:
     }
     if len(controls) != len(report.controls) or len(findings) != len(report.code_findings):
         raise ValueError("report contains duplicate evidence identifiers")
+    if report.exploit_risk is not None:
+        if report.exploit_risk.scan_id != report.scan_run.scan_id:
+            raise ValueError("exploit risk belongs to another scan")
+        if report.exploit_risk.calculated_at != report.generated_at:
+            raise ValueError("exploit risk timestamp does not match report timestamp")
+        for contributor in report.exploit_risk.contributors:
+            finding = findings.get(contributor.finding_id)
+            if finding is None:
+                raise ValueError("exploit risk contributor references a missing finding")
+            if (
+                contributor.rule_id != finding.rule_id
+                or contributor.severity is not finding.severity
+                or contributor.status is not finding.status
+            ):
+                raise ValueError("exploit risk contributor disagrees with its finding")
     input_hashes = set(report.scan_run.input_hashes.values())
     if any(item.asset_id != report.scan_run.asset_id for item in report.onchain_evidence):
         raise ValueError("onchain evidence belongs to another asset")
@@ -177,6 +193,12 @@ def build_evidence_report(
         OnchainEvidence.model_validate(item.model_dump(mode="json"))
         for item in onchain_evidence
     ]
+    exploit_risk = calculate_exploit_risk(
+        scan_id=snapshot_scan.scan_id,
+        findings=snapshot_findings,
+        calculated_at=timestamp,
+        scan_rule_versions=snapshot_scan.rule_versions,
+    )
     lineage = ReportLineage(
         input_hashes=dict(snapshot_scan.input_hashes),
         document_extractor=document_extractor,
@@ -203,6 +225,7 @@ def build_evidence_report(
         code_findings=snapshot_findings,
         mismatches=snapshot_mismatches,
         onchain_evidence=snapshot_onchain,
+        exploit_risk=exploit_risk,
         lineage=lineage,
         generated_at=timestamp,
         is_synthetic=True,

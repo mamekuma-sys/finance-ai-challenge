@@ -19,7 +19,14 @@ export function stageReport(report: EvidenceReport, state: ScreenState): Staged 
   if (state === "empty") {
     return {
       empty: true,
-      report: { ...report, controls: [], code_findings: [], mismatches: [], onchain_evidence: [] },
+      report: {
+        ...report,
+        controls: [],
+        code_findings: [],
+        mismatches: [],
+        onchain_evidence: [],
+        exploit_risk: null,
+      },
     };
   }
 
@@ -47,6 +54,7 @@ export function stageReport(report: EvidenceReport, state: ScreenState): Staged 
         mismatches: report.mismatches.filter(
           (mismatch) => mismatch.finding_id !== "finding_oracle_range_missing",
         ),
+        exploit_risk: null,
       },
     };
   }
@@ -65,6 +73,7 @@ export function stageReport(report: EvidenceReport, state: ScreenState): Staged 
           implementation_status: "UNKNOWN" as const,
         })),
         controls: report.controls.map((control) => ({ ...control, confirmed: false })),
+        exploit_risk: null,
       },
     };
   }

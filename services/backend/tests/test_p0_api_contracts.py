@@ -14,11 +14,13 @@ def test_p0_contract_catalog_is_complete() -> None:
         "AssetDetail",
         "ContractCreateRequest",
         "ContractCreateResponse",
+        "ControlField",
         "CreateAssetRequest",
         "CreateAssetResponse",
         "DashboardResponse",
         "DocumentResponse",
         "DocumentStatus",
+        "ExploitRisk",
         "PolicyPatchRequest",
         "ReportDownloadMetadata",
         "ReportResponse",
@@ -48,6 +50,35 @@ def test_create_asset_request_forbids_extra_fields_and_real_data() -> None:
         contracts.CreateAssetRequest.model_validate({**payload, "unexpected": "field"})
     with pytest.raises(ValidationError):
         contracts.CreateAssetRequest.model_validate({**payload, "is_synthetic": False})
+
+
+@pytest.mark.parametrize(
+    "obsolete_field",
+    [
+        "authorized_minter",
+        "collateral_requirement",
+        "oracle_update_interval",
+        "price_deviation_policy",
+        "pause_authority",
+        "effective_date",
+    ],
+)
+def test_control_spec_rejects_obsolete_fr02_fields(obsolete_field: str) -> None:
+    with pytest.raises(ValidationError):
+        contracts.ControlSpec(
+            asset_id="asset_01",
+            document_id="doc_01",
+            constraint_id="control_obsolete",
+            field=obsolete_field,
+            value="obsolete",
+            evidence_span=contracts.EvidenceSpan(
+                document_id="doc_01",
+                page=1,
+                start=0,
+                end=8,
+                quote="obsolete",
+            ),
+        )
 
 
 def test_partial_document_and_scan_results_preserve_failure_details() -> None:

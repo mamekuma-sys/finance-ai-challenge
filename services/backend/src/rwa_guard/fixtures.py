@@ -7,6 +7,7 @@ from rwa_guard.config import Settings
 from rwa_guard.domain.contracts import (
     CodeFinding,
     CodeLocation,
+    ControlField,
     ControlSpec,
     EvidenceKind,
     EvidenceLink,
@@ -58,7 +59,7 @@ def _control(
         asset_id=ASSET_ID,
         document_id=DOCUMENT_ID,
         constraint_id=constraint_id,
-        field=field,
+        field=ControlField(field),
         value=value,
         unit=unit,
         evidence_span=EvidenceSpan(
@@ -164,20 +165,20 @@ def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
             document_text=document_text,
         ),
         _control(
-            constraint_id="control_collateral_verified",
-            field="collateral_verified",
-            value=True,
-            unit=None,
-            quote="기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다.",
-            confirmed=True,
-            document_text=document_text,
-        ),
-        _control(
             constraint_id="control_issuer_role",
             field="issuer_role",
             value="ISSUER_ROLE",
             unit=None,
             quote="ISSUER_ROLE을 가진 주소만 토큰을 발행할 수 있다.",
+            confirmed=True,
+            document_text=document_text,
+        ),
+        _control(
+            constraint_id="control_collateral_verified",
+            field="collateral_verified",
+            value=True,
+            unit=None,
+            quote="기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다.",
             confirmed=True,
             document_text=document_text,
         ),
@@ -209,6 +210,22 @@ def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
             document_text=document_text,
         ),
     ]
+    access_finding = CodeFinding(
+        scan_id=SCAN_ID,
+        finding_id="finding_mint_access_control_missing",
+        rule_id="MINT_ACCESS_CONTROL_MISSING",
+        severity=Severity.CRITICAL,
+        status=FindingStatus.CONFIRMED,
+        title="mint 실행경로에 접근권한 검사가 없습니다.",
+        source_hash=token_hash,
+        code_location=_location(active_store, TOKEN_FILE, 12, 12),
+        deterministic_evidence=[
+            "analysis=solc_ast_control_flow",
+            "entrypoint=VulnerableRwaToken.mint",
+            "guard.authorization=missing",
+        ],
+        tool_versions={"rwa_guard_contract": "1.0.0", "rule": "1.0.0", "solc": "0.8.24"},
+    )
     mint_finding = CodeFinding(
         scan_id=SCAN_ID,
         finding_id="finding_mint_collateral_cap_missing",
@@ -280,7 +297,7 @@ def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
             evidence_links=links,
         )
 
-    findings = [mint_finding, oracle_finding]
+    findings = [access_finding, mint_finding, oracle_finding]
     scan = ScanRun(
         scan_id=SCAN_ID,
         asset_id=ASSET_ID,
@@ -292,6 +309,7 @@ def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
             f"source:{ORACLE_FILE}": oracle_hash,
         },
         rule_versions={
+            "MINT_ACCESS_CONTROL_MISSING": "1.0.0",
             "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
             "ORACLE_VALIDATION_MISSING": "1.0.0",
         },
@@ -314,8 +332,15 @@ def build_demo_report(store: FixtureStore | None = None) -> EvidenceReport:
             ),
             mismatch(
                 "mismatch_collateral_01",
-                controls[1],
+                controls[2],
                 mint_finding,
+                ImplementationStatus.MISSING,
+                Severity.CRITICAL,
+            ),
+            mismatch(
+                "mismatch_issuer_role_01",
+                controls[1],
+                access_finding,
                 ImplementationStatus.MISSING,
                 Severity.CRITICAL,
             ),

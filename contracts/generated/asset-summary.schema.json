@@ -81,6 +81,16 @@
       "title": "ExploitRisk",
       "type": "object"
     },
+    "FindingStatus": {
+      "enum": [
+        "CONFIRMED",
+        "PROBABLE",
+        "NEEDS_REVIEW",
+        "UNKNOWN"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
     "LatestScanRef": {
       "additionalProperties": false,
       "properties": {
@@ -138,6 +148,9 @@
         "severity": {
           "$ref": "#/$defs/Severity"
         },
+        "status": {
+          "$ref": "#/$defs/FindingStatus"
+        },
         "weight": {
           "maximum": 40,
           "minimum": 0,
@@ -149,6 +162,7 @@
         "finding_id",
         "rule_id",
         "severity",
+        "status",
         "weight",
         "confidence",
         "contribution"

@@ -18,6 +18,7 @@ import { createScan } from "@/lib/adapters/scans";
 import {
   controlDraft,
   hasConfirmedP0Controls,
+  isP0ControlField,
   manualControlValidity,
   P0_CONTROL_FIELDS,
   policyPatch,
@@ -105,8 +106,11 @@ export function DocumentReview({
   if (document.isPending) return <p role="status" aria-live="polite">문서 처리 상태를 확인 중입니다…</p>;
   if (document.isError || !document.data) return <p role="alert">문서를 불러오지 못했습니다. <button className="btn btn-small" type="button" onClick={() => document.refetch()}>다시 시도</button></p>;
   const selectedControl = controls.find((control) => control.constraint_id === activeSelection);
-  const selectedManualField = activeSelection?.startsWith("manual:")
+  const manualFieldCandidate = activeSelection?.startsWith("manual:")
     ? activeSelection.slice("manual:".length)
+    : undefined;
+  const selectedManualField = manualFieldCandidate && isP0ControlField(manualFieldCandidate)
+    ? manualFieldCandidate
     : undefined;
   const selectedText = content.data?.text;
   const selectedSpan = selectedControl?.evidence_span;

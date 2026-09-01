@@ -83,11 +83,15 @@ afterEach(() => {
 
 describe("Task5 layout and accessibility regressions", () => {
   it("labels a review-only theater finding without claiming a confirmed code failure", () => {
+    const leadFindingId = sample.mismatches[0].finding_id;
     const reviewReport: EvidenceReport = {
       ...sample,
-      code_findings: sample.code_findings.map((finding, index) => (
-        index === 0 ? { ...finding, status: "NEEDS_REVIEW" } : finding
+      code_findings: sample.code_findings.map((finding) => (
+        finding.finding_id === leadFindingId
+          ? { ...finding, status: "NEEDS_REVIEW" }
+          : finding
       )),
+      exploit_risk: null,
     };
 
     const view = render(

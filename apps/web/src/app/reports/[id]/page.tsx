@@ -8,6 +8,7 @@ import { InvalidLinkNotice } from "@/components/invalid-link-notice";
 import { PartialScanNotice, StateNotice } from "@/components/states";
 import { PollingRefresher } from "@/components/polling-refresher";
 import { ReportActions } from "@/components/report-actions";
+import { RiskRuler } from "@/components/risk-ruler";
 import { AppError } from "@/lib/adapters/errors";
 import { getReport } from "@/lib/adapters/reports";
 import { getScan } from "@/lib/adapters/scans";
@@ -189,6 +190,7 @@ export default async function ReportPage({
               <div><dt>생성 시각</dt><dd>{formatKst(report.generated_at)}</dd></div>
             </dl>
           </div>
+          <RiskRuler risk={report.exploit_risk} />
         </section>
 
         <section role="region" aria-label="발견사항" aria-labelledby="report-findings">

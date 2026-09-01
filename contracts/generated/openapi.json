@@ -577,6 +577,19 @@
         "title": "ContractSourceKind",
         "type": "string"
       },
+      "ControlField": {
+        "description": "FR-02에서 동결한 P0 통제조건 6개.",
+        "enum": [
+          "max_supply",
+          "issuer_role",
+          "collateral_verified",
+          "oracle_max_age",
+          "price_band_breach",
+          "pauser_role"
+        ],
+        "title": "ControlField",
+        "type": "string"
+      },
       "ControlSpec": {
         "additionalProperties": false,
         "properties": {
@@ -601,8 +614,7 @@
             "$ref": "#/components/schemas/EvidenceSpan"
           },
           "field": {
-            "title": "Field",
-            "type": "string"
+            "$ref": "#/components/schemas/ControlField"
           },
           "is_synthetic": {
             "const": true,
@@ -1093,6 +1105,16 @@
             },
             "title": "Controls",
             "type": "array"
+          },
+          "exploit_risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExploitRisk"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "generated_at": {
             "format": "date-time",
@@ -1696,8 +1718,7 @@
             "type": "integer"
           },
           "field": {
-            "title": "Field",
-            "type": "string"
+            "$ref": "#/components/schemas/ControlField"
           },
           "is_synthetic": {
             "const": true,
@@ -2046,6 +2067,9 @@
           "severity": {
             "$ref": "#/components/schemas/Severity"
           },
+          "status": {
+            "$ref": "#/components/schemas/FindingStatus"
+          },
           "weight": {
             "maximum": 40.0,
             "minimum": 0.0,
@@ -2057,6 +2081,7 @@
           "finding_id",
           "rule_id",
           "severity",
+          "status",
           "weight",
           "confidence",
           "contribution"
@@ -2158,6 +2183,16 @@
             },
             "title": "Diff",
             "type": "array"
+          },
+          "exploit_risk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExploitRisk"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "is_synthetic": {
             "const": true,

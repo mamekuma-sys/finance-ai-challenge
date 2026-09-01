@@ -7,12 +7,18 @@ export interface ControlDraft {
 
 export const P0_CONTROL_FIELDS = [
   "max_supply",
-  "collateral_verified",
   "issuer_role",
+  "collateral_verified",
   "oracle_max_age",
   "price_band_breach",
   "pauser_role",
-] as const;
+] as const satisfies readonly ControlSpec["field"][];
+
+export type P0ControlField = (typeof P0_CONTROL_FIELDS)[number];
+
+export function isP0ControlField(value: string): value is P0ControlField {
+  return P0_CONTROL_FIELDS.some((field) => field === value);
+}
 
 export function hasConfirmedP0Controls(
   controls: readonly Pick<ControlSpec, "field" | "confirmed">[],

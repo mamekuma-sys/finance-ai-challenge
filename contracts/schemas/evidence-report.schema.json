@@ -25,6 +25,12 @@
       "type": "array",
       "items": { "$ref": "./onchain-evidence.schema.json" }
     },
+    "exploit_risk": {
+      "oneOf": [
+        { "$ref": "./exploit-risk.schema.json" },
+        { "type": "null" }
+      ]
+    },
     "lineage": {
       "type": "object",
       "additionalProperties": false,

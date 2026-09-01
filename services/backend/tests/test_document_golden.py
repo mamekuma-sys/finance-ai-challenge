@@ -2,8 +2,8 @@
 
 PRD §10.4는 문서 필드 추출 최소 10케이스와 필수 필드 정확도 90% 이상을 요구한다.
 `tests/golden/document_cases.json`이 케이스와 기대값을, `document-evaluation.json`이
-측정 결과를 고정한다. 이 평가는 합성 TXT 결정론적 P0 6필드만 다루며 `effective_date`,
-AI, PDF, 실데이터는 제외한다. 기대값은 명세에서 도출했고 추출기 출력에서 역산하지 않는다.
+측정 결과를 고정한다. 이 평가는 합성 TXT 결정론적 P0 6필드만 다루며 AI, PDF,
+실데이터는 제외한다. 기대값은 명세에서 도출했고 추출기 출력에서 역산하지 않는다.
 """
 
 import hashlib
@@ -109,7 +109,6 @@ def test_manifest_locks_ten_cases_and_six_p0_fields() -> None:
     assert manifest["measurement_scope"] == "synthetic_txt_deterministic_p0_six_fields"
     assert tuple(manifest["fields"]) == P0_FIELD_ORDER
     assert set(manifest["fields"]) == P0_FIELDS
-    assert manifest["unmeasured_fields"] == ["effective_date"]
     assert len(manifest["cases"]) >= 10, "PRD §10.4는 최소 10케이스를 요구한다"
     assert len({case["case_id"] for case in manifest["cases"]}) == len(manifest["cases"])
 
@@ -272,7 +271,6 @@ def test_recorded_exact_match_rate_matches_the_executable_corpus() -> None:
         "anthropic_or_other_ai",
         "pdf",
         "real_or_competition_data",
-        "effective_date",
     ]
     assert evaluation["measured"]["total_field_outcomes"] == measured["total_field_outcomes"]
     assert evaluation["measured"]["correct"] == measured["correct"]

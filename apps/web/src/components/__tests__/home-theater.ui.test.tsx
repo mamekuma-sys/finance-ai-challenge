@@ -20,6 +20,10 @@ afterEach(cleanup);
 
 describe("home Evidence Theater", () => {
   it("renders one sentence verdict, risk, coverage, top comparison, spine, and both actions", () => {
+    const lead = sample.mismatches[0];
+    const leadFinding = sample.code_findings.find(
+      (finding) => finding.finding_id === lead.finding_id,
+    );
     const view = render(
       <HomeTheater
         assetId={sample.scan_run.asset_id}
@@ -39,7 +43,7 @@ describe("home Evidence Theater", () => {
       sample.controls[0].evidence_span.quote,
     );
     expect(view.getByRole("region", { name: "최상위 불일치 대조" })).toHaveTextContent(
-      sample.code_findings[0].title,
+      leadFinding?.title ?? "",
     );
     expect(view.getByRole("button", { name: "샘플 검증 시작" })).toBeInTheDocument();
     expect(view.getByRole("button", { name: "신규 자산 등록" })).toBeInTheDocument();

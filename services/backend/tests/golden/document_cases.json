@@ -11,9 +11,6 @@
     "price_band_breach",
     "pauser_role"
   ],
-  "unmeasured_fields": [
-    "effective_date"
-  ],
   "cases": [
     {
       "case_id": "baseline_full",

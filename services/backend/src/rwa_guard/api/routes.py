@@ -56,6 +56,7 @@ from rwa_guard.db.repositories import (
     WorkerHeartbeatRepository,
 )
 from rwa_guard.domain.contracts import (
+    P0_CONTROL_FIELDS,
     AlertPatchRequest,
     AlertStatus,
     AlertSummary,
@@ -66,6 +67,7 @@ from rwa_guard.domain.contracts import (
     ContractCreateRequest,
     ContractCreateResponse,
     ContractSourceKind,
+    ControlField,
     ControlSpec,
     CreateAssetRequest,
     CreateAssetResponse,
@@ -79,6 +81,7 @@ from rwa_guard.domain.contracts import (
     EvidenceMode,
     EvidenceReport,
     EvidenceSpan,
+    ExploitRisk,
     FailedStage,
     FindingDiff,
     FindingStatus,
@@ -120,16 +123,6 @@ from rwa_guard.pipelines.report import validate_report_integrity
 router = APIRouter()
 logger = logging.getLogger(__name__)
 MAX_ORACLE_MAX_AGE_MINUTES = 24 * 60
-P0_CONTROL_FIELDS = frozenset(
-    {
-        "max_supply",
-        "collateral_verified",
-        "issuer_role",
-        "oracle_max_age",
-        "price_band_breach",
-        "pauser_role",
-    }
-)
 ALERT_TRANSITIONS: dict[AlertStatus, frozenset[AlertStatus]] = {
     AlertStatus.NEW: frozenset({AlertStatus.ACKNOWLEDGED}),
     AlertStatus.ACKNOWLEDGED: frozenset({AlertStatus.INVESTIGATING}),
@@ -320,7 +313,7 @@ def _policy_contract(record: PolicyConstraintRecord) -> ControlSpec:
         asset_id=record.asset_id,
         document_id=record.document_id,
         constraint_id=record.id,
-        field=record.field_name,
+        field=ControlField(record.field_name),
         value=normalized_value,
         unit=unit,
         evidence_span=EvidenceSpan.model_validate(record.evidence_span),
@@ -517,6 +510,25 @@ def _render_report_html(report: EvidenceReport) -> str:
         if any(item.mode is EvidenceMode.REPLAY for item in report.onchain_evidence)
         else "<p>연결된 온체인 증거 없음</p>"
     )
+    risk = report.exploit_risk
+    risk_section = (
+        "<p>Exploit Risk 미산출 — 구형 스냅샷 또는 계산 제한</p>"
+        if risk is None
+        else (
+            f"<p><strong>{risk.score} · {escape(risk.grade.value)}</strong> · "
+            f"계산시각 {escape(risk.calculated_at.isoformat())}</p>"
+            + "<ul>"
+            + "".join(
+                "<li>"
+                f"{escape(item.finding_id)} · {escape(item.rule_id)} · "
+                f"confidence {item.confidence:.2f} · contribution {item.contribution:.2f}"
+                "</li>"
+                for item in risk.contributors
+            )
+            + "</ul><h3>Exploit Risk 룰 버전</h3>"
+            + json_pre(risk.rule_versions)
+        )
+    )
     return (
         "<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
@@ -531,6 +543,8 @@ def _render_report_html(report: EvidenceReport) -> str:
         "<section aria-labelledby=\"verdict\"><h2 id=\"verdict\">판정</h2>"
         f"<p>확정 Critical/High 코드 발견사항 {len(confirmed)}건, "
         f"문서–코드 불일치 {len(report.mismatches)}건</p></section>"
+        "<section aria-labelledby=\"exploit-risk\"><h2 id=\"exploit-risk\">Exploit Risk</h2>"
+        f"{risk_section}</section>"
         "<section aria-labelledby=\"evidence\"><h2 id=\"evidence\">문서·코드 증거</h2>"
         f"{''.join(evidence_sections) or '<p>연결된 불일치 증거 없음</p>'}</section>"
         "<section aria-labelledby=\"onchain\"><h2 id=\"onchain\">온체인 증거</h2>"
@@ -894,6 +908,9 @@ def demo_bootstrap(
                 item.model_dump(mode="json") for item in report.onchain_evidence
             ],
             "diff": [],
+            "exploit_risk": report.exploit_risk.model_dump(mode="json")
+            if report.exploit_risk is not None
+            else None,
         },
         started_at=started_at,
         completed_at=completed_at,
@@ -1580,6 +1597,11 @@ def get_scan(
             for item in payload.get("onchain_evidence", [])
         ],
         diff=stored_diff,
+        exploit_risk=(
+            ExploitRisk.model_validate(payload["exploit_risk"])
+            if isinstance(payload.get("exploit_risk"), dict)
+            else None
+        ),
         report_id=report.id if report is not None else None,
     )
 
@@ -1697,6 +1719,11 @@ def dashboard(session: Annotated[Session, Depends(get_session)]) -> DashboardRes
             OnchainEvidence.model_validate(item)
             for item in result.get("onchain_evidence", [])
         ]
+        risk = (
+            ExploitRisk.model_validate(result["exploit_risk"])
+            if isinstance(result.get("exploit_risk"), dict)
+            else None
+        )
         highest = (
             Severity.CRITICAL
             if Severity.CRITICAL in severities
@@ -1718,6 +1745,7 @@ def dashboard(session: Annotated[Session, Depends(get_session)]) -> DashboardRes
                 )
                 if latest
                 else None,
+                exploit_risk=risk,
                 evidence_mode=chain[0].mode if chain else None,
                 fixture_version=chain[0].fixture_version if chain else None,
                 freshness=derive_scan_freshness(

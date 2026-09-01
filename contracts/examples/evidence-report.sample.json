@@ -1,6 +1,6 @@
 {
   "report_id": "report_demo_02",
-  "report_hash": "sha256:2da6e0fdf41864f8442d05007e5a3c8bbe24e2c8090d06fc0eb7cf1ff8aec00a",
+  "report_hash": "sha256:6627a931cafc8b942ed9e492a9821483dd60e3ad4b9d27ff14536a9354c71e17",
   "scan_run": {
     "scan_id": "scan_demo_vulnerable_02",
     "asset_id": "asset_synthetic_hanriver_01",
@@ -12,6 +12,7 @@
       "source:chain/src/fixtures/VulnerableOracle.sol": "sha256:69d6ab421bbe2668ce3dcc0bcabab08c4327e683272e4f4c1ce46e4d462b1eb0"
     },
     "rule_versions": {
+      "MINT_ACCESS_CONTROL_MISSING": "1.0.0",
       "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
       "ORACLE_VALIDATION_MISSING": "1.0.0"
     },
@@ -42,24 +43,6 @@
     {
       "asset_id": "asset_synthetic_hanriver_01",
       "document_id": "doc_synthetic_issuance_01",
-      "constraint_id": "control_collateral_verified",
-      "field": "collateral_verified",
-      "value": true,
-      "unit": null,
-      "evidence_span": {
-        "document_id": "doc_synthetic_issuance_01",
-        "page": 1,
-        "start": 314,
-        "end": 365,
-        "quote": "기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다."
-      },
-      "confirmed": true,
-      "version": 1,
-      "is_synthetic": true
-    },
-    {
-      "asset_id": "asset_synthetic_hanriver_01",
-      "document_id": "doc_synthetic_issuance_01",
       "constraint_id": "control_issuer_role",
       "field": "issuer_role",
       "value": "ISSUER_ROLE",
@@ -70,6 +53,24 @@
         "start": 280,
         "end": 313,
         "quote": "ISSUER_ROLE을 가진 주소만 토큰을 발행할 수 있다."
+      },
+      "confirmed": true,
+      "version": 1,
+      "is_synthetic": true
+    },
+    {
+      "asset_id": "asset_synthetic_hanriver_01",
+      "document_id": "doc_synthetic_issuance_01",
+      "constraint_id": "control_collateral_verified",
+      "field": "collateral_verified",
+      "value": true,
+      "unit": null,
+      "evidence_span": {
+        "document_id": "doc_synthetic_issuance_01",
+        "page": 1,
+        "start": 314,
+        "end": 365,
+        "quote": "기초자산 확인 상태가 collateralVerified=true로 확정된 이후에만 발행한다."
       },
       "confirmed": true,
       "version": 1,
@@ -131,6 +132,32 @@
     }
   ],
   "code_findings": [
+    {
+      "scan_id": "scan_demo_vulnerable_02",
+      "finding_id": "finding_mint_access_control_missing",
+      "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+      "severity": "CRITICAL",
+      "status": "CONFIRMED",
+      "title": "mint 실행경로에 접근권한 검사가 없습니다.",
+      "source_hash": "sha256:3d5eafbbe08e8d42cd66e347284f1df7fd6c4494bf6de81adaa57db643b4d15d",
+      "code_location": {
+        "file": "chain/src/fixtures/VulnerableRwaToken.sol",
+        "start_line": 12,
+        "end_line": 12,
+        "excerpt": "        totalSupply += amount;"
+      },
+      "deterministic_evidence": [
+        "analysis=solc_ast_control_flow",
+        "entrypoint=VulnerableRwaToken.mint",
+        "guard.authorization=missing"
+      ],
+      "tool_versions": {
+        "rwa_guard_contract": "1.0.0",
+        "rule": "1.0.0",
+        "solc": "0.8.24"
+      },
+      "is_synthetic": true
+    },
     {
       "scan_id": "scan_demo_vulnerable_02",
       "finding_id": "finding_mint_collateral_cap_missing",
@@ -227,6 +254,24 @@
       "is_synthetic": true
     },
     {
+      "mismatch_id": "mismatch_issuer_role_01",
+      "constraint_id": "control_issuer_role",
+      "finding_id": "finding_mint_access_control_missing",
+      "implementation_status": "MISSING",
+      "severity": "CRITICAL",
+      "evidence_links": [
+        {
+          "kind": "DOCUMENT",
+          "ref": "control_issuer_role"
+        },
+        {
+          "kind": "CODE",
+          "ref": "finding_mint_access_control_missing"
+        }
+      ],
+      "is_synthetic": true
+    },
+    {
       "mismatch_id": "mismatch_oracle_max_age_01",
       "constraint_id": "control_oracle_max_age",
       "finding_id": "finding_oracle_range_missing",
@@ -263,6 +308,50 @@
       "is_synthetic": true
     }
   ],
+  "exploit_risk": {
+    "scan_id": "scan_demo_vulnerable_02",
+    "score": 100,
+    "grade": "CRITICAL",
+    "contributors": [
+      {
+        "finding_id": "finding_mint_access_control_missing",
+        "rule_id": "MINT_ACCESS_CONTROL_MISSING",
+        "severity": "CRITICAL",
+        "status": "CONFIRMED",
+        "weight": 40,
+        "confidence": 1.0,
+        "contribution": 40.0
+      },
+      {
+        "finding_id": "finding_mint_collateral_cap_missing",
+        "rule_id": "MINT_COLLATERAL_CAP_MISSING",
+        "severity": "CRITICAL",
+        "status": "CONFIRMED",
+        "weight": 40,
+        "confidence": 1.0,
+        "contribution": 40.0
+      },
+      {
+        "finding_id": "finding_oracle_range_missing",
+        "rule_id": "ORACLE_VALIDATION_MISSING",
+        "severity": "HIGH",
+        "status": "CONFIRMED",
+        "weight": 25,
+        "confidence": 1.0,
+        "contribution": 25.0
+      }
+    ],
+    "has_confirmed_critical": true,
+    "floor_applied": false,
+    "rule_versions": {
+      "EXPLOIT_RISK_SCORE": "1.0.0",
+      "MINT_ACCESS_CONTROL_MISSING": "1.0.0",
+      "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
+      "ORACLE_VALIDATION_MISSING": "1.0.0"
+    },
+    "calculated_at": "2026-08-25T03:00:08Z",
+    "is_synthetic": true
+  },
   "lineage": {
     "input_hashes": {
       "document": "sha256:0b45057443d67198c38014b2757073e30bd98e655553b6447b74779db9a4db80",
@@ -274,12 +363,16 @@
     "ai_model": null,
     "model_versions": {},
     "rule_versions": {
+      "MINT_ACCESS_CONTROL_MISSING": "1.0.0",
       "MINT_COLLATERAL_CAP_MISSING": "1.0.0",
       "ORACLE_VALIDATION_MISSING": "1.0.0"
     },
     "tool_versions": {
       "report_pipeline": "1.0.0",
       "fixture_builder": "1.1.0",
+      "finding:finding_mint_access_control_missing:rwa_guard_contract": "1.0.0",
+      "finding:finding_mint_access_control_missing:rule": "1.0.0",
+      "finding:finding_mint_access_control_missing:solc": "0.8.24",
       "finding:finding_mint_collateral_cap_missing:rwa_guard_contract": "1.0.0",
       "finding:finding_mint_collateral_cap_missing:rule": "1.0.0",
       "finding:finding_mint_collateral_cap_missing:solc": "0.8.24",

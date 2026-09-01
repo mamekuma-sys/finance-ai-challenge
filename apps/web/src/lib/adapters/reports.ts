@@ -33,6 +33,14 @@ export async function fetchScanViewForAsset(
   const reportResponse = scan.report_id ? await getReport(scan.report_id) : null;
   if (reportResponse) {
     assertIntegrity("report.scan_id", selectedScan.scan_id, reportResponse.scan_id);
+    const reportRisk = reportResponse.report?.exploit_risk;
+    if (
+      scan.exploit_risk &&
+      reportRisk &&
+      JSON.stringify(scan.exploit_risk) !== JSON.stringify(reportRisk)
+    ) {
+      throw new AppError("integrity", 409, { field: "exploit_risk" }, { resource: "exploit_risk" });
+    }
   }
   return {
     asset,

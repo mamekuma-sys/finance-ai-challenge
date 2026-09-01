@@ -78,6 +78,7 @@ class ContractCatalog(BaseModel):
     evidence_report: EvidenceReport
     asset_summary: AssetSummary
     finding_diff: FindingDiff
+    exploit_risk: ExploitRisk
     asset_detail: AssetDetail
     create_asset_request: CreateAssetRequest
     create_asset_response: CreateAssetResponse
