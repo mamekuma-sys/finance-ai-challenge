@@ -103,4 +103,50 @@ describe("home persisted report selection", () => {
       }),
     ).rejects.toMatchObject({ kind: "integrity" });
   });
+
+  it("does not compare the latest rescan risk with the canonical report risk", async () => {
+    const canonical = report(
+      "asset_synthetic_hanriver_01",
+      "report_demo_02",
+      "CRITICAL",
+      "2026-08-27T00:00:00Z",
+    );
+    const latest = {
+      ...asset("asset_synthetic_hanriver_01", null),
+      exploit_risk: {
+        ...canonical.exploit_risk!,
+        scan_id: "scan_fixed_latest",
+        score: 0,
+        grade: "LOW" as const,
+        contributors: [],
+        has_confirmed_critical: false,
+      },
+    };
+
+    await expect(
+      selectHomeEvidenceReport([latest], async () => canonical),
+    ).resolves.toMatchObject({ report: { report_id: "report_demo_02" } });
+  });
+
+  it("rejects different server risk payloads for the same scan", async () => {
+    const canonical = report(
+      "asset_synthetic_hanriver_01",
+      "report_demo_02",
+      "CRITICAL",
+      "2026-08-27T00:00:00Z",
+    );
+    const sameScan = {
+      ...asset("asset_synthetic_hanriver_01", "CRITICAL"),
+      exploit_risk: {
+        ...canonical.exploit_risk!,
+        scan_id: canonical.scan_run.scan_id,
+        score: 80,
+        grade: "CRITICAL" as const,
+      },
+    };
+
+    await expect(
+      selectHomeEvidenceReport([sameScan], async () => canonical),
+    ).rejects.toMatchObject({ kind: "integrity" });
+  });
 });

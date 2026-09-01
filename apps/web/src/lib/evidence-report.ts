@@ -69,9 +69,14 @@ export async function selectHomeEvidenceReport(
       scanId: SUBMISSION_DEMO.scanId,
       reportId: SUBMISSION_DEMO.reportId,
     });
+    // AssetSummary는 최신 완료 scan의 점수이고 홈 theater는 고정된 제출용
+    // canonical report를 연다. 두 점수가 같은 scan을 가리킬 때만 무결성을
+    // 비교해야 하며, 정상적인 재검사 후 최신 점수가 달라진 것을 손상으로
+    // 오인해서는 안 된다.
     if (
       asset.exploit_risk &&
       report.exploit_risk &&
+      asset.exploit_risk.scan_id === report.scan_run.scan_id &&
       JSON.stringify(asset.exploit_risk) !== JSON.stringify(report.exploit_risk)
     ) {
       throw new AppError(
