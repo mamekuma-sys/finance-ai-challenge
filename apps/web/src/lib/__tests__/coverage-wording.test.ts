@@ -46,4 +46,17 @@ describe("집계 문구", () => {
     // 위반이 0건이면 문장 자체를 두지 않는다.
     expect(scan).toContain("{coverage.mismatched > 0 ?");
   });
+
+  it("결함이 없어도 무엇을 얼마나 검사했는지 남긴다", async () => {
+    const scan = await read("scan");
+
+    // PASS 분기가 문장 두 줄로 끝나면 검사가 돌지 않은 화면과 구분되지 않는다.
+    const pass = scan.split('verdict === "PASS"')[1].split("      ) : (")[0];
+    expect(pass).toContain("<RiskRuler");
+    expect(pass).toContain("통제조건 {report.controls.length}개 중 위반");
+    expect(pass).toContain("코드 검사 룰");
+    // 검사 범위 밖 조건이 몇 개인지도 함께 밝힌다.
+    expect(pass).toContain("isRuleMappedControlField");
+    expect(pass).toContain("P0 범위 밖");
+  });
 });

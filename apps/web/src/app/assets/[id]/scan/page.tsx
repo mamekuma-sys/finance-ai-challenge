@@ -13,6 +13,7 @@ import { AppError } from "@/lib/adapters/errors";
 import { fetchScanViewForAsset } from "@/lib/adapters/reports";
 import { formatKst } from "@/lib/asset-directory";
 import { coverageOf } from "@/lib/control-coverage";
+import { isRuleMappedControlField } from "@/lib/control-ledger";
 import { linkOf, spineOf } from "@/lib/evidence-report";
 import { parseScreenState } from "@/lib/screen-state";
 import { allowDevelopmentState } from "@/lib/screen-state";
@@ -203,11 +204,28 @@ export default async function ScanPage({
           detail="저장된 scan 상태를 다시 확인하세요."
         />
       ) : verdict === "PASS" ? (
-        <StateNotice
-          tone="neutral"
-          title="자동검사 통과 — 담당자 검토 필요"
-          detail="결정론적 룰에서 발견사항이 없었습니다. 이는 자동 승인을 의미하지 않습니다."
-        />
+        <>
+          <StateNotice
+            tone="neutral"
+            title="자동검사 통과 — 담당자 검토 필요"
+            detail="결정론적 룰에서 발견사항이 없었습니다. 이는 자동 승인을 의미하지 않습니다."
+          />
+          {/* 결함이 없어도 무엇을 얼마나 검사했는지는 남긴다. 빈 화면은 검사가
+              돌지 않은 것과 구분되지 않는다. */}
+          <section className="audit-verdict-strip" aria-label="검사 판정 요약">
+            <RiskRuler risk={report.exploit_risk} compact />
+            <p>
+              통제조건 {report.controls.length}개 중 위반 <strong>{coverage.mismatched}개</strong>
+              <span className="muted"> · 통제 공백 {coverage.missing}개 · 부분 구현 {coverage.partial}개</span>
+            </p>
+            <p className="row-meta">
+              코드 검사 룰 {Object.keys(report.scan_run.rule_versions ?? {}).length}종을 실행해 결함 0건입니다.
+              {report.controls.filter((control) => !isRuleMappedControlField(control.field)).length > 0
+                ? ` 통제조건 ${report.controls.filter((control) => !isRuleMappedControlField(control.field)).length}개는 대응 룰이 없어 P0 범위 밖이며 담당자가 직접 확인해야 합니다.`
+                : ""}
+            </p>
+          </section>
+        </>
       ) : (
         <>
           <PartialScanNotice scan={report.scan_run} />

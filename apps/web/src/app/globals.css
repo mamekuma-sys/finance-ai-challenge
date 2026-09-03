@@ -983,6 +983,24 @@ time,
   font-weight: 700;
 }
 
+/* 시나리오 선택은 기대 결과까지 함께 읽혀야 고를 수 있다. */
+.scenario-picker {
+  background: var(--surface-paper);
+}
+
+.scenario-option {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  width: 100%;
+  text-align: left;
+}
+
+.scenario-option[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
 .registration-advanced summary {
   font-size: var(--t-label);
   font-weight: 600;

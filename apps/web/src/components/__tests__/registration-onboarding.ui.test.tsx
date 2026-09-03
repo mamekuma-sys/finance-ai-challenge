@@ -86,17 +86,20 @@ describe("등록 마법사 온보딩", () => {
     await user.click(view.getByRole("button", { name: "샘플 값으로 채우기" }));
     await user.click(view.getByRole("button", { name: "다음: 문서" }));
 
-    await user.click(view.getByRole("button", { name: "샘플 발행조건서 사용" }));
+    await user.click(view.getByRole("button", { name: /샘플 A/ }));
     await waitFor(() => expect(view.getByRole("status")).toHaveTextContent("issuance-terms-01.txt"));
     await user.click(view.getByRole("button", { name: "다음: 코드" }));
 
-    expect(view.getByRole("radio", { name: /샘플 취약 컨트랙트 사용/ })).toBeChecked();
+    expect(view.getByRole("radio", { name: /샘플 시나리오 컨트랙트 사용/ })).toBeChecked();
+    expect(view.getByRole("radio", { name: /샘플 A/ })).toBeChecked();
     expect(view.queryByLabelText("Kaia 컨트랙트 주소")).not.toBeInTheDocument();
     await waitFor(() => expect(view.getByRole("button", { name: "자산 등록" })).toBeEnabled());
     await user.click(view.getByRole("button", { name: "자산 등록" }));
 
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/assets/asset_1/document"));
     expect(dependencies.calls.source).toContain("contract VulnerableRwaToken");
+    // 오라클까지 함께 넣어야 P0 룰 3종이 모두 판정 대상이 된다.
+    expect(dependencies.calls.source).toContain("contract VulnerableOracle");
     expect(dependencies.calls.address).toBeUndefined();
   });
 
@@ -107,7 +110,7 @@ describe("등록 마법사 온보딩", () => {
     await user.click(view.getByRole("button", { name: "신규 자산 등록" }));
     await user.click(view.getByRole("button", { name: "샘플 값으로 채우기" }));
     await user.click(view.getByRole("button", { name: "다음: 문서" }));
-    await user.click(view.getByRole("button", { name: "샘플 발행조건서 사용" }));
+    await user.click(view.getByRole("button", { name: /샘플 A/ }));
     await waitFor(() => expect(view.getByRole("status")).toBeInTheDocument());
     await user.click(view.getByRole("button", { name: "다음: 코드" }));
 
@@ -125,5 +128,44 @@ describe("등록 마법사 온보딩", () => {
     const view = render(<RegistrationDialog dependencies={deps()} />);
     await user.click(view.getByRole("button", { name: "신규 자산 등록" }));
     await expectNoAxeViolations(view.container.ownerDocument.body);
+  });
+
+  it("샘플 B를 고르면 깨끗한 결과가 나오는 컨트랙트가 함께 채워진다", async () => {
+    const user = userEvent.setup();
+    const dependencies = deps();
+    const view = render(<RegistrationDialog dependencies={dependencies} />);
+    await user.click(view.getByRole("button", { name: "신규 자산 등록" }));
+    await user.click(view.getByRole("button", { name: "샘플 값으로 채우기" }));
+    await user.click(view.getByRole("button", { name: "다음: 문서" }));
+
+    // 시나리오 하나로 문서와 컨트랙트가 함께 채워진다.
+    await user.click(view.getByRole("button", { name: /샘플 B/ }));
+    await waitFor(() =>
+      expect(view.getByRole("status")).toHaveTextContent("issuance-terms-01.txt"),
+    );
+    await user.click(view.getByRole("button", { name: "다음: 코드" }));
+    await waitFor(() => expect(view.getByRole("button", { name: "자산 등록" })).toBeEnabled());
+    await user.click(view.getByRole("button", { name: "자산 등록" }));
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalled());
+    expect(dependencies.calls.source).toContain("contract FixedRwaToken");
+    expect(dependencies.calls.source).toContain("contract FixedOracle");
+    expect(dependencies.calls.source).not.toContain("contract VulnerableRwaToken");
+  });
+
+  it("두 시나리오가 같은 발행조건서를 쓴다", async () => {
+    const user = userEvent.setup();
+    const view = render(<RegistrationDialog dependencies={deps()} />);
+    await user.click(view.getByRole("button", { name: "신규 자산 등록" }));
+    await user.click(view.getByRole("button", { name: "샘플 값으로 채우기" }));
+    await user.click(view.getByRole("button", { name: "다음: 문서" }));
+
+    await user.click(view.getByRole("button", { name: /샘플 A/ }));
+    await waitFor(() => expect(view.getByRole("status")).toHaveTextContent("issuance-terms-01.txt"));
+    await user.click(view.getByRole("button", { name: /샘플 B/ }));
+    await waitFor(() => expect(view.getByRole("status")).toHaveTextContent("issuance-terms-01.txt"));
+
+    // 결과를 가르는 것은 문서가 아니라 컨트랙트라는 점이 화면에 적혀 있다.
+    expect(view.getByText(/결과를 가르는 것은 조건서가 아니라 컨트랙트/)).toBeInTheDocument();
   });
 });

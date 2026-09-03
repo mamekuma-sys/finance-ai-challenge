@@ -22,10 +22,11 @@ import { safeErrorMessage } from "@/lib/error-presentation";
 import {
   DOCUMENT_CHECKLIST,
   SAMPLE_ASSET,
-  SAMPLE_CONTRACT_PATH,
   SAMPLE_DOCUMENT_NAME,
+  SAMPLE_SCENARIOS,
   fetchSampleDocument,
-  fetchSampleText,
+  fetchScenarioContract,
+  type SampleScenario,
 } from "@/lib/registration-samples";
 
 const defaults: RegistrationDependencies = { createAsset, uploadDocument, createContract };
@@ -46,12 +47,13 @@ export function RegistrationDialog({
   const [documentIsSample, setDocumentIsSample] = useState(false);
   const [codeMode, setCodeMode] = useState<CodeMode>("sample");
   const [sampleContract, setSampleContract] = useState("");
+  const [scenario, setScenario] = useState<SampleScenario>("vulnerable");
   const [sampleBusy, setSampleBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const assetFirstRef = useRef<HTMLInputElement>(null);
   const documentFirstRef = useRef<HTMLInputElement>(null);
   const contractFirstRef = useRef<HTMLInputElement>(null);
-  const sampleRequested = useRef(false);
+  const sampleRequested = useRef<SampleScenario | null>(null);
 
   useEffect(() => {
     const target = step === 0
@@ -62,19 +64,11 @@ export function RegistrationDialog({
     target?.focus();
   }, [step]);
 
-  /* 샘플이 기본 선택지다. 코드 단계에 들어오면 클릭을 기다리지 않고 미리 불러온다. */
+  /* 시나리오가 정한 컨트랙트를 받아둔다. 2단계에서 이미 받았으면 다시 받지 않는다. */
   useEffect(() => {
-    if (step !== 2 || codeMode !== "sample" || sampleRequested.current) return;
-    sampleRequested.current = true;
-    setSampleBusy(true);
-    fetchSampleText(SAMPLE_CONTRACT_PATH)
-      .then(setSampleContract)
-      .catch(() => {
-        sampleRequested.current = false;
-        setError("샘플 컨트랙트를 불러오지 못했습니다. 코드를 직접 붙여넣으세요.");
-      })
-      .finally(() => setSampleBusy(false));
-  }, [step, codeMode]);
+    if (step !== 2 || codeMode !== "sample" || sampleRequested.current === scenario) return;
+    void loadScenarioContract(scenario);
+  }, [step, codeMode, scenario]);
 
   function field(name: string) {
     return formRef.current?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
@@ -95,18 +89,37 @@ export function RegistrationDialog({
     assetFirstRef.current?.focus();
   }
 
-  async function useSampleDocument() {
+  async function loadScenarioContract(kind: SampleScenario) {
+    sampleRequested.current = kind;
+    setSampleContract("");
+    setSampleBusy(true);
+    try {
+      setSampleContract(await fetchScenarioContract(kind));
+    } catch {
+      sampleRequested.current = null;
+      setError("샘플 컨트랙트를 불러오지 못했습니다. 코드를 직접 붙여넣으세요.");
+    } finally {
+      setSampleBusy(false);
+    }
+  }
+
+  /** 시나리오 하나가 발행 문서와 컨트랙트를 함께 채운다. */
+  async function applyScenario(kind: SampleScenario) {
     if (sampleBusy) return;
     setError("");
+    setScenario(kind);
+    setCodeMode("sample");
     setSampleBusy(true);
     try {
       setDocumentFile(await fetchSampleDocument());
       setDocumentIsSample(true);
     } catch {
       setError("샘플 발행조건서를 불러오지 못했습니다. 직접 파일을 선택하세요.");
-    } finally {
       setSampleBusy(false);
+      return;
     }
+    setSampleBusy(false);
+    await loadScenarioContract(kind);
   }
 
   function selectCodeMode(mode: CodeMode) {
@@ -152,6 +165,12 @@ export function RegistrationDialog({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    // 마지막 단계가 아니면 제출하지 않는다. 단계 이동 버튼이 제출로 바뀌는 순간의
+    // 클릭이 그대로 등록으로 이어지면 사용자가 코드 단계를 건너뛴다.
+    if (step !== 2) {
+      nextStep();
+      return;
+    }
     setError("");
     const form = new FormData(event.currentTarget);
     const supply = Number(form.get("supply"));
@@ -294,9 +313,29 @@ export function RegistrationDialog({
                       </li>
                     ))}
                   </ul>
-                  <button className="btn btn-small sample-fill" type="button" onClick={useSampleDocument} disabled={sampleBusy}>
-                    {sampleBusy ? "불러오는 중…" : "샘플 발행조건서 사용"}
-                  </button>
+                  <fieldset className="code-mode scenario-picker">
+                    <legend>샘플로 검증해보기</legend>
+                    <p className="field-help">
+                      시나리오 하나를 고르면 발행조건서와 컨트랙트가 함께 채워집니다.
+                      결과를 가르는 것은 조건서가 아니라 컨트랙트입니다.
+                    </p>
+                    {(["vulnerable", "clean"] as const).map((kind) => (
+                      <button
+                        key={kind}
+                        className="btn btn-small sample-fill scenario-option"
+                        type="button"
+                        onClick={() => applyScenario(kind)}
+                        disabled={sampleBusy}
+                        aria-pressed={documentIsSample && scenario === kind}
+                      >
+                        <strong>{SAMPLE_SCENARIOS[kind].label}</strong>
+                        <span className="field-help">{SAMPLE_SCENARIOS[kind].expectation}</span>
+                      </button>
+                    ))}
+                    <p className="field-help">
+                      {sampleBusy ? "샘플을 불러오는 중입니다…" : SAMPLE_SCENARIOS[scenario].detail}
+                    </p>
+                  </fieldset>
                   <div className="field">
                     <label htmlFor="registration-document">직접 업로드 · PDF 또는 TXT</label>
                     <input
@@ -326,7 +365,7 @@ export function RegistrationDialog({
                     <legend>컨트랙트 입력 방법</legend>
                     <label className="check-row">
                       <input ref={contractFirstRef} type="radio" name="codeMode" value="sample" checked={codeMode === "sample"} onChange={() => selectCodeMode("sample")} />
-                      샘플 취약 컨트랙트 사용 · 권장
+                      샘플 시나리오 컨트랙트 사용 · 권장
                     </label>
                     <label className="check-row">
                       <input type="radio" name="codeMode" value="source" checked={codeMode === "source"} onChange={() => selectCodeMode("source")} />
@@ -338,13 +377,27 @@ export function RegistrationDialog({
                     </label>
                   </fieldset>
                   {codeMode === "sample" ? (
-                    <p className="field-help">
-                      {sampleBusy
-                        ? "샘플 컨트랙트를 불러오는 중입니다…"
-                        : sampleContract
-                          ? "VulnerableRwaToken.sol · 발행 권한과 한도 검사가 빠진 합성 fixture입니다. 문서 조건과의 불일치가 그대로 드러납니다."
-                          : "VulnerableRwaToken.sol 합성 fixture를 사용합니다."}
-                    </p>
+                    <fieldset className="code-mode scenario-picker">
+                      <legend>선택한 시나리오</legend>
+                      {(["vulnerable", "clean"] as const).map((kind) => (
+                        <label className="check-row" key={kind}>
+                          <input
+                            type="radio"
+                            name="scenario"
+                            value={kind}
+                            checked={scenario === kind}
+                            onChange={() => {
+                              setError("");
+                              setScenario(kind);
+                            }}
+                          />
+                          {SAMPLE_SCENARIOS[kind].label} · {SAMPLE_SCENARIOS[kind].expectation}
+                        </label>
+                      ))}
+                      <p className="field-help">
+                        {sampleBusy ? "샘플 컨트랙트를 불러오는 중입니다…" : SAMPLE_SCENARIOS[scenario].detail}
+                      </p>
+                    </fieldset>
                   ) : null}
                   {codeMode === "source" ? (
                     <div className="field">
@@ -369,8 +422,14 @@ export function RegistrationDialog({
                   <Button className="btn" onPress={close}>취소</Button>
                   <div className="registration-step-actions">
                     {step > 0 ? <button className="btn" type="button" onClick={previousStep}>뒤로: {step === 1 ? "자산" : "문서"}</button> : null}
-                    {step < 2 ? <button className="btn btn-primary" type="button" onClick={nextStep}>다음: {step === 0 ? "문서" : "코드"}</button> : (
-                      <button className="btn btn-primary" type="submit" disabled={pending || (codeMode === "sample" && !sampleContract)}>{pending ? "등록 중…" : "자산 등록"}</button>
+                    {step < 2 ? (
+                      <button key="advance" className="btn btn-primary" type="button" onClick={nextStep}>
+                        다음: {step === 0 ? "문서" : "코드"}
+                      </button>
+                    ) : (
+                      <button key="submit" className="btn btn-primary" type="submit" disabled={pending || (codeMode === "sample" && !sampleContract)}>
+                        {pending ? "등록 중…" : "자산 등록"}
+                      </button>
                     )}
                   </div>
                 </footer>
