@@ -15,12 +15,14 @@ import {
   type Control,
 } from "@/lib/adapters/documents";
 import { createScan } from "@/lib/adapters/scans";
+import { numeric } from "@/lib/evidence-report";
 import {
   controlDraft,
   hasConfirmedP0Controls,
   isP0ControlField,
   manualControlValidity,
   P0_CONTROL_FIELDS,
+  p0ConfirmationProgress,
   policyPatch,
   type ControlDraft,
 } from "@/lib/document-review-state";
@@ -124,12 +126,12 @@ export function DocumentReview({
   const invalidConstraint = selected !== null
     && !controls.some((control) => control.constraint_id === selected)
     && !missingFields.some((field) => `manual:${field}` === selected);
-  const allConfirmed = hasConfirmedP0Controls(
-    controls.map((control) => ({
-      field: control.field,
-      confirmed: drafts[control.constraint_id]?.confirmed ?? control.confirmed,
-    })),
-  );
+  const confirmationInput = controls.map((control) => ({
+    field: control.field,
+    confirmed: drafts[control.constraint_id]?.confirmed ?? control.confirmed,
+  }));
+  const allConfirmed = hasConfirmedP0Controls(confirmationInput);
+  const progress = p0ConfirmationProgress(confirmationInput);
   const sourceAccessible = Boolean(content.data?.text || content.data?.content_base64);
   const selectConstraint = (key: string) => {
     setActiveKey(key);
@@ -182,7 +184,6 @@ export function DocumentReview({
               >
                 선택 근거 · {selectedControl.evidence_span.page}페이지
               </strong>
-              <blockquote>{selectedControl.evidence_span.quote}</blockquote>
               {content.data?.content_base64 ? (
                 <p className="row-meta">
                   브라우저 PDF 뷰어는 exact quote 자동 강조를 지원하지 않습니다.
@@ -201,7 +202,9 @@ export function DocumentReview({
         </section>
         <section className="constraint-review" aria-label="통제조건 검토">
           <nav className="constraint-rail" aria-label="통제조건 선택">
-            <p className="key">CONSTRAINTS · {controls.length + missingFields.length}</p>
+            <p className="key">
+              CONSTRAINTS · {controls.length + missingFields.length} · 확정 {progress.confirmed}/{progress.total}
+            </p>
             <ul className="rows">
               {controls.map((control) => (
                 <li key={control.constraint_id}>
@@ -213,7 +216,14 @@ export function DocumentReview({
                     onClick={() => selectConstraint(control.constraint_id)}
                   >
                     <span className="row-mark" data-status={control.confirmed ? "IMPLEMENTED" : "PARTIAL"} />
-                    <span><strong className="row-name">{CONTROL_NAMES[control.field] ?? control.field}</strong><span className="row-meta">{control.field}</span></span>
+                    <span>
+                      <strong className="row-name">{CONTROL_NAMES[control.field] ?? control.field}</strong>
+                      <span className="row-meta">{control.field}</span>
+                      <span className="constraint-row-value mono">
+                        {numeric(controlDraft(control, drafts[control.constraint_id]).value)}
+                        {control.unit ? ` ${control.unit}` : ""}
+                      </span>
+                    </span>
                     <span className="row-tail"><Badge tone={control.confirmed ? "safe" : "warn"}>{control.confirmed ? "확정" : "검토"}</Badge></span>
                   </button>
                 </li>
@@ -244,6 +254,12 @@ export function DocumentReview({
                 <article className="control control-editor" id={selectedControl.constraint_id} tabIndex={-1}>
                   <header><p className="key">선택 통제</p><h2>{CONTROL_NAMES[selectedControl.field] ?? selectedControl.field}</h2></header>
                   <label>값<input value={String(draft.value)} onChange={(event) => setDrafts((current) => ({ ...current, [selectedControl.constraint_id]: { ...draft, value: event.target.value } }))} /></label>
+                  {selectedControl.evidence_span.quote ? (
+                    <div className="control-evidence">
+                      <p className="key">원문 근거 · {selectedControl.evidence_span.page}페이지</p>
+                      <blockquote className="quote">{selectedControl.evidence_span.quote}</blockquote>
+                    </div>
+                  ) : null}
                   <label className="check-row"><input type="checkbox" checked={draft.confirmed} onChange={(event) => setDrafts((current) => ({ ...current, [selectedControl.constraint_id]: { ...draft, confirmed: event.target.checked } }))} /> 원문 근거를 확인했습니다</label>
                   {!selectedControl.evidence_span.quote ? <Badge tone="warn">확인 필요</Badge> : null}
                   {confirmedWithoutSource ? <p className="form-error" role="alert">원문 content가 없어 confirmed 상태로 저장할 수 없습니다.</p> : null}
@@ -300,7 +316,21 @@ export function DocumentReview({
       <div className="document-sticky-actions">
       {contractId ? (
         <>
-          {!allConfirmed || !sourceAccessible ? <p className="state" data-tone="warn">필수 P0 통제조건 6개와 원문 근거를 모두 저장·확정해야 검사를 시작할 수 있습니다.</p> : null}
+          {!allConfirmed || !sourceAccessible ? (
+            <p className="state" data-tone="warn" role="status">
+              <span className="state-text">
+                <strong className="tabular">P0 통제조건 {progress.confirmed}/{progress.total} 확정</strong>
+                {progress.missing.length ? (
+                  <span className="state-detail">
+                    남은 항목 · {progress.missing.map((field) => CONTROL_NAMES[field] ?? field).join(", ")}
+                  </span>
+                ) : null}
+                {!sourceAccessible ? (
+                  <span className="state-detail">원문 근거를 불러오지 못해 확정 저장이 막혀 있습니다.</span>
+                ) : null}
+              </span>
+            </p>
+          ) : null}
           <button className="btn btn-primary" type="button" disabled={!allConfirmed || !sourceAccessible || scan.isPending} onClick={() => scan.mutate()}>
             {scan.isPending ? "검사 시작 중…" : "컨트랙트 검사 시작"}
           </button>

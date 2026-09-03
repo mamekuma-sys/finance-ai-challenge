@@ -4,7 +4,12 @@ import { AppShell } from "@/components/app-shell";
 import { ApiErrorNotice } from "@/components/api-error-notice";
 import { Badge } from "@/components/badge";
 import { BlockReceipt } from "@/components/block-receipt";
-import { CONTROL_NAMES, IMPLEMENTATION_LABEL, IMPLEMENTATION_TONE } from "@/components/control-card";
+import { CONTROL_NAMES } from "@/components/control-card";
+import {
+  CONTROL_LEDGER_LABEL,
+  CONTROL_LEDGER_TONE,
+  controlLedgerState,
+} from "@/lib/control-ledger";
 import { AssetRecoveryActions } from "@/components/asset-recovery-actions";
 import { EmptyState, PartialScanNotice, StateNotice } from "@/components/states";
 import { getAsset } from "@/lib/adapters/assets";
@@ -112,11 +117,15 @@ export default async function AssetPage({
           </div>
           {controls.length ? <ul className="rows asset-control-ledger">
             {controls.map((control) => {
-              const status = implementation.get(control.constraint_id) ?? (scan ? "UNKNOWN" : undefined);
+              const state = controlLedgerState({
+                field: control.field,
+                implementation: implementation.get(control.constraint_id),
+                scanStatus: scan?.scan_run.status,
+              });
               return (
                 <li key={control.constraint_id}>
                   <div className="row">
-                    <span className="row-mark" data-status={status ?? "UNCHECKED"} />
+                    <span className="row-mark" data-status={state} />
                     <span className="control-ledger-name">
                       <span className="row-name">{CONTROL_NAMES[control.field] ?? control.field}</span>
                       <span className="row-meta mono">{control.constraint_id}</span>
@@ -127,8 +136,8 @@ export default async function AssetPage({
                       </Badge>
                     </span>
                     <span className="row-tail">
-                      <Badge tone={status ? IMPLEMENTATION_TONE[status] : "neutral"}>
-                        {status ? IMPLEMENTATION_LABEL[status] : "미검사"}
+                      <Badge tone={CONTROL_LEDGER_TONE[state]}>
+                        {CONTROL_LEDGER_LABEL[state]}
                       </Badge>
                     </span>
                   </div>
@@ -136,6 +145,11 @@ export default async function AssetPage({
               );
             })}
           </ul> : <EmptyState title="등록된 통제조건이 없습니다." detail="발행 문서를 등록하고 문서 근거를 검토하세요." action={<Link className="btn btn-primary" href={`/assets/${id}/document`}>문서 등록·검토</Link>} />}
+          <p className="screen-note">
+            P0 코드 검사는 접근권한·담보/발행한도·오라클 검증 3종만 수행합니다.
+            대응 룰이 없는 조건은 <strong>P0 범위 밖</strong>으로 표시하며 담당자가 직접 확인해야 합니다.
+            <strong> 결함 없음</strong>은 해당 룰이 결함을 찾지 못했다는 뜻이며 구현을 보증하지 않습니다.
+          </p>
         </section>
 
         <section className="asset-ledger-section" role="region" aria-label="검사 이력">

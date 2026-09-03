@@ -1115,6 +1115,28 @@ time,
   min-width: 0;
 }
 
+/* 값을 목록에서 바로 읽게 한다. 6개 값을 보려고 6번 클릭하지 않는다. */
+.constraint-row-value {
+  margin-top: 2px;
+  font-size: var(--t-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* 값과 그 근거 문장을 같은 자리에 둔다. */
+.control-evidence {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-quiet);
+  background: var(--surface-paper);
+}
+
+.control-evidence .quote {
+  margin: 0;
+}
+
 .constraint-editor {
   min-width: 0;
   padding: 18px;
@@ -2198,6 +2220,17 @@ a.row:hover {
 }
 .row-mark[data-status="MISSING"] {
   background: var(--breach);
+}
+/* 결함을 못 찾은 것과 검사 대상이 아닌 것을 색으로도 구분한다. */
+.row-mark[data-status="NO_FINDING"] {
+  background: var(--safe);
+}
+.row-mark[data-status="OUT_OF_SCOPE"] {
+  background: var(--line);
+}
+.row-mark[data-status="SCANNING"],
+.row-mark[data-status="UNCHECKED"] {
+  background: var(--line-quiet);
 }
 
 .row-name {

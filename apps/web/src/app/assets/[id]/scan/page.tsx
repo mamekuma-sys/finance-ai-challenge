@@ -214,8 +214,8 @@ export default async function ScanPage({
           <section className="audit-verdict-strip" aria-label="검사 판정 요약">
             <RiskRuler risk={report.exploit_risk} compact />
             <p>
-              통제조건 {report.controls.length}개 · 불일치 <strong>{coverage.mismatched}</strong>
-              <span className="muted"> · 미구현 {coverage.missing} · 부분 구현 {coverage.partial}</span>
+              통제조건 {report.controls.length}개 중 위반 <strong>{coverage.mismatched}개</strong>
+              <span className="muted"> · 통제 공백 {coverage.missing}개 · 부분 구현 {coverage.partial}개</span>
             </p>
             {reviewFindings.length ? <Badge tone="warn">NEEDS_REVIEW {reviewFindings.length}</Badge> : null}
             {report.scan_run.status === "PARTIAL" ? <Badge tone="warn">PARTIAL</Badge> : null}
@@ -227,7 +227,7 @@ export default async function ScanPage({
               <nav className="finding-rail" aria-label="발견사항 선택">
                 <div className="audit-section-head">
                   <h2>발견사항</h2>
-                  <span className="row-meta">{report.code_findings.length}건</span>
+                  <span className="row-meta">코드 결함 {report.code_findings.length}건</span>
                 </div>
                 <ul className="rows">
                   {[...confirmedFindings, ...reviewFindings].map((finding) => {

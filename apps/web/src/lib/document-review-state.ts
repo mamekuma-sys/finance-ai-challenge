@@ -29,6 +29,26 @@ export function hasConfirmedP0Controls(
   return P0_CONTROL_FIELDS.every((field) => confirmed.has(field));
 }
 
+/**
+ * P0 6개 중 몇 개가 확정됐고 무엇이 남았는지.
+ *
+ * 게이트가 "6개를 모두 확정하세요"라고만 말하면 담당자가 목록 배지를 하나씩
+ * 세어야 한다. 남은 필드 이름을 그대로 돌려준다.
+ */
+export function p0ConfirmationProgress(
+  controls: readonly Pick<ControlSpec, "field" | "confirmed">[],
+): { confirmed: number; total: number; missing: P0ControlField[] } {
+  const confirmed = new Set(
+    controls.filter((control) => control.confirmed).map((control) => control.field),
+  );
+  const missing = P0_CONTROL_FIELDS.filter((field) => !confirmed.has(field));
+  return {
+    confirmed: P0_CONTROL_FIELDS.length - missing.length,
+    total: P0_CONTROL_FIELDS.length,
+    missing: [...missing],
+  };
+}
+
 export function controlDraft(
   control: ControlSpec,
   override: ControlDraft | undefined,

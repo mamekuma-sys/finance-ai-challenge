@@ -12,7 +12,7 @@ import type { ControlSpec, ImplementationStatus } from "@/types/ui";
 const IMPLEMENTATION_LABEL: Record<ImplementationStatus, string> = {
   IMPLEMENTED: "구현됨",
   PARTIAL: "부분 구현",
-  MISSING: "코드 미구현",
+  MISSING: "통제 공백",
   UNKNOWN: "판단 불가",
 };
 
