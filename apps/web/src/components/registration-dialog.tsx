@@ -10,6 +10,7 @@ import {
   ModalOverlay,
 } from "react-aria-components";
 
+import { CONTROL_NAMES } from "@/components/control-card";
 import { createAsset, createContract } from "@/lib/adapters/assets";
 import { uploadDocument } from "@/lib/adapters/documents";
 import {
@@ -18,8 +19,20 @@ import {
   type RegistrationDependencies,
 } from "@/lib/registration-workflow";
 import { safeErrorMessage } from "@/lib/error-presentation";
+import {
+  DOCUMENT_CHECKLIST,
+  SAMPLE_ASSET,
+  SAMPLE_DOCUMENT_NAME,
+  SAMPLE_SCENARIOS,
+  fetchSampleDocument,
+  fetchScenarioContract,
+  type SampleScenario,
+} from "@/lib/registration-samples";
 
 const defaults: RegistrationDependencies = { createAsset, uploadDocument, createContract };
+
+/** 컨트랙트를 넣는 세 가지 경로. 무엇을 골라야 하는지 화면에서 먼저 정한다. */
+type CodeMode = "sample" | "source" | "address";
 
 export function RegistrationDialog({
   dependencies = defaults,
@@ -30,10 +43,17 @@ export function RegistrationDialog({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentIsSample, setDocumentIsSample] = useState(false);
+  const [codeMode, setCodeMode] = useState<CodeMode>("sample");
+  const [sampleContract, setSampleContract] = useState("");
+  const [scenario, setScenario] = useState<SampleScenario>("vulnerable");
+  const [sampleBusy, setSampleBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const assetFirstRef = useRef<HTMLInputElement>(null);
   const documentFirstRef = useRef<HTMLInputElement>(null);
   const contractFirstRef = useRef<HTMLInputElement>(null);
+  const sampleRequested = useRef<SampleScenario | null>(null);
 
   useEffect(() => {
     const target = step === 0
@@ -44,8 +64,67 @@ export function RegistrationDialog({
     target?.focus();
   }, [step]);
 
+  /* 시나리오가 정한 컨트랙트를 받아둔다. 2단계에서 이미 받았으면 다시 받지 않는다. */
+  useEffect(() => {
+    if (step !== 2 || codeMode !== "sample" || sampleRequested.current === scenario) return;
+    void loadScenarioContract(scenario);
+  }, [step, codeMode, scenario]);
+
   function field(name: string) {
     return formRef.current?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null;
+  }
+
+  function setValue(name: string, value: string) {
+    const target = field(name);
+    if (target) target.value = value;
+  }
+
+  function fillSampleAsset() {
+    setError("");
+    setValue("name", SAMPLE_ASSET.name);
+    setValue("underlying", SAMPLE_ASSET.underlying);
+    setValue("supply", SAMPLE_ASSET.supply);
+    setValue("currency", SAMPLE_ASSET.currency);
+    setValue("unit", SAMPLE_ASSET.unit);
+    assetFirstRef.current?.focus();
+  }
+
+  async function loadScenarioContract(kind: SampleScenario) {
+    sampleRequested.current = kind;
+    setSampleContract("");
+    setSampleBusy(true);
+    try {
+      setSampleContract(await fetchScenarioContract(kind));
+    } catch {
+      sampleRequested.current = null;
+      setError("샘플 컨트랙트를 불러오지 못했습니다. 코드를 직접 붙여넣으세요.");
+    } finally {
+      setSampleBusy(false);
+    }
+  }
+
+  /** 시나리오 하나가 발행 문서와 컨트랙트를 함께 채운다. */
+  async function applyScenario(kind: SampleScenario) {
+    if (sampleBusy) return;
+    setError("");
+    setScenario(kind);
+    setCodeMode("sample");
+    setSampleBusy(true);
+    try {
+      setDocumentFile(await fetchSampleDocument());
+      setDocumentIsSample(true);
+    } catch {
+      setError("샘플 발행조건서를 불러오지 못했습니다. 직접 파일을 선택하세요.");
+      setSampleBusy(false);
+      return;
+    }
+    setSampleBusy(false);
+    await loadScenarioContract(kind);
+  }
+
+  function selectCodeMode(mode: CodeMode) {
+    setError("");
+    setCodeMode(mode);
   }
 
   function nextStep() {
@@ -55,7 +134,7 @@ export function RegistrationDialog({
       const underlying = field("underlying");
       const supply = Number(field("supply")?.value);
       if (!name?.value.trim()) {
-        setError("자산명을 입력하세요.");
+        setError("자산명을 입력하세요. 아래 ‘샘플 값으로 채우기’를 눌러도 됩니다.");
         name?.focus();
         return;
       }
@@ -70,13 +149,10 @@ export function RegistrationDialog({
         return;
       }
     }
-    if (step === 1) {
-      const documentInput = field("document") as HTMLInputElement | null;
-      if (!documentInput?.files?.[0]) {
-        setError("PDF 또는 TXT 발행 문서를 선택하세요.");
-        documentInput?.focus();
-        return;
-      }
+    if (step === 1 && !documentFile) {
+      setError("발행 문서를 선택하거나 ‘샘플 발행조건서 사용’을 누르세요.");
+      documentFirstRef.current?.focus();
+      return;
     }
     setStep((current) => Math.min(current + 1, 2));
   }
@@ -89,14 +165,20 @@ export function RegistrationDialog({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    // 마지막 단계가 아니면 제출하지 않는다. 단계 이동 버튼이 제출로 바뀌는 순간의
+    // 클릭이 그대로 등록으로 이어지면 사용자가 코드 단계를 건너뛴다.
+    if (step !== 2) {
+      nextStep();
+      return;
+    }
     setError("");
     const form = new FormData(event.currentTarget);
-    const file = form.get("document");
     const supply = Number(form.get("supply"));
-    const sourceCode = String(form.get("source") ?? "").trim();
-    const address = String(form.get("address") ?? "").trim();
-    if (!(file instanceof File) || file.size === 0) {
-      setError("PDF 또는 TXT 발행 문서를 선택하세요.");
+    const typedSource = String(form.get("source") ?? "").trim();
+    const sourceCode = codeMode === "sample" ? sampleContract.trim() : codeMode === "source" ? typedSource : "";
+    const address = codeMode === "address" ? String(form.get("address") ?? "").trim() : "";
+    if (!documentFile || documentFile.size === 0) {
+      setError("발행 문서를 선택하거나 ‘샘플 발행조건서 사용’을 누르세요.");
       return;
     }
     if (!Number.isSafeInteger(supply) || supply <= 0) {
@@ -104,7 +186,11 @@ export function RegistrationDialog({
       return;
     }
     if (!sourceCode && !address) {
-      setError("Kaia 컨트랙트 주소 또는 Solidity source를 입력하세요.");
+      setError(
+        codeMode === "address"
+          ? "Kaia 컨트랙트 주소를 입력하세요."
+          : "Solidity 코드를 붙여넣거나 샘플 컨트랙트를 선택하세요.",
+      );
       return;
     }
     if (address && !/^0x[0-9a-fA-F]{40}$/.test(address)) {
@@ -131,7 +217,7 @@ export function RegistrationDialog({
             token_unit: String(form.get("unit") ?? "").trim(),
             is_synthetic: true,
           },
-          document: file,
+          document: documentFile,
           sourceCode: sourceCode || undefined,
           address: address || undefined,
         },
@@ -158,16 +244,20 @@ export function RegistrationDialog({
         <Modal className="registration-modal">
           <Dialog aria-label="신규 합성 자산 등록">
             {({ close }) => (
-              <form ref={formRef} className="registration-form" onSubmit={submit} aria-busy={pending} aria-describedby={error ? "registration-error" : undefined}>
+              <form ref={formRef} className="registration-form" noValidate onSubmit={submit} aria-busy={pending} aria-describedby={error ? "registration-error" : undefined}>
                 <header>
                   <div>
                     <h2>신규 자산 등록</h2>
-                    <p>합성 상업용 부동산 · Kaia Kairos 범위로 고정됩니다.</p>
+                    <p>발행 문서와 컨트랙트를 연결하면 통제 불일치를 검사합니다.</p>
                   </div>
                   <Button className="btn btn-small" onPress={close}>
                     닫기
                   </Button>
                 </header>
+                <ul className="registration-scope" aria-label="고정 범위">
+                  <li>자산 유형 <strong>합성 상업용 부동산 수익증권</strong></li>
+                  <li>네트워크 <strong>Kaia Kairos · chain 1001</strong></li>
+                </ul>
                 <ol className="step-progress" aria-label="등록 단계">
                   {["자산", "문서", "코드"].map((label, index) => (
                     <li key={label} aria-current={index === step ? "step" : undefined} data-complete={index < step || undefined}>
@@ -175,37 +265,171 @@ export function RegistrationDialog({
                     </li>
                   ))}
                 </ol>
+
                 <fieldset className="registration-step" hidden={step !== 0}>
                   <legend>1. 자산 정보</legend>
-                  <p>심사 데모에 사용할 합성 자산의 식별 정보와 발행 계획을 입력합니다.</p>
-                  <label>자산명<input ref={assetFirstRef} name="name" autoComplete="off" autoFocus /></label>
-                  <label>기초자산 설명<textarea name="underlying" /></label>
-                  <div className="responsive-split">
-                    <label>예정 공급량<input name="supply" type="number" min="1" step="1" /></label>
-                    <label>통화<input name="currency" defaultValue="KRW" /></label>
+                  <p>리포트와 경보에 표시될 자산의 이름과 발행 계획입니다. 세 항목 모두 필수입니다.</p>
+                  <button className="btn btn-small sample-fill" type="button" onClick={fillSampleAsset}>
+                    샘플 값으로 채우기
+                  </button>
+                  <div className="field">
+                    <label htmlFor="registration-name">자산명</label>
+                    <input ref={assetFirstRef} id="registration-name" name="name" autoComplete="off" autoFocus aria-describedby="registration-name-help" />
+                    <p className="field-help" id="registration-name-help">예: 한강 오피스 수익증권 01</p>
                   </div>
-                  <label>토큰 단위<input name="unit" defaultValue="TOKEN" /></label>
+                  <div className="field">
+                    <label htmlFor="registration-underlying">기초자산 설명</label>
+                    <textarea id="registration-underlying" name="underlying" aria-describedby="registration-underlying-help" />
+                    <p className="field-help" id="registration-underlying-help">무엇에서 수익이 나오는지 한두 문장으로 씁니다. 예: 서울 여의도 소재 오피스의 임대수익</p>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="registration-supply">예정 공급량</label>
+                    <input id="registration-supply" name="supply" type="number" min="1" step="1" aria-describedby="registration-supply-help" />
+                    <p className="field-help" id="registration-supply-help">발행조건서의 최대 발행량과 같은 값을 넣으세요. 문서와 코드가 다르면 그 차이를 불일치로 탐지합니다.</p>
+                  </div>
+                  <details className="registration-advanced">
+                    <summary>표시 단위 · 기본값 사용</summary>
+                    <div className="responsive-split">
+                      <div className="field">
+                        <label htmlFor="registration-currency">통화</label>
+                        <input id="registration-currency" name="currency" defaultValue="KRW" />
+                      </div>
+                      <div className="field">
+                        <label htmlFor="registration-unit">토큰 단위</label>
+                        <input id="registration-unit" name="unit" defaultValue="TOKEN" />
+                      </div>
+                    </div>
+                  </details>
                 </fieldset>
+
                 <fieldset className="registration-step" hidden={step !== 1}>
                   <legend>2. 발행 문서</legend>
-                  <p>통제조건의 page/span 근거가 될 합성 PDF 또는 TXT 문서를 등록합니다.</p>
-                  <label>발행 문서 PDF/TXT<input ref={documentFirstRef} name="document" type="file" accept=".pdf,.txt,application/pdf,text/plain" /></label>
+                  <p>AI가 이 문서에서 6개 통제조건과 그 근거 문장을 뽑습니다. 아래 조건이 문장으로 들어 있는 발행조건서여야 합니다.</p>
+                  <ul className="document-checklist" aria-label="문서에 필요한 통제조건">
+                    {DOCUMENT_CHECKLIST.map((item) => (
+                      <li key={item.field}>
+                        <strong>{CONTROL_NAMES[item.field] ?? item.field}</strong>
+                        <span className="field-help">“{item.example}”</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <fieldset className="code-mode scenario-picker">
+                    <legend>샘플로 검증해보기</legend>
+                    <p className="field-help">
+                      시나리오 하나를 고르면 발행조건서와 컨트랙트가 함께 채워집니다.
+                      결과를 가르는 것은 조건서가 아니라 컨트랙트입니다.
+                    </p>
+                    {(["vulnerable", "clean"] as const).map((kind) => (
+                      <button
+                        key={kind}
+                        className="btn btn-small sample-fill scenario-option"
+                        type="button"
+                        onClick={() => applyScenario(kind)}
+                        disabled={sampleBusy}
+                        aria-pressed={documentIsSample && scenario === kind}
+                      >
+                        <strong>{SAMPLE_SCENARIOS[kind].label}</strong>
+                        <span className="field-help">{SAMPLE_SCENARIOS[kind].expectation}</span>
+                      </button>
+                    ))}
+                    <p className="field-help">
+                      {sampleBusy ? "샘플을 불러오는 중입니다…" : SAMPLE_SCENARIOS[scenario].detail}
+                    </p>
+                  </fieldset>
+                  <div className="field">
+                    <label htmlFor="registration-document">직접 업로드 · PDF 또는 TXT</label>
+                    <input
+                      ref={documentFirstRef}
+                      id="registration-document"
+                      name="document"
+                      type="file"
+                      accept=".pdf,.txt,application/pdf,text/plain"
+                      onChange={(event) => {
+                        setDocumentFile(event.target.files?.[0] ?? null);
+                        setDocumentIsSample(false);
+                      }}
+                    />
+                  </div>
+                  {documentFile ? (
+                    <p className="state" data-tone="accent" role="status">
+                      선택됨 · {documentFile.name}
+                      {documentIsSample ? ` (샘플 · ${SAMPLE_DOCUMENT_NAME})` : ""}
+                    </p>
+                  ) : null}
                 </fieldset>
+
                 <fieldset className="registration-step" hidden={step !== 2}>
                   <legend>3. 컨트랙트 코드</legend>
-                  <p>Kaia Kairos(chain 1001) 주소, Solidity source 또는 둘 다 입력할 수 있습니다.</p>
-                  <label>Kaia 컨트랙트 주소 · 선택<input ref={contractFirstRef} name="address" placeholder="0x…" pattern="^0x[0-9a-fA-F]{40}$" /></label>
-                  <label>Solidity source / fixture · 선택<textarea name="source" rows={8} maxLength={200_000} /></label>
-                  <p className="row-meta">주소만 등록하면 소스 분석이 제한될 수 있습니다. 3분 데모는 source fixture 입력을 권장합니다.</p>
+                  <p>문서 조건이 실제 코드에 구현됐는지 비교할 대상입니다. 하나만 고르면 됩니다.</p>
+                  <fieldset className="code-mode">
+                    <legend>컨트랙트 입력 방법</legend>
+                    <label className="check-row">
+                      <input ref={contractFirstRef} type="radio" name="codeMode" value="sample" checked={codeMode === "sample"} onChange={() => selectCodeMode("sample")} />
+                      샘플 시나리오 컨트랙트 사용 · 권장
+                    </label>
+                    <label className="check-row">
+                      <input type="radio" name="codeMode" value="source" checked={codeMode === "source"} onChange={() => selectCodeMode("source")} />
+                      Solidity 코드 직접 붙여넣기
+                    </label>
+                    <label className="check-row">
+                      <input type="radio" name="codeMode" value="address" checked={codeMode === "address"} onChange={() => selectCodeMode("address")} />
+                      배포된 Kaia 주소 입력
+                    </label>
+                  </fieldset>
+                  {codeMode === "sample" ? (
+                    <fieldset className="code-mode scenario-picker">
+                      <legend>선택한 시나리오</legend>
+                      {(["vulnerable", "clean"] as const).map((kind) => (
+                        <label className="check-row" key={kind}>
+                          <input
+                            type="radio"
+                            name="scenario"
+                            value={kind}
+                            checked={scenario === kind}
+                            onChange={() => {
+                              setError("");
+                              setScenario(kind);
+                            }}
+                          />
+                          {SAMPLE_SCENARIOS[kind].label} · {SAMPLE_SCENARIOS[kind].expectation}
+                        </label>
+                      ))}
+                      <p className="field-help">
+                        {sampleBusy ? "샘플 컨트랙트를 불러오는 중입니다…" : SAMPLE_SCENARIOS[scenario].detail}
+                      </p>
+                    </fieldset>
+                  ) : null}
+                  {codeMode === "source" ? (
+                    <div className="field">
+                      <label htmlFor="registration-source">Solidity source</label>
+                      <textarea id="registration-source" name="source" rows={8} maxLength={200_000} aria-describedby="registration-source-help" />
+                      <p className="field-help" id="registration-source-help">컨트랙트 전체 코드를 붙여넣으세요. 최대 200,000자.</p>
+                    </div>
+                  ) : null}
+                  {codeMode === "address" ? (
+                    <div className="field">
+                      <label htmlFor="registration-address">Kaia 컨트랙트 주소</label>
+                      <input id="registration-address" name="address" placeholder="0x…" pattern="^0x[0-9a-fA-F]{40}$" aria-describedby="registration-address-help" />
+                      <p className="field-help" id="registration-address-help">소스가 공개돼 있지 않으면 분석이 제한되고 결과를 ‘검증 제한’으로 표시합니다.</p>
+                    </div>
+                  ) : null}
+                  <p className="row-meta">등록하면 문서에서 통제조건을 추출합니다. 이어서 담당자가 근거를 확인하고 검사를 실행하면 리포트가 만들어집니다.</p>
                 </fieldset>
+
                 {pending ? <p className="row-meta" role="status" aria-live="polite">자산 생성, 문서 업로드, 컨트랙트 연결을 순서대로 처리 중입니다. 창을 닫아도 시작된 서버 작업은 유지됩니다.</p> : null}
                 {error ? <p className="form-error" id="registration-error" role="alert">{error}</p> : null}
                 <footer>
                   <Button className="btn" onPress={close}>취소</Button>
                   <div className="registration-step-actions">
                     {step > 0 ? <button className="btn" type="button" onClick={previousStep}>뒤로: {step === 1 ? "자산" : "문서"}</button> : null}
-                    {step < 2 ? <button className="btn btn-primary" type="button" onClick={nextStep}>다음: {step === 0 ? "문서" : "코드"}</button> : (
-                      <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "등록 중…" : "자산 등록"}</button>
+                    {step < 2 ? (
+                      <button key="advance" className="btn btn-primary" type="button" onClick={nextStep}>
+                        다음: {step === 0 ? "문서" : "코드"}
+                      </button>
+                    ) : (
+                      <button key="submit" className="btn btn-primary" type="submit" disabled={pending || (codeMode === "sample" && !sampleContract)}>
+                        {pending ? "등록 중…" : "자산 등록"}
+                      </button>
                     )}
                   </div>
                 </footer>

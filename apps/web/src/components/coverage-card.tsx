@@ -12,7 +12,7 @@ const ORDER = ["IMPLEMENTED", "PARTIAL", "MISSING", "UNCHECKED"];
 const LEGEND: Array<{ key: keyof ReturnType<typeof coverageOf>; label: string; color: string }> = [
   { key: "implemented", label: "구현", color: "var(--safe)" },
   { key: "partial", label: "부분", color: "var(--warn)" },
-  { key: "missing", label: "미구현", color: "var(--breach)" },
+  { key: "missing", label: "통제 공백", color: "var(--breach)" },
   { key: "unjudged", label: "미검사", color: "var(--ink-faint)" },
 ];
 
@@ -35,7 +35,7 @@ export function CoverageCard({ report }: { report: EvidenceReport }) {
           {coverage.implemented} / {coverage.total}
         </span>
         <span style={{ fontSize: "var(--t-label)", color: "var(--ink-soft)" }}>
-          구현 확인 · 불일치 {coverage.mismatched}
+          구현 확인 · 위반 {coverage.mismatched}개
         </span>
       </p>
 
