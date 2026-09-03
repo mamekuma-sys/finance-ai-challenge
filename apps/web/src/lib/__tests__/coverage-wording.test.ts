@@ -35,4 +35,15 @@ describe("집계 문구", () => {
       expect(await read(key)).toContain("통제 공백");
     }
   });
+
+  it("두 숫자가 왜 다른지 화면에서 설명한다", async () => {
+    const scan = await read("scan");
+
+    // 코드 기준 수와 통제조건 기준 수의 관계를 문장으로 잇는다.
+    expect(scan).toContain("코드 결함 {report.code_findings.length}건이 통제조건 {coverage.mismatched}개를 위반");
+    // 두 수가 같을 때는 사족을 붙이지 않는다.
+    expect(scan).toContain("report.code_findings.length !== coverage.mismatched");
+    // 위반이 0건이면 문장 자체를 두지 않는다.
+    expect(scan).toContain("{coverage.mismatched > 0 ?");
+  });
 });

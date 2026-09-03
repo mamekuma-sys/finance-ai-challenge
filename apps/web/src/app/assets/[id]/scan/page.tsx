@@ -217,6 +217,14 @@ export default async function ScanPage({
               통제조건 {report.controls.length}개 중 위반 <strong>{coverage.mismatched}개</strong>
               <span className="muted"> · 통제 공백 {coverage.missing}개 · 부분 구현 {coverage.partial}개</span>
             </p>
+            {coverage.mismatched > 0 ? (
+              <p className="row-meta">
+                코드 결함 {report.code_findings.length}건이 통제조건 {coverage.mismatched}개를 위반했습니다.
+                {report.code_findings.length !== coverage.mismatched
+                  ? " 한 결함이 여러 조항에 걸칠 수 있어 두 수는 다를 수 있습니다."
+                  : ""}
+              </p>
+            ) : null}
             {reviewFindings.length ? <Badge tone="warn">NEEDS_REVIEW {reviewFindings.length}</Badge> : null}
             {report.scan_run.status === "PARTIAL" ? <Badge tone="warn">PARTIAL</Badge> : null}
           </section>

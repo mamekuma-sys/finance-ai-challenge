@@ -31,6 +31,7 @@ export function RiskRuler({
   const score = risk.score;
   const grade = riskGradeLabel(risk.grade);
   const contributors = topContributors(risk);
+  const totalContributors = risk.contributors?.length ?? 0;
 
   return (
     <section aria-label="Exploit Risk">
@@ -73,7 +74,13 @@ export function RiskRuler({
       )}
 
       {contributors.length > 0 ? (
-        <ul className="rows" style={{ marginTop: 14 }}>
+        <>
+        <p className="key" style={{ margin: "14px 0 0" }}>
+          {totalContributors > contributors.length
+            ? `상위 원인 ${contributors.length} / 전체 ${totalContributors}`
+            : `상위 원인 ${totalContributors}`}
+        </p>
+        <ul className="rows" aria-label="Exploit Risk 상위 기여 원인">
           {contributors.map((finding) => (
             <li key={finding.finding_id}>
               <div
@@ -98,6 +105,7 @@ export function RiskRuler({
             </li>
           ))}
         </ul>
+        </>
       ) : null}
 
       <p className="risk-note">
