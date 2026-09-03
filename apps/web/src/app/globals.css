@@ -904,6 +904,95 @@ time,
   margin-left: auto;
 }
 
+/* 등록 마법사 안내 — 빈 폼 대신 예시와 기준을 먼저 보여준다. */
+
+.registration-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registration-scope li {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  background: var(--surface-paper);
+  font-size: var(--t-micro);
+  color: var(--ink-muted);
+}
+
+.registration-scope strong {
+  color: var(--ink);
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: var(--t-label);
+  font-weight: 600;
+}
+
+.field-help {
+  margin: 0;
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.sample-fill {
+  justify-self: start;
+}
+
+.document-checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  border: 1px dashed var(--line);
+  background: var(--surface);
+}
+
+.document-checklist li {
+  display: grid;
+  gap: 2px;
+}
+
+.document-checklist strong {
+  font-size: var(--t-label);
+}
+
+.code-mode {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.code-mode legend {
+  padding: 0 6px;
+  font-size: var(--t-label);
+  font-weight: 700;
+}
+
+.registration-advanced summary {
+  font-size: var(--t-label);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.registration-advanced .responsive-split {
+  margin-top: 10px;
+}
+
 .form-error {
   color: var(--breach);
   font-size: var(--t-small);
